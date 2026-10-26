@@ -15,6 +15,7 @@ create table motor.solicitudes_servidor (
   usada_en    timestamptz
 );
 revoke all on motor.solicitudes_servidor from public, anon, authenticated;
+alter table motor.solicitudes_servidor enable row level security;  -- sin políticas: solo las funciones internas
 
 -- Contexto para una llamada del servidor ------------------------------------------
 create or replace function public.servidor_preparar(p_persona uuid, p_ahora timestamptz default now())
