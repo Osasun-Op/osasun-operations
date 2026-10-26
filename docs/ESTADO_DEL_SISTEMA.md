@@ -90,7 +90,7 @@ Cada trabajador tiene una app supervisora que le dice qué hacer, le mantiene el
 
 ### En cualquier momento (eventos)
 - **Llega mercancía:** se abre y se comprueba en el momento.
-- **Pedido de cliente** (1 o 2 por semana, sobre todo los miércoles): se prepara como el de una tienda y se envía por Nacex.
+- **Pedido de cliente** (1 o 2 por semana, sobre todo los miércoles): se prepara como el de una tienda y se envía por Nacex. Lo mete en la app quien lo recibe: Administración como tarea nueva o el operario con el botón «Pedido de cliente» (decisión del propietario, 26/10/2026).
 - **No quedan vapers:** tirada de 50, repartida entre 2 tipos.
 - **Falta material:** catálogo (sección 7).
 - **Bloqueo:** flujo de problemas (sección 6.6).
