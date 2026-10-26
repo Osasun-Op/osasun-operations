@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.6 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD (PR #1) revisada. Sin desarrollo iniciado.
+**Versión:** 1.7 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD (PR #1) revisada. Sin desarrollo iniciado.
 
 ---
 
@@ -70,6 +70,7 @@ Cada trabajador tiene una app supervisora que le dice qué hacer, le mantiene el
 | Hasta la salida | 1) Calcular el total de cajas, restar las hechas y producir lo que falta. 2) Preparar las bolsas de cada tienda. 3) Con el tiempo restante, stock del almacén (+35 %). |
 | Viernes | 30 minutos de limpieza intensiva de la estación de resinas antes del reparto. |
 | Si sale él | Salida a las 10:45 y ruta de unas 2 h. A la vuelta, efectivo frente a la Z y reporte a Administración. |
+| 10:45 | **Bolsas listas en la mesa de salida.** Las organiza siempre el operario (lo normal es tenerlas hacia las 10:30). Si no llega, pulsa «Retrasar 15 min» o «Retrasar 30 min» y se avisa a quien sale de la nueva hora de salida, para que no llegue antes y espere. Cada retraso queda registrado y el cierre lo cruza con las cajas del reparto y las incidencias de la mañana. La salida suele ser entre las 10:45 y las 11:00 (decisión del propietario, 26/10/2026). |
 | Si sale Administración | Bloque libre hasta las 12:45 (cola de tiempo libre). |
 | 12:45–13:00 | Recuento de stock y cajas hechas, y actualización de STOCK ALMACÉN DIARIO. |
 
@@ -215,6 +216,7 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
 
 ### 6.7 Avisos
 - **El operario solo ve tareas:** pendientes, en curso y acabadas. Nunca avisos de tiempo ni de presión. Excepciones, que también son tareas: una tarea nueva durante el reparto le llega al Pixel, y un problema sin resolver reaparece a los 30 minutos.
+- **Excepción aprobada:** el retraso de la salida del reparto (botones de las 10:45) avisa en el momento a quien sale.
 - **Administración solo recibe el cierre:** uno por turno (13:00 y 18:30 de lunes a jueves; 13:00 el viernes), **por correo** (D2 y D3, decididos 26/10/2026). La advertencia de conflicto al lanzar una tarea no es un aviso: se ve mientras se crea.
 
 ### 6.8 Métricas
@@ -428,3 +430,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.4 | 26/10/2026 | Revisión del PR #1. Decididos D1 (redondeo hacia arriba), D2 (cierre por turno) y D3 (correo). Duraciones de referencia (§6.10) y duración orientativa en Nueva tarea. Tiendas en el reparto, reparto corregido, minis y FIFO (§5). Pestañas de la V1 y formatos de T BALLS/KRUSH comprobados (§9). |
 | 1.5 | 26/10/2026 | Proyecto Supabase de pruebas creado y conectado mediante el conector de Claude (P4). |
 | 1.6 | 26/10/2026 | Cuenta técnica de Google creada y comprobada (P5). Acceso público por enlace a la hoja de stock (P6): se mantiene hasta terminar la Etapa 3. |
+| 1.7 | 26/10/2026 | Dudas secundarias del PR #1: destinos del envío, obligatorias no terminadas, pedidos de cliente y bolsas a las 10:45 con aviso de retraso. |
