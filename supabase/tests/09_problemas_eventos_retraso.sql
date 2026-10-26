@@ -56,7 +56,6 @@ declare
   v_t uuid;
   c1 uuid := gen_random_uuid();
   c2 uuid := gen_random_uuid();
-  n_net integer;
 begin
   j := motor.generar_jornada(op, d);
   select id into v_rev from public.tareas where jornada_id = j and clave = 'revision_inicial';
@@ -184,11 +183,12 @@ begin
   -- Miércoles: sale Administración → correo «Salida retrasada a las HH:MM»
   j2 := motor.generar_jornada(op, '2026-11-11');
   perform pg_temp.guardar(j2, pg_temp.reparto('administracion'), '2026-11-11 09:00+01');
-  select count(*) into n_net from net.http_request_queue;
   r := motor.retrasar_salida_de(op, gen_random_uuid(), 15, '2026-11-11 10:35+01');
   perform pg_temp.comprobar('Sale Administración: aviso por correo encolado (una petición a enviar_correo)',
     r ->> 'aviso' = 'correo' and r ->> 'nueva_hora_salida' = '11:00'
-    and (select count(*) from net.http_request_queue) = n_net + 1
+    and (select count(*) from net.http_request_queue q, public.registro_eventos e
+          where e.jornada_id = j2 and e.tipo = 'salida_retrasada' and q.url like '%/functions/v1/enviar_correo'
+            and convert_from(q.body, 'UTF8')::jsonb = jsonb_build_object('tipo', 'retraso', 'ref', e.id::text)) = 1
     and exists (select 1 from public.registro_eventos where tipo = 'correo_encolado' and datos ->> 'tipo' = 'retraso'), r::text);
   perform pg_temp.comprobar('El retraso se ve en estado_actual',
     motor.estado_actual_de('2026-11-11 10:36+01') -> 'retrasos_salida' -> 0 ->> 'nueva_hora' = '11:00',

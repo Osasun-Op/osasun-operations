@@ -62,7 +62,6 @@ declare
   c2 uuid := gen_random_uuid();
   c3 uuid := gen_random_uuid();
   c4 uuid := gen_random_uuid();
-  n_net integer;
   n integer;
 begin
   j := motor.generar_jornada(op, '2026-11-10');
@@ -196,14 +195,16 @@ begin
   -- Cierre de la mañana (martes 13:00) ----------------------------------------------------
   perform motor.terminar_incidencia_de(op, (select id from public.incidencias where jornada_id = j and terminada_en is null), '2026-11-10 10:20+01');
   perform pg_temp.comprobar('A las 12:59 no se genera ningún cierre', motor.generar_cierres_programados('2026-11-10 12:59+01') = 0);
-  select count(*) into n_net from net.http_request_queue;
   n := motor.generar_cierres_programados('2026-11-10 13:00+01');
   select id into v_cierre from public.cierres where jornada_id = j and turno = 'manana';
   perform pg_temp.comprobar('A las 13:00 se genera el cierre de la mañana y se encola su correo',
-    n = 1 and v_cierre is not null and (select count(*) from net.http_request_queue) = n_net + 1
-    and exists (select 1 from net.http_request_queue where body ->> 'tipo' = 'cierre' and body ->> 'ref' = v_cierre::text));
+    n = 1 and v_cierre is not null
+    and (select count(*) from net.http_request_queue
+          where convert_from(body, 'UTF8')::jsonb = jsonb_build_object('tipo', 'cierre', 'ref', v_cierre::text)) = 1);
   perform pg_temp.comprobar('Otra vez a las 13:30: no se genera otro ni se encola otro correo',
-    motor.generar_cierres_programados('2026-11-10 13:30+01') = 0 and (select count(*) from net.http_request_queue) = n_net + 1
+    motor.generar_cierres_programados('2026-11-10 13:30+01') = 0
+    and (select count(*) from net.http_request_queue
+          where convert_from(body, 'UTF8')::jsonb = jsonb_build_object('tipo', 'cierre', 'ref', v_cierre::text)) = 1
     and motor.generar_cierre(j, 'manana', '2026-11-10 13:31+01') = v_cierre
     and (select count(*) from public.cierres where jornada_id = j) = 1);
   r := (select contenido from public.cierres where id = v_cierre);

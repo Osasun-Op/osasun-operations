@@ -54,7 +54,8 @@ permisos_esquemas as (
 carga as (
   select md5(
     (select string_agg(format('%s %s %s %s %s %s', codigo, nombre, tipo, nombre_en_sheets, alias::text, activo), E'\n' order by codigo) from public.centros_trabajo)
-    || (select string_agg(format('%s %s', clave, valor::text), E'\n' order by clave) from public.configuracion where clave <> 'entorno')
+    || (select string_agg(format('%s %s', clave, valor::text), E'\n' order by clave) from public.configuracion
+        where clave not in ('entorno', 'correo_administracion'))  -- propias de cada entorno
     || (select string_agg(row(p.codigo, p.titulo, p.programacion, p.dias_semana, p.turno, p.hora_inicio, p.hora_limite,
                               p.duracion_min, p.condicion, p.requiere_codigo, p.contenido, p.obligatoria, p.prioridad_cola,
                               p.no_terminada, p.modo, p.orden, p.activa)::text, E'\n' order by p.codigo)
@@ -69,5 +70,5 @@ union all select 'funciones', md5(t) from funciones
 union all select 'permisos sobre funciones', md5(t) from permisos_funciones
 union all select 'permisos sobre esquemas', md5(t) from permisos_esquemas
 union all select 'carga inicial', h from carga
-union all select 'generación programada', md5(coalesce((select string_agg(jobname || ' ' || schedule || ' ' || command, E'\n')
+union all select 'generación programada', md5(coalesce((select string_agg(jobname || ' ' || schedule || ' ' || command, E'\n' order by jobname)
                                                        from cron.job), ''));
