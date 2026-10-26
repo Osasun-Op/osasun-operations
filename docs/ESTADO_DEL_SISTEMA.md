@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.8 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 en curso: estructura base y jornada automática en pruebas.
+**Versión:** 1.9 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 en curso: estructura base y jornada automática en pruebas.
 
 ---
 
@@ -56,7 +56,7 @@ Cada trabajador tiene una app supervisora que le dice qué hacer, le mantiene el
 | **Operario de almacén** | Chromebook en su mesa (principal) y Google Pixel | Chromebook: tarea activa, siempre visible. Pixel: preparación de bolsas y tareas recibidas durante el reparto. |
 
 - **Horario del operario:** lunes a jueves de 08:30 a 13:00 y de 15:30 a 18:30; viernes de 08:30 a 13:00. Son 34,5 h de un contrato de 35 h, así que hay **30 minutos semanales flexibles** para cuando la vuelta del reparto se alarga.
-- **Cuentas:** cada persona tiene su usuario. No hay credenciales compartidas. Osasun usa cuentas de Google gratuitas, no Workspace.
+- **Cuentas:** cada persona tiene su usuario. No hay credenciales compartidas. Osasun usa cuentas de Google gratuitas, no Workspace. **Se entra con la cuenta de Google** de cada persona; solo pueden entrar las cuentas dadas de alta (decisión del propietario, 26/10/2026).
 
 ---
 
@@ -87,7 +87,7 @@ Cada trabajador tiene una app supervisora que le dice qué hacer, le mantiene el
 | Cierre con envío | Recuento de 17:55 a 18:10, salida a Nacex a las 18:10 y vuelta hacia las 18:25 para cerrar. |
 | Cierre sin envío | Recuento y cierre de 18:15 a 18:30. |
 
-**Viernes:** si hace falta, envío a Gipuzkoa/Durango por la mañana. Se decide el **jueves a las 15:30**, en la misma revisión del envío de ese día (decisión del propietario, 26/10/2026).
+**Viernes:** si hace falta, envío a Gipuzkoa/Durango por la mañana. Se decide el **jueves a las 15:30**, en la misma revisión del envío de ese día (decisión del propietario, 26/10/2026). El envío del viernes se prepara **antes de las 10:45**, junto con las bolsas, y quien sale a repartir lo deja en Nacex de camino.
 
 ### En cualquier momento (eventos)
 - **Llega mercancía:** se abre y se comprueba en el momento.
@@ -432,3 +432,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.6 | 26/10/2026 | Cuenta técnica de Google creada y comprobada (P5). Acceso público por enlace a la hoja de stock (P6): se mantiene hasta terminar la Etapa 3. |
 | 1.7 | 26/10/2026 | Dudas secundarias del PR #1: destinos del envío, obligatorias no terminadas, pedidos de cliente y bolsas a las 10:45 con aviso de retraso. |
 | 1.8 | 26/10/2026 | Papeles de resinas fuera de la V1. PR #1 aprobado y fusionado: `MODELO_DATOS.md`, `CONTRATOS.md`, `REGLAS_CALCULO.md` y `PLAN_TECNICO.md` son la base técnica (los ajusta la Tarea 2). Tarea 2 encargada. |
+| 1.9 | 26/10/2026 | Revisión de la Tarea 2 (PR #2). Acceso con cuenta de Google. Envío del viernes antes de las 10:45. |
