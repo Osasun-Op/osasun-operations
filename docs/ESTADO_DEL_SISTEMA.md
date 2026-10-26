@@ -108,7 +108,7 @@ La recepción de mercancía no está en la cola: se atiende en el momento en que
 - **Operario:** la ejecución según las reglas, el orden dentro de las listas de producción, las compras online de consumibles y la recepción.
 
 ### Indicador de calidad semanal
-La limpieza del viernes hecha y los papeles de resinas rectos y cuidados.
+La limpieza del viernes hecha (sale de la tarea). Los papeles de resinas rectos y cuidados son una apreciación del propio operario, a modo de reconocimiento, sin comprobación; **queda fuera de la V1** y se retomará cuando todo funcione (decisión del propietario, 26/10/2026).
 
 ---
 
