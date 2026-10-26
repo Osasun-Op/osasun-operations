@@ -5,47 +5,41 @@
 -- 2. Minis: sin duración hasta que se conozca.
 -- 3. Envío del viernes: se prepara antes de las 10:45 y lo lleva a Nacex quien
 --    sale; si sale Administración no es una tarea del operario. Para eso una
---    plantilla puede tener varias condiciones (todas deben cumplirse).
+--    plantilla puede tener condiciones extra de estado (todas deben cumplirse).
+-- Migración solo aditiva: añade columnas y funciones; no borra ni transforma nada.
 -- Además, las tareas de preparar el envío llevan sus cajas (contenido «bolsas»).
 
-alter table public.plantillas_tarea drop constraint plantillas_tarea_condicion_check;
 alter table public.plantillas_tarea
-  alter column condicion type text[] using case when condicion is null then null else array[condicion] end;
-alter table public.plantillas_tarea add constraint plantillas_tarea_condicion_check check (
-  cardinality(condicion) > 0 and condicion <@ array[
-    'sale_operario', 'sale_administracion', 'hay_envio', 'no_hay_envio',
-    'reparto_pegado', 'envio_pegado', 'llega_mercancia', 'pedido_cliente', 'no_quedan_vapers']::text[]);
-alter table public.plantillas_tarea add column urgente boolean not null default false;
+  add column condiciones_extra text[] not null default '{}'
+    check (condiciones_extra <@ array['sale_operario', 'sale_administracion', 'hay_envio', 'no_hay_envio']::text[]),
+  add column urgente boolean not null default false;
+comment on column public.plantillas_tarea.condiciones_extra is
+  'Condiciones de estado del día que también deben cumplirse, además de «condicion».';
 
--- ¿Se cumplen las condiciones con lo que ya se sabe del día? true/false si todas
--- son de estado; null si alguna depende de algo que pasa durante el día.
-drop function motor.condicion_estado(public.jornadas, text);
-create or replace function motor.condicion_estado(p_jornada public.jornadas, p_condiciones text[])
+-- ¿Se cumplen la condición y las condiciones extra con lo que ya se sabe del día?
+-- true/false si son de estado; null si la principal depende de algo que pasa
+-- durante el día (reparto, envío, eventos).
+create or replace function motor.condiciones_cumplidas(p_jornada public.jornadas, p_condicion text, p_extra text[])
 returns boolean
 language sql immutable
 set search_path = ''
 as $$
   select case
-    when p_condiciones is null or cardinality(p_condiciones) = 0 then true
-    when exists (select 1 from unnest(p_condiciones) c
-                 where c not in ('sale_operario', 'sale_administracion', 'hay_envio', 'no_hay_envio')) then null
-    else (select bool_and(case c
-            when 'sale_operario' then coalesce(p_jornada.sale = 'operario', false)
-            when 'sale_administracion' then coalesce(p_jornada.sale = 'administracion', false)
-            when 'hay_envio' then p_jornada.hay_envio
-            when 'no_hay_envio' then not p_jornada.hay_envio
-          end) from unnest(p_condiciones) c)
+    when motor.condicion_estado(p_jornada, p_condicion) is null then null
+    else motor.condicion_estado(p_jornada, p_condicion)
+         and coalesce((select bool_and(motor.condicion_estado(p_jornada, e)) from unnest(p_extra) e), true)
   end;
 $$;
 
 -- Motivo de la retirada: la primera condición que no se cumple.
-create or replace function motor.texto_condiciones(p_jornada public.jornadas, p_condiciones text[])
+create or replace function motor.texto_condiciones(p_jornada public.jornadas, p_condicion text, p_extra text[])
 returns text
 language sql immutable
 set search_path = ''
 as $$
-  select coalesce((select motor.texto_condicion(c) from unnest(p_condiciones) with ordinality u(c, n)
-                   where not motor.condicion_estado(p_jornada, array[c]) order by n limit 1), '');
+  select coalesce((select motor.texto_condicion(c)
+                   from unnest(array_prepend(p_condicion, coalesce(p_extra, '{}'))) with ordinality u(c, n)
+                   where c is not null and not motor.condicion_estado(p_jornada, c) order by n limit 1), '');
 $$;
 
 create or replace function motor.insertar_desde_plantilla(
@@ -63,7 +57,7 @@ begin
     hora_limite, duracion_min, no_terminada, orden)
   select
     j.id, p_clave, p_origen, p.id, p.titulo, p.porque, p.contenido, p.obligatoria, p.urgente,
-    p.prioridad_cola, array_to_string(p.condicion, '+'), p.requiere_codigo,
+    p.prioridad_cola, array_to_string(array_prepend(p.condicion, p.condiciones_extra), '+'), p.requiere_codigo,
     coalesce(motor.en_local(j.fecha, p.hora_inicio),
              motor.inicio_turno(j.persona_id, j.fecha, p.turno),
              motor.inicio_turno(j.persona_id, j.fecha, null)),
@@ -101,7 +95,7 @@ begin
       and extract(isodow from j.fecha)::smallint = any (dias_semana)
     order by orden, codigo
   loop
-    v_cumple := motor.condicion_estado(j, p.condicion);
+    v_cumple := motor.condiciones_cumplidas(j, p.condicion, p.condiciones_extra);
     if v_cumple is null then
       continue;  -- se crea cuando pase (motor.crear_tarea_condicionada)
     elsif v_cumple then
@@ -119,7 +113,7 @@ begin
       for v_id in
         update public.tareas
            set estado = 'cancelada', retirada_por_condicion = true,
-               motivo_no_hecha = 'Ya no aplica: ' || motor.texto_condiciones(j, p.condicion)
+               motivo_no_hecha = 'Ya no aplica: ' || motor.texto_condiciones(j, p.condicion, p.condiciones_extra)
          where jornada_id = j.id and clave = p.codigo and estado = 'pendiente'
         returning id
       loop
@@ -149,9 +143,9 @@ begin
   end if;
   for p in
     select * from public.plantillas_tarea
-    where centro_id = j.centro_id and activa and p_condicion = any (condicion)
+    where centro_id = j.centro_id and activa and condicion = p_condicion
       and extract(isodow from j.fecha)::smallint = any (dias_semana)
-      and coalesce(motor.condicion_estado(j, array_remove(condicion, p_condicion)), false)
+      and coalesce((select bool_and(motor.condicion_estado(j, e)) from unnest(condiciones_extra) e), true)
     order by orden, codigo
   loop
     v_clave := p.codigo || coalesce(':' || p_sufijo, '');
@@ -217,7 +211,7 @@ update public.plantillas_tarea set hora_limite = '10:45', contenido = 'bolsas'
  where codigo = 'preparar_envio_viernes';
 update public.plantillas_tarea set contenido = 'bolsas' where codigo = 'preparar_envio';
 update public.plantillas_tarea
-   set programacion = 'con_hora', hora_inicio = '10:45', condicion = array['hay_envio', 'sale_operario'],
+   set programacion = 'con_hora', hora_inicio = '10:45', condiciones_extra = array['sale_operario'],
        titulo = 'Lleva el envío de Gipuzkoa en el reparto y déjalo en Nacex de camino', orden = 49
  where codigo = 'nacex_viernes';
 
