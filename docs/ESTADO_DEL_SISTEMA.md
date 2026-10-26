@@ -216,7 +216,7 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
 
 ### 6.7 Avisos
 - **El operario solo ve tareas:** pendientes, en curso y acabadas. Nunca avisos de tiempo ni de presión. Excepciones, que también son tareas: una tarea nueva durante el reparto le llega al Pixel, y un problema sin resolver reaparece a los 30 minutos.
-- **Excepción aprobada:** el retraso de la salida del reparto (botones de las 10:45) avisa en el momento a quien sale.
+- **Excepción aprobada:** el retraso de la salida del reparto (botones de las 10:45) avisa en el momento a quien sale. Si sale Administración, le llega un correo corto («Salida retrasada a las HH:MM») y lo ve en la pantalla de inicio del panel (decisión del propietario, 26/10/2026).
 - **Administración solo recibe el cierre:** uno por turno (13:00 y 18:30 de lunes a jueves; 13:00 el viernes), **por correo** (D2 y D3, decididos 26/10/2026). La advertencia de conflicto al lanzar una tarea no es un aviso: se ve mientras se crea.
 
 ### 6.8 Métricas
