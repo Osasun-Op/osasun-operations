@@ -1,6 +1,8 @@
 -- Prueba 06 · Paso 3 de 4 (sesión B). Lanzada mientras A está dentro de su
 -- transacción: debe esperar a A y devolver la MISMA jornada, sin error y sin
--- duplicar nada.
+-- duplicar nada. Se lanza a la vez que A y espera 2 segundos para empezar
+-- cuando A ya tiene la jornada a medio confirmar.
+select pg_sleep(2);
 select 'B' as sesion,
        motor.generar_jornada('00000000-0000-4000-a000-0000000000c1', '2026-11-10') as jornada_b,
        clock_timestamp() as terminada_a_las;

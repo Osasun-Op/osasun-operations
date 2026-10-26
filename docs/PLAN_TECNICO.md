@@ -1,163 +1,163 @@
-# OSASUN OPERATIONS — Plan técnico de la base de datos (propuesta V1)
+# OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 0.1 (propuesta, pendiente de aprobación) · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Tarea:** 1
+**Versión:** 0.2 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1) con las decisiones de la revisión. Tarea 2 construida en pruebas: estructura base, permisos y jornada automática.
 
-> Cómo funcionará por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`. Nada está construido.
+> Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
 ---
 
 ## 1. Piezas (y solo estas)
 
-| Pieza | Para qué |
-| --- | --- |
-| **Postgres de Supabase** | Tablas, permisos (RLS) y funciones de base de datos: motor de tareas, problemas, incidencias, cierres. |
-| **Supabase Auth** | Usuarios (Administración y operario). Altas solo por invitación; registro abierto desactivado. Acceso con correo y contraseña (sin servicios adicionales). |
-| **2 funciones del servidor (Edge Functions)** | `pegar_reparto` y `lista_stock`: las únicas que leen Google Sheets. Aplican R1 y R3 (código TypeScript con pruebas). |
-| **Tareas programadas (pg_cron)** | Generar la jornada cada mañana y generar/enviar los cierres. |
-| **Realtime de Supabase** | Que una tarea nueva aparezca sola en el Chromebook o en el Pixel. |
+| Pieza | Para qué | Estado |
+| --- | --- | --- |
+| **Postgres de Supabase** | Tablas, permisos (RLS) y funciones: motor de tareas, problemas, incidencias, cierres. | ✅ base (Tarea 2) |
+| **Supabase Auth** | Usuarios (Administración y operario). Altas solo por invitación. | En pruebas: 2 usuarios ficticios |
+| **2 funciones del servidor (Edge Functions)** | `pegar_reparto` y `lista_stock`: las únicas que leen Google Sheets (R1 y R3). | Tarea 3 |
+| **Tareas programadas (pg_cron)** | Generar la jornada a las 06:00 y los cierres de cada turno. | ✅ jornada (Tarea 2) |
+| **Correo** | Cierres por turno y aviso de retraso de la salida (D3). | Se crea al programar el cierre (Tarea 4) |
+| **Realtime de Supabase** | Que una tarea nueva aparezca sola en el Chromebook o el Pixel. | Con la primera pantalla que lo use |
 
 No hay servidor propio, ni cola de mensajes, ni copia del stock en la base de datos.
 
+### Esquemas
+- `public`: las tablas y las funciones que publica la API (`mi_perfil`, `tarea_activa`…). Las públicas no tienen privilegios propios: solo llaman a `motor.api_*`.
+- `motor`: la lógica. `motor.api_*` comprueba quién llama y su rol; el resto (generar, elegir, arrastrar…) no se concede a nadie. No se publica en la API.
+- `prueba`: `prueba.fijar_condicion`, para simular la semana. No se concede a nadie y además exige `configuracion.entorno = "pruebas"`.
+
+Todas las funciones del motor reciben la hora como parámetro: así las pruebas simulan cualquier día y hora. Las públicas pasan siempre la hora del servidor.
+
 ## 2. Motor de tareas
 
-### 2.1 Generación diaria
-- Tarea programada cada día a las **06:00 (hora de Madrid)** + generación «perezosa» la primera vez que el operario abre la app (`tarea_activa`). Las dos llaman a la misma función, que es **idempotente**: único (persona, fecha) en jornadas y único (jornada, clave) en tareas. Reiniciar, abrir dos pestañas o perder la conexión no duplica nada (§6.2).
-- Solo se generan jornadas para los días con turnos en `horarios`.
-- Se crean las tareas de las plantillas activas cuyo día coincide y **cuya condición ya se sabe** (ej. `hay_envio` el lunes). Las condicionadas por algo que aún no ha pasado se crean cuando pasa:
+### 2.1 Generación diaria ✅
+- **Tarea programada a las 06:00 de Madrid** (`generar_jornada_diaria`). pg_cron trabaja en UTC: se lanza a las 04:00 y 05:00 UTC y solo actúa la ejecución que cae a las 06:00 en Madrid (verano o invierno).
+- **Generación «perezosa»**: si el operario abre la app antes, `tarea_activa` la genera. Las dos llaman a la misma función, que es **idempotente**: candado por persona y fecha + único (persona, fecha) + único (jornada, clave). Dos llamadas a la vez: la segunda espera y devuelve la misma jornada (probado).
+- Solo hay jornada los días con turnos en `horarios`.
+- Al generar: 1) se arrastra lo pendiente del último día trabajado (§2.2); 2) se crean las tareas de las plantillas del día cuya condición ya se cumple.
+- **Envío:** el lunes la jornada nace con envío. El viernes nace con envío si el jueves se marcó «envío mañana» (`envio_dia_siguiente`).
+- **Condiciones de estado** (quién sale, si hay envío): se evalúan al generar y cada vez que cambian. Si una deja de cumplirse, sus tareas pendientes se **retiran** (canceladas, con motivo «Ya no aplica: …» y registro); si vuelve a cumplirse, se recuperan. Nada desaparece en silencio.
+- **Condiciones de algo que pasa** (reparto o envío pegado, mercancía, pedido de cliente, vapers): la tarea se crea cuando pasa. Hasta que existan sus funciones (Tarea 3), en pruebas se simula con `prueba.fijar_condicion`.
 
-| Condición | Se crea cuando… |
+| Condición | Se crea o cambia cuando… |
 | --- | --- |
-| `reparto_pegado` | se acepta el reparto (producción y bolsas, con sus elementos). |
+| `reparto_pegado` | se acepta el reparto (producción y bolsas). |
 | `sale_operario` / `sale_administracion` | se conoce la línea `SALE:` (o el operario responde). |
-| `envio_pegado` / `hay_envio` / `no_hay_envio` | se pega el envío aprobado (o, si no, a las 15:30 se da por «sin envío» al terminar la tarea de revisión). |
+| `hay_envio` / `no_hay_envio` | se aprueba el envío (se pega la versión final). |
+| `envio_pegado` | se pega el envío aprobado (prepararlo). |
 | `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers` | se registra el evento. |
 
-### 2.2 Arrastres (§6.5)
-Al generar la jornada se revisan las tareas no terminadas de la jornada anterior:
+### 2.2 Arrastres (§6.5, decidido) ✅
+Al generar la jornada se revisan las tareas no terminadas (pendiente, en curso o bloqueada) del último día trabajado:
+- `arrastrar` (obligatorias fijas: minis, resinas, control de materiales, limpieza de resinas; recepción, pedido de cliente, vapers; tareas de Administración) y `sigue_abierta` (compras y recogidas): la original pasa a `arrastrada` y se crea una copia en el nuevo día, disponible desde el primer turno, sin hora. Conserva su origen y quién la creó.
 - `recalcular` (stock): no se arrastra; se vuelve a calcular.
-- `sigue_abierta` (compras y recogidas): la original pasa a `arrastrada` y se crea una copia que sigue hasta que él confirma que lo tiene.
-- `arrastrar` (tareas de Administración): igual, marcada como «arrastrada» para el panel y el cierre.
-- `nada`: constan en el cierre como no hechas con su motivo (ver duda sobre obligatorias en `MODELO_DATOS.md` §7).
+- `nada` (ligadas a una hora o un turno: recuentos, Nacex, salida, efectivo, revisión, reparto y bolsas del día): no pasan; constan en el cierre como no hechas.
+- Una copia que tampoco se hace vuelve a pasar al siguiente día trabajado (salta el fin de semana).
 
-### 2.3 Qué tarea toca ahora (`tarea_activa`)
-Regla determinista, en este orden:
+### 2.3 Qué tarea toca ahora (`tarea_activa`) ✅
+Solo tareas disponibles (su hora o su turno ya ha llegado), no bloqueadas y con su requisito hecho. Orden:
 
-1. La tarea **en curso**, si la hay (solo puede haber una).
-2. La tarea **«Llama a Administración»** de un problema sin resolver cuya hora de nueva llamada ha llegado (§6.6, 30 minutos).
-3. **Urgentes de Administración** pendientes (por hora de creación).
-4. **Tareas con hora** ya vencida y pendientes (por hora; desempate: `orden`).
-5. Tareas **obligatorias** y **de Administración con hora límite**, por la hora límite más próxima (empate: la obligatoria primero). Las que no tienen hora límite van detrás.
-6. **Tareas de Administración «hoy»** sin hora.
-7. **Flexibles** de plantilla.
-8. **Cola de tiempo libre:** A (stock +35 %), C (compras y aprovisionamientos pendientes), D (orden y limpieza).
+1. La tarea **en curso** (solo puede haber una).
+2. **«Llama a Administración»** por un problema sin resolver cuya nueva llamada ha llegado (§6.6).
+3. **Urgentes de Administración**.
+4. **Tareas con hora** ya vencida (la más temprana primero).
+5. **Obligatorias y de Administración con hora límite**, por la hora límite más próxima (empate: la obligatoria). Las obligatorias sin hora límite van detrás.
+6. **De Administración «hoy»** sin hora.
+7. **Flexibles** de plantilla (ej. tirada de vapers).
+8. **Cola de tiempo libre:** A (stock +35 %), C (compras), D (orden y limpieza).
 
-Las tareas bloqueadas (con problema abierto) se saltan. «Lo que viene después» es el resultado de aplicar la misma regla sin la tarea actual.
+Desempates: `orden` de la plantilla y hora de creación. **«Lo que viene después»**: lo que tocaría sin la tarea actual; pero si antes llega una tarea con hora (o el siguiente turno), se anuncia esa con su hora.
 
-**Punto de encaje (§6.4):** una tarea con hora o urgente **nunca interrumpe** a mitad de una referencia, pesaje o bolsa. Solo se evalúa al terminar un elemento (referencia de producción o bolsa completa de una tienda) o una tarea. Si toca cambiar, la tarea con lista vuelve a `pendiente` conservando lo hecho. Si empieza tarde, la hora real queda registrada (`iniciada_en`).
+**Punto de encaje (§6.4):** una tarea con hora o urgente **nunca interrumpe** a mitad de una referencia o de una bolsa. Se evalúa al terminar un elemento (referencia de producción, o **bolsa completa de una tienda**, decidido) o una tarea (Tarea 3).
 
-### 2.4 Conflictos al crear una tarea de Administración (§6.4)
-Al crear (o al comprobar antes de crear):
+### 2.4 Conflictos al crear una tarea de Administración (§6.4) — Tarea 4
 ```
-ventana     = desde ahora (o el inicio del día elegido) hasta la hora límite (o el final del turno/jornada)
-disponible  = minutos de turno dentro de la ventana − bloques fijos (salida del reparto, Nacex)
-necesario   = Σ duración de las obligatorias pendientes que vencen dentro de la ventana + duración de la nueva tarea
+ventana     = desde ahora (o el inicio del día elegido) hasta la hora límite (o el final del turno)
+disponible  = minutos de turno en la ventana − bloques fijos (ruta del reparto ~2 h, Nacex)
+necesario   = Σ duración de las obligatorias pendientes que vencen en la ventana + duración de la nueva
 conflicto   = necesario > disponible
 ```
-- Sin conflicto: se crea y se informa del encaje previsto.
-- Con conflicto: **no se crea**; se muestra mientras se rellena (no es un aviso posterior) qué obligatorias quedan en riesgo. Administración elige qué cede (pasar después, a mañana o cancelar) o no la crea. La decisión queda en el registro. Nada desaparece en silencio.
-- **Necesita duraciones**: las de recuento (15 min), salida del reparto (~2 h), limpieza del viernes (30 min) y Nacex vienen del mapa (§4). Las de producción, bolsas y la tarea nueva no están definidas → decisión 4 (§8).
+**Duraciones** (§6.10, decidido): producción = cajas que faltan × 1 min; bolsas = 3 min por tienda; recuento 15 min; limpieza de resinas 30 min; ruta del reparto ~2 h; tareas de Administración: la **duración orientativa obligatoria** que pone Administración al crearla.
+Con conflicto, la tarea no se crea: Administración ve, mientras la crea, qué obligatorias quedan en riesgo y decide qué cede. La decisión queda en el registro.
 
-### 2.5 Problemas (§6.6)
+### 2.5 Problemas (§6.6) — Tarea 4
 - Abrir un problema bloquea la tarea; el operario sigue con la siguiente.
-- «No contestan» fija `proxima_llamada_en = ahora + 30 min`. A esa hora `tarea_activa` devuelve la tarea de volver a llamar (en el siguiente punto de encaje).
-- La regla de 5 minutos se mide (abierto → solución) y aparece en el cierre con el tiempo de cada problema. La app no muestra cuentas atrás al operario (§6.7).
+- «No contestan» → WhatsApp → **a los 30 minutos del WhatsApp** (decidido) vuelve a aparecer «Llama a Administración» (escalón 2).
+- La regla de los 5 minutos se mide (abierto → solución) y sale en el cierre. La app no muestra cuentas atrás al operario (§6.7).
 
-### 2.6 Plantillas iniciales (carga de la V1, del mapa semanal §4)
-Obligatoria/flexible según la tabla de §6.3; lo que no aparece en ella va como flexible. Todo es ajustable sin código.
+### 2.6 Plantillas cargadas (Tarea 2, del mapa semanal §4) ✅
+Obligatoria/flexible según §6.3; lo que no aparece allí va como flexible. Todo se ajusta sin código.
 
-| Código | Días | Hora / límite | Condición | Obligatoria |
-| --- | --- | --- | --- | --- |
-| `revision_inicial` | L–V | 08:30 | — | No |
-| `pegar_reparto` | L–V | 08:45 | — | Sí (parte de «producción y bolsas del reparto») |
-| `produccion_reparto` | L–V | antes de la salida | reparto_pegado | Sí |
-| `bolsas` | L–V | antes de la salida | reparto_pegado | Sí |
-| `limpieza_resinas` (30 min) | V | antes de la salida | — | Sí |
-| `salida_reparto` | L–V | 10:45 | sale_operario | Sí |
-| `efectivo_reporte` | L–V | al volver | sale_operario | Sí |
-| `recuento_manana` (15 min) | L–V | 12:45 | — | Sí |
-| `revisar_envio` | L–J | 15:30 | — | No |
-| `revisar_envio_viernes` | V | mañana (hora por definir) | — | No |
-| `minis` | L | tarde | — | Sí |
-| `resinas` (comprobar antes PRINCIPAL, R8) | M | tarde | — | Sí |
-| `control_materiales` | J | última hora, antes del recuento | — | Sí |
-| `preparar_envio` | L–V | antes de 18:10 | envio_pegado | Sí |
-| `nacex_salida` | L–J | 18:10 | hay_envio | Sí |
-| `recuento_tarde_envio` (15 min) | L–J | 17:55 | hay_envio | Sí |
-| `recuento_tarde` (15 min) | L–J | 18:15 | no_hay_envio | Sí |
-| `recepcion_mercancia` | — | en el momento | llega_mercancia | Sí |
-| `pedido_cliente` | — | — | pedido_cliente | Sí |
-| `tirada_vapers` (50, 2 tipos) | — | — | no_quedan_vapers | No |
-| `cola_stock` (A) | L–V | — | cola_libre | No |
-| `cola_compras` (C) | L–V | — | cola_libre | No |
-| `cola_orden_limpieza` (D) | L–V | — | cola_libre | No |
+| Código | Días | Hora · límite | Condición | Oblig. | No terminada |
+| --- | --- | --- | --- | --- | --- |
+| `revision_inicial` (15 min) | L–V | 08:30 | — | No | nada |
+| `pegar_reparto` (5 min) | L–V | 08:45 | — | Sí | nada |
+| `limpieza_resinas` (30 min) | V | antes de 10:45 | — | Sí | arrastrar |
+| `produccion_reparto` | L–V | antes de 10:45 | reparto_pegado | Sí | nada |
+| `bolsas` (bolsas listas en la mesa de salida; retraso 15/30 min en Tarea 3) | L–V | antes de 10:45 | reparto_pegado | Sí | nada |
+| `salida_reparto` (~2 h) | L–V | 10:45 | sale_operario | Sí | nada |
+| `efectivo_reporte` (tras la salida) | L–V | — | sale_operario | Sí | nada |
+| `preparar_envio_viernes` | V | mañana | envio_pegado | Sí | nada |
+| `nacex_viernes` | V | mañana | hay_envio | Sí | nada |
+| `recuento_manana` (15 min) | L–V | 12:45 · 13:00 | — | Sí | nada |
+| `revisar_envio` (el jueves decide también el viernes) | L–J | 15:30 | — | No | nada |
+| `minis` (~35 min) | L | tarde | — | Sí | arrastrar |
+| `resinas` (comprobar antes PRINCIPAL, R8) | M | tarde | — | Sí | arrastrar |
+| `control_materiales` | J | tarde · antes de 17:55 | — | Sí | arrastrar |
+| `preparar_envio` | L–J | tarde · antes de 18:10 | envio_pegado | Sí | nada |
+| `recuento_tarde_envio` (15 min) | L–J | 17:55 · 18:10 | hay_envio | Sí | nada |
+| `nacex_salida` (vuelta ~18:25) | L–J | 18:10 | hay_envio | Sí | nada |
+| `recuento_tarde` (15 min) | L–J | 18:15 · 18:30 | no_hay_envio | Sí | nada |
+| `recepcion_mercancia` | L–V | en el momento | llega_mercancia | Sí | arrastrar |
+| `pedido_cliente` | L–V | — | pedido_cliente | Sí | arrastrar |
+| `tirada_vapers` (50, 2 tipos) | L–V | — | no_quedan_vapers | No | arrastrar |
+| `cola_stock` (A) | L–V | — | cola libre | No | recalcular |
+| `cola_compras` (C) | L–V | — | cola libre | No | nada |
+| `cola_orden` (D) | L–V | — | cola libre | No | nada |
 
 Si sale Administración, el tiempo hasta las 12:45 queda para la cola de tiempo libre (sin tarea especial).
 
-## 3. Lectura de Google Sheets
+### 2.7 Retraso de la salida (§4, decidido) — Tarea 3
+La tarea de bolsas (a las 10:45 en la mesa de salida) tiene los botones «Retrasar 15 min» y «Retrasar 30 min» (`retrasar_salida`). Cada retraso mueve la hora de salida, avisa en el momento a quien sale (correo y panel si es Administración), queda registrado y el cierre lo cruza con las cajas del reparto y las incidencias de la mañana.
+
+## 3. Lectura de Google Sheets — Tarea 3
 
 ### 3.1 Acceso
-- **Cuenta de servicio** de Google Cloud con permiso **Lector** solo sobre `STOCK OSASUN-CLAUDE`, alcance `spreadsheets.readonly`. No puede escribir aunque el código lo intentara. Revocable quitándola de «Compartir».
-- Su clave se guarda como **secreto de Supabase** (nunca en el repositorio), una por entorno (§10, condición 5).
+- **Cuenta de servicio** `osasun-lector-sheets@osasun-operations.iam.gserviceaccount.com` con permiso **Lector** solo sobre `STOCK OSASUN-CLAUDE` (creada y comprobada, P5), alcance `spreadsheets.readonly`.
+- Su clave se crea al programar la lectura y se guarda como **secreto de Supabase** (nunca en el repositorio).
 
-### 3.2 Pestañas confirmadas (lectura del 26/10/2026)
-Título real del documento: **`STOCK OSASUN-CLAUDE`** (con guion). Pestañas:
-
-| Pestaña | Uso en la V1 | Observación |
-| --- | --- | --- |
-| `PRINCIPAL` | Catálogo, cajas en almacén (col. R), granel (col. R, fila del producto) | Formato por bloques; «V2 » con espacio final. |
-| `CONTEO DE CAJAS TOTAL` | Contador y consumo (R3) | Grupos EXTERIOR, INVERNADERO, INDOOR, HIGH TECH, CBDX. |
-| `ALMACEN` | Categoría de cada producto | Sin tilde. El grupo se llama «INDOOR POPS». |
-| `STOCK ALMACEN DIARIO` | No se lee en la V1 | **Sin tilde.** No tiene fecha: R5 (V1.1) necesitará otra forma de saber si se actualizó (fecha de modificación del archivo o una celda con la fecha). |
-| `VENTAS SKU`, `TOTAL GENERAL`, `COMPARATIVO MEDIA TIENDAS` | No se leen | |
-| `BILBAO`, `ALGORTA`, `DONOSTI`, `BARAKALDO`, `RENTERIA`, `BASAURI`, `LAUDIO`, `PORTU`, `GIPUZKOA` | No se leen en la V1 | Dan los nombres de las tiendas. `LAUDIO` = Durango. |
-
-Los nombres se guardan en `configuracion`, no en el código. Pido al coordinador que actualice §9 de `ESTADO_DEL_SISTEMA.md` con esta tabla (no lo cambio yo).
+### 3.2 Pestañas (confirmadas, §9)
+`PRINCIPAL` (catálogo, cajas y granel en la columna R), `CONTEO DE CAJAS TOTAL` (contador y consumo; «INVERNADERO TOTAL» e «INDOOR TOTAL»), `ALMACEN` (categorías; grupo «INDOOR POPS») y `GIPUZKOA` (envío). `STOCK ALMACEN DIARIO` (sin tilde, sin fecha) no se lee en la V1. Los nombres se guardan en `configuracion`.
 
 ### 3.3 Cuándo se lee
-- Al pegar el reparto o el envío (R1).
-- Al pedir la lista de stock, una vez por turno (R3).
-- Nada más: no hay lecturas periódicas. Una sola llamada por vez (lectura en bloque de las 3 pestañas), muy por debajo de los límites gratuitos de Google.
+Al pegar el reparto o el envío (R1) y al pedir la lista de stock, una vez por turno (R3). Nada más.
 
 ### 3.4 Si falla
-- Se espera como máximo 10 s y se reintenta una vez.
-- Si sigue fallando: el cálculo **no se hace** y la pantalla dice por qué (`SHEETS_NO_DISPONIBLE`). Las tareas, problemas, incidencias y cierres siguen funcionando (principio 8). No se usan datos viejos ni inventados.
-- Si la hoja ha cambiado de forma (pestaña renombrada, columnas movidas, encabezados distintos): `ESTRUCTURA_SHEETS_CAMBIADA`. La lectura se hace **buscando encabezados y nombres**, no celdas fijas, para que añadir una fila de producto no rompa nada.
-- Cada lectura (correcta o no) queda en `lecturas_sheets` y el panel de Administración muestra el último error.
+Máximo 10 s y un reintento. Si sigue fallando, el cálculo **no se hace** y la pantalla dice por qué; el resto de la app sigue funcionando (principio 8). Si la hoja cambió de forma: `ESTRUCTURA_SHEETS_CAMBIADA`. La lectura busca encabezados y nombres, no celdas fijas. Cada lectura queda en `lecturas_sheets`.
 
-## 4. Entornos y forma de trabajo
+## 4. Entornos y forma de trabajar
 
 | Entorno | Qué es | Quién lo usa |
 | --- | --- | --- |
-| **Pruebas** | Proyecto Supabase `osasun-pruebas` con datos de prueba | Agente de base de datos y Lovable (siempre) |
-| **Producción** | Proyecto Supabase `osasun-produccion` | Solo tras aprobar la puesta en marcha |
+| **Pruebas** | Proyecto Supabase `osasun-pruebas` (ref `rvypswuoafnjwqdwxjvo`, Irlanda), con 2 usuarios ficticios | Agente de base de datos (por el conector de Supabase, sin claves) y Lovable |
+| **Producción** | Se crea cuando se apruebe la puesta en marcha | — |
 
-- Todo cambio de base de datos es una **migración** en el repositorio (`supabase/migrations`), revisada por PR y aplicada primero en pruebas. A producción solo pasa la misma migración ya probada.
-- Pruebas automáticas en el repositorio: R1 y R3 (los casos de `REGLAS_CALCULO.md`) y el motor (estados, idempotencia, permisos, conflictos, arrastres), con una semana simulada de lunes a viernes.
-- Pruebas puede leer el `STOCK OSASUN-CLAUDE` real (solo lectura, sin riesgo) para la semana en paralelo; las pruebas automáticas usan copias fijas de los datos.
+- **Migraciones** en `supabase/migrations/`: se escriben en el repositorio y **después** se aplican a pruebas. El nombre de cada archivo lleva la versión con la que Supabase la registró, para que coincidan.
+- **Datos solo de pruebas** en `supabase/seed_pruebas.sql` (usuarios ficticios, horario del operario, `entorno = pruebas`). Nunca en producción.
+- **Pruebas automáticas** en `supabase/tests/` (ver `supabase/tests/LEEME.md`). Cada una corre dentro de una transacción que se deshace al final: la base queda como estaba. La 00 compara la «huella» de la estructura de pruebas con la de una base creada solo con las migraciones.
 
-## 5. Permisos
+## 5. Permisos ✅
 
-- **RLS activado en todas las tablas.** Lectura según `MODELO_DATOS.md` §6.
-- **Nadie escribe directamente en tablas**: se retiran los permisos de insertar, modificar y borrar a los usuarios. Toda escritura pasa por funciones que comprueban el rol al empezar.
-- **El operario no puede ver ni usar el panel**: las funciones de Administración devuelven `NO_AUTORIZADO` y las tablas de cierres y registro no le son visibles. Se prueba con su propio usuario.
-- **Lovable usa solo la clave pública**. La clave maestra (service role) solo existe como secreto de las funciones del servidor.
-- Usuarios: el agente de base de datos da de alta a las dos personas por invitación, con la aprobación del propietario. Registro abierto desactivado.
+- **RLS activado en todas las tablas.** Una política de lectura por tabla (`MODELO_DATOS.md` §6). **Ninguna política de escritura.**
+- **Nadie escribe directamente en tablas**: `anon` y `authenticated` no tienen permisos de insertar, modificar ni borrar. Toda escritura pasa por funciones `SECURITY DEFINER` del esquema `motor` que comprueban quién llama y su rol.
+- `anon` (sin sesión) no puede leer ninguna tabla ni usar ninguna función.
+- Lo que nace después (tablas o funciones nuevas) nace cerrado: los privilegios por defecto están retirados.
+- Todas las funciones fijan `search_path` vacío.
+- **Lovable usa solo la clave pública**. La clave maestra solo existe como secreto de las funciones del servidor.
+- Probado con cada rol en la prueba 04 (operario, Administración, usuario sin ficha y sin sesión).
 
 ## 6. Copias de seguridad
-
 - **Producción en plan Pro:** copia diaria automática con 7 días de retención.
-- La estructura está entera en el repositorio (migraciones), así que se puede reconstruir desde cero.
-- Antes de la puesta en marcha se hace **una prueba de restauración** en pruebas.
+- La estructura está entera en el repositorio (migraciones): se puede reconstruir desde cero.
+- Antes de la puesta en marcha, una prueba de restauración en pruebas.
 - El stock no necesita copia: está en Google Sheets.
 
 ## 7. Coste estimado de Supabase
@@ -165,61 +165,57 @@ Los nombres se guardan en `configuracion`, no en el código. Pido al coordinador
 | Concepto | Coste |
 | --- | --- |
 | Hasta la puesta en marcha (solo pruebas, plan gratuito) | 0 € |
-| Producción: plan Pro (incluye la copia diaria y el cómputo de un proyecto pequeño) | ~25 $/mes |
-| Pruebas en la misma organización tras la puesta en marcha | ~10 $/mes más (o 0 € si se deja en plan gratuito, que se pausa tras una semana sin uso) |
+| Producción: plan Pro | ~25 $/mes |
+| Pruebas en la misma organización tras la puesta en marcha | ~10 $/mes más (o 0 € en plan gratuito, que se pausa tras una semana sin uso) |
 | Cuenta de servicio de Google y API de Sheets | 0 € |
-| **Total** | **~25–35 $/mes (~23–33 €)**, dentro de los ~100 €/mes previstos |
+| **Total** | **~25–35 $/mes (~23–33 €)** |
 
-Precios públicos según lo que conozco; se confirman en la web de Supabase en el momento de contratar. No contrato nada: lo hace el propietario.
+Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 
-## 8. Decisiones que necesito del propietario (imprescindibles)
+## 8. Decisiones tomadas (revisión del PR #1, 26/10/2026)
 
-| # | Decisión | Mi propuesta |
-| --- | --- | --- |
-| 1 | **D1 — Redondeo de R3** | Hacia arriba (garantiza el +35 %). |
-| 2 | **D2 — Cierre** | Uno al terminar la jornada (18:30 L–J, 13:00 V). La tabla admite los dos, se puede cambiar. |
-| 3 | **D3 — Canal del cierre** | Correo a la cuenta de Administración (servicio de envío con plan gratuito; requiere crear esa cuenta) o notificación de la app instalada en el móvil (sin servicio extra, pero hay que instalarla como app). Necesito saber qué móvil usa Administración. |
-| 4 | **Duraciones para detectar conflictos** | Que Administración dé un tiempo aproximado de producción del reparto y bolsas, y un tiempo por defecto para sus tareas (propongo 15 min). Alternativa en «Propuestas»: añadir «cuánto lleva» (opcional) a Nueva tarea. |
-| 5 | **Cuentas** | Que el propietario cree (o autorice crear) el proyecto Supabase de pruebas (gratuito) y la cuenta de servicio de Google, y me dé sus claves como secretos del entorno. Yo no creo cuentas. |
-
-Además, las **dudas de negocio** listadas en `MODELO_DATOS.md` §7, `CONTRATOS.md` §7 y `REGLAS_CALCULO.md` §5. Las imprescindibles para empezar a construir son: tiendas y su forma de escribirse en el reparto, minis, FIFO en Invernadero/Indoor y qué pasa al volver a pegar un reparto.
-
-**Otras dudas del motor:**
-- Cuando sale Administración, ¿a qué hora sale? (marca la hora límite de producción y bolsas).
-- Envío a Gipuzkoa/Durango el viernes por la mañana: ¿a qué hora se revisa?
-- Problema sin respuesta: ¿los 30 minutos cuentan desde el WhatsApp o desde que se abrió el problema? (provisional: desde el WhatsApp).
-- Días festivos o ausencias: ¿cómo los indica Administración? (provisional: sin jornada si no hay turnos; fuera de la V1 salvo que se pida).
+| Tema | Decisión |
+| --- | --- |
+| D1 Redondeo R3 | Hacia arriba |
+| D2 Cierre | Uno por turno |
+| D3 Canal | Correo |
+| Duraciones | §2.4 (§6.10 de `ESTADO_DEL_SISTEMA.md`); duración orientativa obligatoria en las tareas de Administración (P-T1) |
+| Tiendas y envío | Como en la hoja; Durango = DURANGO o LAUDIO; envío en un bloque GIPUZKOA que va a Rentería |
+| Minis · FIFO · vapers | Solo MINIBUDS MIX 10g · lo decide el operario · fuera de R3 |
+| Reparto corregido | Sustituye y conserva lo hecho (`REGLAS_CALCULO.md` §2.6) |
+| Obligatorias no terminadas | Se arrastran, salvo las ligadas a hora o turno |
+| Pedido de cliente | Lo mete quien lo recibe |
+| Bolsas a las 10:45 | Con «Retrasar 15/30 min» y aviso a quien sale |
+| Indicador del viernes | Solo «limpieza hecha» |
+| Encaje en bolsas · 30 min del problema | Al terminar la tienda · desde el WhatsApp |
+| P-R1a · P-R1b · P-R1c · P-R3a | Aprobada · aprobada · rechazada · más adelante |
 
 ## 9. Riesgos
 
 | Riesgo | Efecto | Medida |
 | --- | --- | --- |
-| Cambia la forma de la hoja (filas, nombres, pestañas) | Cálculos que fallan | Lectura por encabezados; validación de estructura; error claro, nunca datos inventados. |
-| Nombres irregulares en PRINCIPAL (§9, P2) | Repartos rechazados | Errores por línea; propuesta P-R1c; limpieza P2. |
+| Cambia la forma de la hoja | Cálculos que fallan | Lectura por encabezados; validación; error claro, nunca datos inventados. |
+| Nombres irregulares en PRINCIPAL (P2) | Repartos rechazados | Errores por línea; limpieza P2. |
 | Sheets sin actualizar (recuento no hecho) | Listas con datos de ayer | Se muestra la hora de los datos; R5 en la V1.1. |
-| Duraciones desconocidas | Aviso de conflicto impreciso | Decisión 4; ajustar tras la semana en paralelo. |
-| Diferencias de formato entre pestañas (T BALLS, KRUSH) | Referencias con aviso | Duda 9 de `REGLAS_CALCULO.md`. |
+| Duraciones aproximadas | Aviso de conflicto impreciso | Ajustar tras la semana en paralelo. |
 | Clave de la cuenta técnica expuesta | Lectura del stock por terceros (no escritura) | Secreto del entorno; revocable al momento. |
 | Plan gratuito pausado en producción | App parada | Producción en plan Pro. |
+| Contraseñas filtradas (aviso de seguridad de Supabase Auth) | Un usuario podría elegir una contraseña conocida | La protección solo existe en el plan Pro: activarla en producción (o entrar sin contraseña). Decisión pendiente. |
 
 ## 10. Trazabilidad con los criterios de aceptación (§13)
 
-| Criterio | Dónde está en el diseño |
-| --- | --- |
-| Jornada (cada tarea el día y la hora correctos) | Plantillas (§2.6), generación (§2.1), regla de selección (§2.3); prueba de semana simulada (§4). |
-| Duplicados | Restricciones únicas e `id_cliente` (`MODELO_DATOS.md` §5); generación idempotente (§2.1). |
-| Reparto (5 repartos reales) | R1 (`REGLAS_CALCULO.md` §2), casos R1-01…16; `repartos.texto_original` + `lecturas_sheets` para comparar cada número. |
-| Stock (+35 %) | R3 (`REGLAS_CALCULO.md` §3), casos R3-01…18, orden por consumo (§3.5). |
-| Tareas de Administración | Punto de encaje (§2.3) y conflicto al lanzar (§2.4); `crear_tarea_admin`. |
-| Problemas (5 min y 30 min) | §2.5; `problemas` con tiempos; `abrir_problema`, `problema_llamada`, `resolver_problema`. |
-| Cierre | `cierres` + `generar_cierre`; canal según D3. |
-| Permisos | §5: RLS, sin escritura directa, funciones con comprobación de rol; cuenta de servicio de solo lectura (§3.1). |
-| Dispositivos | Mismas funciones para Chromebook y Pixel; Realtime para tareas nuevas. Las pantallas son de Lovable. |
-| Uso real | Contratos simples (una tarea activa, tres botones); depende de las pantallas. |
-
-## 11. Propuestas (no aprobadas)
-
-| # | Propuesta | Motivo |
+| Criterio | Dónde está | Probado |
 | --- | --- | --- |
-| P-T1 | Añadir a «Nueva tarea» un campo opcional «cuánto lleva». | Mejora la detección de conflictos sin adivinar. |
-| P-T2 | Las de `REGLAS_CALCULO.md` §4 (P-R1a, P-R1b, P-R1c, P-R3a). | |
+| Jornada | Plantillas (§2.6), generación (§2.1), elección (§2.3) | ✅ 01 (semana simulada), 05 |
+| Duplicados | Restricciones únicas, candado, `id_cliente` | ✅ 02, 06 |
+| Reparto | R1 (`REGLAS_CALCULO.md` §2), casos R1-01…21 | Tarea 3 |
+| Stock (+35 %) | R3 (§3), casos R3-01…20 | Tarea 3 |
+| Tareas de Administración | Encaje (§2.3), conflicto (§2.4) | Orden ✅ 05; conflicto, Tarea 4 |
+| Problemas | §2.5 | Escalón 2 ✅ 05; flujo, Tarea 4 |
+| Cierre | `cierres` + correo | Tarea 4 |
+| Permisos | §5 | ✅ 04 |
+| Dispositivos · Uso real | Mismas funciones para Chromebook y Pixel; pantallas de Lovable | Con las pantallas |
+
+## 11. Propuestas
+
+Ninguna pendiente en este documento.
