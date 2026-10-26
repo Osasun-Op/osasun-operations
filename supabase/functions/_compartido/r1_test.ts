@@ -135,3 +135,25 @@ Deno.test("Catálogo: «V2 » con espacio final y productos sin formato; nombres
   assertEquals(entradas.map((e) => `${e.producto}|${e.formato}|${e.almacen}`), ["V2|4g|25", "FORTE||107", "V 2|4 g|1"]);
   assertEquals(ambiguas, ["V24G"]);
 });
+
+Deno.test("R1-22 envío antes del recuento: se apartan las cajas del reparto de hoy", () => {
+  // V2 4g: 25 en almacén, el reparto de hoy pidió 20 → quedan 5 para el envío; se piden 8 → faltan 3.
+  const r = r1(["GIPUZKOA", "8x V2 4g", "1x BZ1 4g"], {
+    tipo: "envio",
+    apartadoReparto: [{ producto: "V2", formato: "4g", pedido: 20 }, { producto: "BZ1", formato: "4g", pedido: 9 }],
+  });
+  const v2 = r.produccion.find((p) => p.producto === "V2")!;
+  assertEquals([v2.en_almacen, v2.apartado_reparto, v2.faltan], [5, 20, 3]);
+  // BZ1 4g: 7 en almacén, 9 apartadas → 0 disponibles; se pide 1 → falta 1.
+  assertEquals(faltan(r)["BZ1 4g"], 1);
+});
+
+Deno.test("R1-23 envío después del recuento: no se descuenta nada (la hoja ya lo refleja)", () => {
+  const r = r1(["GIPUZKOA", "8x V2 4g"], { tipo: "envio", apartadoReparto: [] });
+  assertEquals([r.produccion[0].en_almacen, r.produccion[0].faltan], [25, 0]);
+});
+
+Deno.test("R1-24 en un reparto nunca se aparta nada", () => {
+  const r = r1(["SALE: YO", "BILBAO", "8x V2 4g"], { apartadoReparto: [{ producto: "V2", formato: "4g", pedido: 20 }] });
+  assertEquals([r.produccion[0].apartado_reparto, r.produccion[0].faltan], [0, 0]);
+});
