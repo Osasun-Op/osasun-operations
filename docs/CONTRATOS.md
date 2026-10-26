@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 0.2 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1) con las decisiones de la revisión. ✅ = publicado en el proyecto de pruebas (Tarea 2).
+**Versión:** 0.3 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 y 3).
 
 > Esto es lo único que las pantallas (Lovable) pueden usar. Cualquier dato o función nueva se pide al coordinador (§11 de `ESTADO_DEL_SISTEMA.md`).
 
@@ -35,10 +35,10 @@
 | `mi_perfil` | BD | ✔ | ✔ | ✅ Tarea 2 |
 | `tarea_activa` | BD | ✔ | — | ✅ Tarea 2 |
 | `iniciar_tarea` · `terminar_tarea` · `anotar_motivo` | BD | ✔ | — | ✅ Tarea 2 |
-| `iniciar_elemento` · `terminar_elemento` · `marcar_cajas` | BD | ✔ | — | Tarea 3 |
-| `pegar_reparto` · `lista_stock` | Servidor | ✔ | ✔ (`lista_stock`, consulta) | Tarea 3 |
-| `retrasar_salida` | BD | ✔ | — | Tarea 3 |
-| `registrar_evento` | BD | ✔ | ✔ | Tarea 3 |
+| `iniciar_elemento` · `terminar_elemento` · `marcar_cajas` | BD | ✔ | — | ✅ Tarea 3 |
+| `pegar_reparto` · `lista_stock` | Servidor | ✔ | ✔ (`lista_stock`, consulta) | ✅ Tarea 3 |
+| `retrasar_salida` | BD | ✔ | — | Pendiente (no estaba en la Tarea 3) |
+| `registrar_evento` | BD | ✔ | ✔ | Pendiente (no estaba en la Tarea 3) |
 | `abrir_problema` · `problema_llamada` · `resolver_problema` | BD | ✔ | ✔ (`resolver_problema`) | Tarea 4 |
 | `iniciar_incidencia` · `terminar_incidencia` | BD | ✔ | — | Tarea 4 |
 | `crear_tarea_admin` · `cancelar_tarea` · `estado_actual` | BD | — | ✔ | Tarea 4 |
@@ -72,8 +72,8 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 ```
 - `jornada` es `null` si hoy no trabaja; `tarea` es `null` si ahora no hay nada que hacer (antes del turno, entre turnos).
 - `siguiente`: una línea con lo que viene después. Si antes llega una tarea con hora, se anuncia esa con su hora.
-- `pregunta`: si la jornada necesita una respuesta para seguir (ej. el reparto no traía `SALE:`): `{ "tipo": "sale", "opciones": ["operario","administracion"] }`. Siempre `null` hasta la Tarea 3.
-- `elementos`: vacío hasta la Tarea 3: `[ { id, producto, formato, categoria, destino, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`.
+- `pregunta`: reservado; hoy siempre `null`. La pregunta «¿Quién sale hoy?» la devuelve `pegar_reparto` (`FALTA_SALE`).
+- `elementos` ✅: `[ { id, tipo, producto, formato, categoria, destino, destino_id, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla).
 - La elección sigue `PLAN_TECNICO.md` §2.3. **Nunca devuelve avisos de tiempo ni de presión** (§6.7): solo tareas.
 - Solo para el operario: Administración recibe `NO_AUTORIZADO`.
 
@@ -84,28 +84,32 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 - `terminar_tarea`: en_curso → hecha. `resultado` (texto corto, opcional) va al cierre.
   - Repetirla no es error: devuelve la tarea con su primer final.
   - `ESTADO_NO_VALIDO` si no está en curso.
-  - Tarea 3: si la tarea tiene elementos sin terminar, `ELEMENTOS_PENDIENTES`, salvo que se mande `motivo`.
+  - Si la tarea tiene elementos sin terminar: `ELEMENTOS_PENDIENTES` (con `pendientes`), salvo que se mande `motivo`. ✅
+  - Una tarea con lista se cierra sola cuando se termina su último elemento; no hace falta pulsar «Terminada».
 - **Salida (ambas):** `{ "tarea": {...}, "tarea_activa": {...} }` (la nueva respuesta de `tarea_activa`).
 
 ### 3.4 `anotar_motivo(tarea_id, motivo)` ✅
 Para que una tarea que no se va a hacer conste en el cierre con su motivo. No cambia el estado. `DATOS_NO_VALIDOS` si el motivo está vacío; `ESTADO_NO_VALIDO` si la tarea ya está cerrada. **Salida:** `{ "tarea": {...} }`.
 
-### 3.5 `iniciar_elemento(elemento_id)` · `terminar_elemento(elemento_id)` · `marcar_cajas(elemento_id, cantidad_hecha)` — Tarea 3
+### 3.5 `iniciar_elemento(elemento_id)` · `terminar_elemento(elemento_id)` · `marcar_cajas(elemento_id, cantidad_hecha)` ✅
 - `iniciar_elemento`: el operario elige la referencia o la tienda (él decide el orden, §8). Inicia también la tarea si estaba pendiente.
 - `terminar_elemento`: **punto de encaje** (§6.4). En producción, al terminar cada referencia; **en bolsas, al terminar la tienda entera** (decidido). Si hay pendiente una tarea con hora ya vencida o una urgente, la tarea con lista vuelve a `pendiente` (conservando lo hecho) y la respuesta trae la nueva `tarea_activa`.
 - `marcar_cajas`: en las bolsas, fija cuántas cajas lleva metidas (valor absoluto, de 0 a `cantidad`).
-- **Errores:** `CANTIDAD_FUERA_DE_RANGO`, `OTRO_ELEMENTO_EN_CURSO`.
+- `terminar_elemento` es para referencias de producción; en bolsas se usa `marcar_cajas` (si no: `DATOS_NO_VALIDOS`).
+- Repetir cualquiera de las tres no es error: devuelve el estado ya alcanzado.
+- **Salida:** `{ "elemento": { id, estado, cantidad, cantidad_hecha }, "tarea_activa": {...} }`.
+- **Errores:** `CANTIDAD_FUERA_DE_RANGO`, `OTRO_ELEMENTO_EN_CURSO`, `OTRA_TAREA_EN_CURSO`, `NO_ENCONTRADO`, `ESTADO_NO_VALIDO`.
 
-### 3.6 `retrasar_salida(minutos)` — Tarea 3
+### 3.6 `retrasar_salida(minutos)` — pendiente
 Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas listas en la mesa de salida a las 10:45, §4).
 - **Entrada:** `minutos` (15 o 30) e `id_cliente`.
 - **Efecto:** mueve la hora límite de las bolsas y la hora de salida, avisa en el momento a quien sale de la nueva hora (si es Administración, correo corto «Salida retrasada a las HH:MM» y aviso en `estado_actual`), y lo registra. El cierre lo cruza con las cajas del reparto y las incidencias de la mañana.
 - **Salida:** `{ "nueva_hora_salida": "11:00", "tarea_activa": {...} }`.
 
-### 3.7 `registrar_evento(id_cliente, tipo, detalle)` — Tarea 3
+### 3.7 `registrar_evento(id_cliente, tipo, detalle)` — pendiente
 `llega_mercancia`, `pedido_cliente` (botón «Pedido de cliente»; Administración también puede crearlo como tarea), `no_quedan_vapers`. Crea la tarea correspondiente. **Salida:** la tarea creada y la nueva `tarea_activa`.
 
-### 3.8 `pegar_reparto` (función del servidor) — Tarea 3
+### 3.8 `pegar_reparto` (función del servidor) ✅
 - **Entrada:** `{ texto, tipo: "reparto"|"envio", sale?: "operario"|"administracion", confirmar_fecha?: true }`
 - **Proceso:** lee Sheets, interpreta el texto según `REGLAS_CALCULO.md` §2 y, si no hay errores, crea o actualiza las tareas «Producción del reparto» y «Bolsas» con sus elementos. Si ya había un reparto aceptado hoy, lo sustituye conservando lo hecho (§5 R1).
 - **Salida correcta:**
@@ -126,10 +130,17 @@ Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas 
 | `FECHA_NO_ES_HOY` | La fecha de `REPARTO dd/mm` no es hoy. La pantalla pide confirmación y repite con `confirmar_fecha: true`. |
 | `SHEETS_NO_DISPONIBLE` | No se ha podido leer Sheets. No se calcula nada. |
 | `ESTRUCTURA_SHEETS_CAMBIADA` | La hoja no tiene la forma esperada. No se calcula nada. |
-| `REPARTO_YA_PEGADO` | Mismo texto ya aceptado hoy: devuelve el resultado anterior (no es fallo). |
+| `REPARTO_YA_PEGADO` | Mismo texto ya aceptado hoy: **no es un error**; devuelve el resultado anterior con `ya_pegado: true` y `aviso: { codigo: "REPARTO_YA_PEGADO" }`. |
+| `CATALOGO_AMBIGUO` | Hay nombres repetidos en PRINCIPAL. No se calcula nada. |
+| `ERROR_INTERNO` | Fallo inesperado del servidor (HTTP 500). |
 
-### 3.9 `lista_stock` (función del servidor) — Tarea 3
-Lista de producción para el stock del almacén (R3, cola A). Se calcula una vez por turno. Salida: la tarea con sus elementos ordenados, `avisos` y `datos_leidos_en`. Errores: `SHEETS_NO_DISPONIBLE`, `ESTRUCTURA_SHEETS_CAMBIADA`.
+### 3.9 `lista_stock` (función del servidor) ✅
+Lista de producción para el stock del almacén (R3, cola A). Se calcula una vez por turno.
+- **Salida (operario):** `{ tarea, ya_calculado, lote, faltas, avisos, excluidos, datos_leidos_en }`. `faltas` = productos sin granel (se crea la tarea «Avisa a Administración: falta X»); `avisos` = datos que no se han podido calcular; `excluidos` = minis y vapers.
+- **Salida (Administración, consulta):** `{ lista, faltas, avisos, excluidos, datos_leidos_en }`, sin guardar nada.
+- **Errores:** `SHEETS_NO_DISPONIBLE`, `ESTRUCTURA_SHEETS_CAMBIADA`, `SIN_TAREA`, `SIN_JORNADA`.
+
+**Quién llama a las funciones del servidor:** la sesión del usuario (cabecera `Authorization`, como hace `supabase.functions.invoke`) o una solicitud interna de un solo uso creada por la base de datos (cabecera `x-solicitud`). Las funciones comprueban la sesión ellas mismas.
 
 ### 3.10 Problemas e incidencias — Tarea 4
 | Función | Entrada | Efecto |
@@ -172,7 +183,9 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes), enviad
 | --- | --- | --- |
 | `motor.generar_jornada(persona, fecha)` ✅ | Tarea programada de las 06:00 y `tarea_activa` | Crea la jornada, arrastra lo pendiente y crea las tareas del día. Idempotente. |
 | `motor.generar_cierre(jornada, turno)` | Tarea programada al final de cada turno | Congela el cierre y lo envía por correo. Idempotente. |
-| `prueba.fijar_condicion(jornada, condicion, valor)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Simula `SALE:`, envío, reparto/envío pegado y eventos hasta que tengan su función real. Nadie tiene permiso para usarla. |
+| `prueba.fijar_condicion(jornada, condicion, valor)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Simula `SALE:`, envío y eventos hasta que tengan su función real. Nadie tiene permiso para usarla. |
+| `prueba.invocar(funcion, persona, cuerpo)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Llama a una función del servidor desde la base de datos con una solicitud interna. |
+| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_guardar_stock` · `servidor_canjear_solicitud` ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
 
 ## 6. Trazabilidad con las pantallas de §8
 

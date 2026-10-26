@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 0.2 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1) con las decisiones de la revisión. Tarea 2 construida en pruebas: estructura base, permisos y jornada automática.
+**Versión:** 0.3 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | **Postgres de Supabase** | Tablas, permisos (RLS) y funciones: motor de tareas, problemas, incidencias, cierres. | ✅ base (Tarea 2) |
 | **Supabase Auth** | Usuarios (Administración y operario). Altas solo por invitación. | En pruebas: 2 usuarios ficticios |
-| **2 funciones del servidor (Edge Functions)** | `pegar_reparto` y `lista_stock`: las únicas que leen Google Sheets (R1 y R3). | Tarea 3 |
+| **2 funciones del servidor (Edge Functions)** | `pegar_reparto` y `lista_stock`: las únicas que leen Google Sheets (R1 y R3). La lectura (`google.ts`, `hoja.ts`) está separada del cálculo (`r1.ts`, `r3.ts`). | ✅ Tarea 3 |
 | **Tareas programadas (pg_cron)** | Generar la jornada a las 06:00 y los cierres de cada turno. | ✅ jornada (Tarea 2) |
 | **Correo** | Cierres por turno y aviso de retraso de la salida (D3). | Se crea al programar el cierre (Tarea 4) |
 | **Realtime de Supabase** | Que una tarea nueva aparezca sola en el Chromebook o el Pixel. | Con la primera pantalla que lo use |
@@ -57,7 +57,7 @@ Solo tareas disponibles (su hora o su turno ya ha llegado), no bloqueadas y con 
 
 1. La tarea **en curso** (solo puede haber una).
 2. **«Llama a Administración»** por un problema sin resolver cuya nueva llamada ha llegado (§6.6).
-3. **Urgentes de Administración**.
+3. **Urgentes**: de Administración o por plantilla (la recepción de mercancía, que se atiende en el momento). Entre urgentes, por orden de llegada.
 4. **Tareas con hora** ya vencida (la más temprana primero).
 5. **Obligatorias y de Administración con hora límite**, por la hora límite más próxima (empate: la obligatoria). Las obligatorias sin hora límite van detrás.
 6. **De Administración «hoy»** sin hora.
@@ -95,18 +95,18 @@ Obligatoria/flexible según §6.3; lo que no aparece allí va como flexible. Tod
 | `bolsas` (bolsas listas en la mesa de salida; retraso 15/30 min en Tarea 3) | L–V | antes de 10:45 | reparto_pegado | Sí | nada |
 | `salida_reparto` (~2 h) | L–V | 10:45 | sale_operario | Sí | nada |
 | `efectivo_reporte` (tras la salida) | L–V | — | sale_operario | Sí | nada |
-| `preparar_envio_viernes` | V | mañana | envio_pegado | Sí | nada |
-| `nacex_viernes` | V | mañana | hay_envio | Sí | nada |
+| `preparar_envio_viernes` (con sus cajas) | V | antes de 10:45 | envio_pegado | Sí | nada |
+| `nacex_viernes` (lo lleva quien sale, de camino) | V | 10:45 | hay_envio + sale_operario | Sí | nada |
 | `recuento_manana` (15 min) | L–V | 12:45 · 13:00 | — | Sí | nada |
 | `revisar_envio` (el jueves decide también el viernes) | L–J | 15:30 | — | No | nada |
-| `minis` (~35 min) | L | tarde | — | Sí | arrastrar |
+| `minis` (duración por conocer) | L | tarde | — | Sí | arrastrar |
 | `resinas` (comprobar antes PRINCIPAL, R8) | M | tarde | — | Sí | arrastrar |
 | `control_materiales` | J | tarde · antes de 17:55 | — | Sí | arrastrar |
 | `preparar_envio` | L–J | tarde · antes de 18:10 | envio_pegado | Sí | nada |
 | `recuento_tarde_envio` (15 min) | L–J | 17:55 · 18:10 | hay_envio | Sí | nada |
 | `nacex_salida` (vuelta ~18:25) | L–J | 18:10 | hay_envio | Sí | nada |
 | `recuento_tarde` (15 min) | L–J | 18:15 · 18:30 | no_hay_envio | Sí | nada |
-| `recepcion_mercancia` | L–V | en el momento | llega_mercancia | Sí | arrastrar |
+| `recepcion_mercancia` (urgente: escalón 3) | L–V | en el momento | llega_mercancia | Sí | arrastrar |
 | `pedido_cliente` | L–V | — | pedido_cliente | Sí | arrastrar |
 | `tirada_vapers` (50, 2 tipos) | L–V | — | no_quedan_vapers | No | arrastrar |
 | `cola_stock` (A) | L–V | — | cola libre | No | recalcular |
@@ -118,11 +118,11 @@ Si sale Administración, el tiempo hasta las 12:45 queda para la cola de tiempo 
 ### 2.7 Retraso de la salida (§4, decidido) — Tarea 3
 La tarea de bolsas (a las 10:45 en la mesa de salida) tiene los botones «Retrasar 15 min» y «Retrasar 30 min» (`retrasar_salida`). Cada retraso mueve la hora de salida, avisa en el momento a quien sale (correo y panel si es Administración), queda registrado y el cierre lo cruza con las cajas del reparto y las incidencias de la mañana.
 
-## 3. Lectura de Google Sheets — Tarea 3
+## 3. Lectura de Google Sheets ✅ (Tarea 3)
 
 ### 3.1 Acceso
 - **Cuenta de servicio** `osasun-lector-sheets@osasun-operations.iam.gserviceaccount.com` con permiso **Lector** solo sobre `STOCK OSASUN-CLAUDE` (creada y comprobada, P5), alcance `spreadsheets.readonly`.
-- Su clave se crea al programar la lectura y se guarda como **secreto de Supabase** (nunca en el repositorio).
+- Su clave está guardada como **secreto de las funciones del servidor** en pruebas: `GOOGLE_CUENTA_TECNICA` (la escribió el propietario en el panel; nunca pasa por el chat ni por el repositorio).
 
 ### 3.2 Pestañas (confirmadas, §9)
 `PRINCIPAL` (catálogo, cajas y granel en la columna R), `CONTEO DE CAJAS TOTAL` (contador y consumo; «INVERNADERO TOTAL» e «INDOOR TOTAL»), `ALMACEN` (categorías; grupo «INDOOR POPS») y `GIPUZKOA` (envío). `STOCK ALMACEN DIARIO` (sin tilde, sin fecha) no se lee en la V1. Los nombres se guardan en `configuracion`.
@@ -141,6 +141,7 @@ Máximo 10 s y un reintento. Si sigue fallando, el cálculo **no se hace** y la 
 | **Producción** | Se crea cuando se apruebe la puesta en marcha | — |
 
 - **Migraciones** en `supabase/migrations/`: se escriben en el repositorio y **después** se aplican a pruebas. El nombre de cada archivo lleva la versión con la que Supabase la registró, para que coincidan.
+- Las migraciones que el conector marca como destructivas (borran algo) piden una confirmación que no llega a la app del propietario. Esas las ejecuta el propietario en el editor SQL de Supabase con el archivo del repositorio; después el agente las anota en el historial y comprueba la huella (prueba 00).
 - **Datos solo de pruebas** en `supabase/seed_pruebas.sql` (usuarios ficticios, horario del operario, `entorno = pruebas`). Nunca en producción.
 - **Pruebas automáticas** en `supabase/tests/` (ver `supabase/tests/LEEME.md`). Cada una corre dentro de una transacción que se deshace al final: la base queda como estaba. La 00 compara la «huella» de la estructura de pruebas con la de una base creada solo con las migraciones.
 
@@ -208,8 +209,8 @@ Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 | --- | --- | --- |
 | Jornada | Plantillas (§2.6), generación (§2.1), elección (§2.3) | ✅ 01 (semana simulada), 05 |
 | Duplicados | Restricciones únicas, candado, `id_cliente` | ✅ 02, 06 |
-| Reparto | R1 (`REGLAS_CALCULO.md` §2), casos R1-01…21 | Tarea 3 |
-| Stock (+35 %) | R3 (§3), casos R3-01…20 | Tarea 3 |
+| Reparto | R1 (`REGLAS_CALCULO.md` §2), casos R1-01…21 | ✅ unitarias R1 y 07; reparto real con la hoja |
+| Stock (+35 %) | R3 (§3), casos R3-01…20 | ✅ unitarias R3 y 07; lista real del 26/10 en el PR #3 |
 | Tareas de Administración | Encaje (§2.3), conflicto (§2.4) | Orden ✅ 05; conflicto, Tarea 4 |
 | Problemas | §2.5 | Escalón 2 ✅ 05; flujo, Tarea 4 |
 | Cierre | `cierres` + correo | Tarea 4 |

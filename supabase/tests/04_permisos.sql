@@ -58,8 +58,8 @@ declare
   v_otro uuid := (select tarea_otro from _ids);
 begin
   perform pg_temp.comprobar('Operario: solo ve su jornada',
-    (select count(*) from public.jornadas) = 1
-    and (select count(*) from public.jornadas where persona_id = '00000000-0000-4000-a000-000000000003') = 0);
+    (select count(*) from public.jornadas where fecha = '2026-11-02') = 1
+    and (select count(*) from public.jornadas where persona_id <> auth.uid()) = 0);
   perform pg_temp.comprobar('Operario: no ve las tareas de otra persona',
     (select count(*) from public.tareas where id = v_otro) = 0
     and (select count(*) from public.tareas) > 0);

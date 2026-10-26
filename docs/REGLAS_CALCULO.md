@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1 y R3 (especificación V1)
 
-**Versión:** 0.2 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1) con las decisiones de la revisión incorporadas. Se construye en la Tarea 3.
+**Versión:** 0.3 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`).
 
 > Especificación exacta de las dos reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto) y **R3** (stock del almacén +35 %).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -135,7 +135,7 @@ Destinos: BILBAO, ALGORTA, DURANGO (alias `DURANGO`, `LAUDIO`), GIPUZKOA. Hoy = 
 | R1-18 | `REPARTO 26/10` · `SALE: YO` · `BILBAO` · `1x V2 4g` | `FECHA_NO_ES_HOY`. Repetido con `confirmar_fecha` → aceptado. |
 | R1-19 | `SALE: ALMACÉN` · `BILBAO` · `1x LORANAT` con almacén vacío en PRINCIPAL | Aceptado; LORANAT faltan 1, con aviso «dato de almacén vacío en PRINCIPAL». |
 | R1-20 | Envío: `GIPUZKOA` · `4x V2 4g` | Aceptado como envío; una bolsa «Gipuzkoa (envío a Rentería)»; `SALE:` no se pide. |
-| R1-21 | Reparto R1-01 aceptado, 3 de las 5 V2 4g hechas y bolsa de Algorta completa; se pega una versión con Bilbao 22x V2 4g | Sustituye al anterior. V2 4g: faltan 7, hechas 3 (se conservan). Bolsa de Algorta se conserva completa; la de Bilbao vuelve a 0 para comprobarla. |
+| R1-21 | Reparto R1-01 aceptado, las 5 V2 4g hechas y bolsa de Algorta completa; se pega una versión con Bilbao 22x V2 4g | Sustituye al anterior. V2 4g: faltan 7, hechas 5 (se conservan; quedan 2). Bolsa de Algorta se conserva completa; la de Bilbao vuelve a 0 para comprobarla. |
 
 ## 3. R3 — Stock del almacén (+35 %)
 
@@ -209,4 +209,5 @@ Una vez por turno (al pedirse la lista por primera vez en el turno), y se guarda
 
 ## 5. Dudas
 
-1. **Cabecera del envío a Gipuzkoa/Durango:** ¿empieza por `REPARTO dd/mm`, por `ENVÍO dd/mm` o no lleva cabecera? (Provisional: se acepta `REPARTO` o `ENVÍO`/`ENVIO`, o ninguna.)
+1. **Cabecera del envío a Gipuzkoa/Durango:** ¿empieza por `REPARTO dd/mm`, por `ENVÍO dd/mm` o no lleva cabecera? (Construido así: se acepta `REPARTO` o `ENVÍO`/`ENVIO`, o ninguna.)
+2. **Envío del viernes y reparto a la vez:** los dos restan las mismas cajas del almacén de PRINCIPAL (la hoja no cambia hasta el recuento). Si en una caja del almacén se cuenta para las dos cosas, la producción saldría corta. ¿Se calcula el envío descontando lo ya pedido en el reparto del día?
