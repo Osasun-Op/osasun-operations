@@ -4,7 +4,8 @@
 -- Se puede ejecutar varias veces.
 
 insert into public.configuracion (clave, centro_id, valor)
-values ('entorno', null, '"pruebas"')
+values ('entorno', null, '"pruebas"'),
+       ('url_proyecto', null, '"https://rvypswuoafnjwqdwxjvo.supabase.co"')  -- dirección pública del proyecto de pruebas (no es una clave)
 on conflict (clave, centro_id) do update set valor = excluded.valor;
 
 insert into auth.users (instance_id, id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)

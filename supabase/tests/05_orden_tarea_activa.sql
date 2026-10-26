@@ -63,7 +63,17 @@ begin
 
   insert into public.tareas (jornada_id, clave, origen, titulo, disponible_desde, urgente, duracion_min, no_terminada, creada_por)
   values (j, 'admin:urgente', 'administracion', 'Mira el pedido de Bilbao', '2026-11-03 10:40:00+01', true, 5, 'arrastrar', adm);
+  -- Entre urgentes manda el orden de llegada: esta llegó antes que la mercancía.
+  update public.tareas set creada_en = now() - interval '1 minute' where jornada_id = j and clave = 'admin:urgente';
   perform pg_temp.toca('Escalón 3: la urgente de Administración antes que la tarea con hora', '10:46', 'admin:urgente');
+
+  perform prueba.fijar_condicion(j, 'llega_mercancia', 'm1');
+  perform pg_temp.toca('Escalón 3: entre urgentes, por orden de llegada (la urgente llegó antes que la mercancía)',
+                       '10:46', 'admin:urgente');
+  update public.tareas set estado = 'hecha' where jornada_id = j and clave = 'admin:urgente';
+  perform pg_temp.toca('Escalón 3: con la urgente hecha, entra la recepción de mercancía', '10:46', 'recepcion_mercancia:m1');
+  update public.tareas set estado = 'pendiente' where jornada_id = j and clave = 'admin:urgente';
+  update public.tareas set estado = 'hecha' where jornada_id = j and clave = 'recepcion_mercancia:m1';
 
   insert into public.tareas (jornada_id, clave, origen, titulo, disponible_desde, hora_programada, obligatoria)
   values (j, 'problema:llamar', 'problema', 'Llama a Administración: no encuentro el kief',

@@ -57,6 +57,8 @@ begin
   perform prueba.fijar_condicion(j, 'envio_pegado');
   perform pg_temp.comprobar('Lunes: hay envío desde el principio',
     (select hay_envio from public.jornadas where id = j));
+  perform pg_temp.comprobar('Lunes: los minis no tienen duración hasta que se conozca',
+    (select duracion_min from public.tareas where jornada_id = j and clave = 'minis') is null);
   perform pg_temp.comparar('Lunes (sale Administración, con envío): tareas y horas', j, colas || array[
     'revision_inicial@08:30|', 'pegar_reparto@08:45|', 'produccion_reparto@08:30|10:45', 'bolsas@08:30|10:45',
     'recuento_manana@12:45|13:00', 'revisar_envio@15:30|', 'minis@15:30|', 'preparar_envio@15:30|18:10',
@@ -121,7 +123,18 @@ begin
   perform pg_temp.comparar('Viernes (sale el operario, envío por la mañana): tareas y horas', j, colas || array[
     'revision_inicial@08:30|', 'pegar_reparto@08:45|', 'limpieza_resinas@08:30|10:45',
     'produccion_reparto@08:30|10:45', 'bolsas@08:30|10:45', 'salida_reparto@10:45|', 'efectivo_reporte@08:30|',
-    'nacex_viernes@08:30|', 'preparar_envio_viernes@08:30|', 'recuento_manana@12:45|13:00']);
+    'nacex_viernes@10:45|', 'preparar_envio_viernes@08:30|10:45', 'recuento_manana@12:45|13:00']);
+  perform pg_temp.comprobar('Viernes: el envío se prepara antes de las 10:45 y se lleva a Nacex con la salida',
+    exists (select 1 from public.tareas where jornada_id = j and clave = 'nacex_viernes'
+            and hora_programada = '2026-11-06 10:45:00+01'
+            and orden < (select orden from public.tareas where jornada_id = j and clave = 'salida_reparto')));
+  -- Si sale Administración, llevar el envío a Nacex no es tarea del operario (pero prepararlo sí).
+  perform prueba.fijar_condicion(j, 'sale', 'administracion');
+  perform pg_temp.comprobar('Viernes: si sale Administración, el operario prepara el envío pero no lo lleva a Nacex',
+    exists (select 1 from public.tareas where jornada_id = j and clave = 'nacex_viernes'
+            and estado = 'cancelada' and retirada_por_condicion and motivo_no_hecha = 'Ya no aplica: hoy no sale el operario')
+    and exists (select 1 from public.tareas where jornada_id = j and clave = 'preparar_envio_viernes' and estado = 'pendiente'));
+  perform prueba.fijar_condicion(j, 'sale', 'operario');
   update public.tareas set estado = 'hecha' where jornada_id = j and estado = 'pendiente';
 
   -- SÁBADO 07/11 · no trabaja
