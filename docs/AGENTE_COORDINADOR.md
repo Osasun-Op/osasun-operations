@@ -70,6 +70,6 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 
 **Pasos que quedan, en este orden:**
 1. Cuentas: proyecto Supabase de pruebas **hecho** (ref `rvypswuoafnjwqdwxjvo`; falta renombrarlo a «osasun-pruebas»). Cuenta técnica de Google **hecha y comprobada** (P5). P6 decidido (se mantiene el enlace público hasta terminar la Etapa 3). El servicio de envío de correo (D3) se crea cuando se programe el cierre, no antes.
-2. Dudas secundarias del agente, de una en una: ~~tiendas del envío~~ (decidido, §5 R1 de ESTADO); ~~obligatorias no terminadas~~ (decidido, §6.5); ~~pedido de cliente~~ (decidido, §4); ~~hora de salida~~ (decidido, §4: bolsas a las 10:45 con retraso avisado: correo + panel); hora de revisión del envío del viernes; papeles de resinas del indicador de calidad.
+2. Dudas secundarias del agente, de una en una: ~~tiendas del envío~~ (decidido, §5 R1 de ESTADO); ~~obligatorias no terminadas~~ (decidido, §6.5); ~~pedido de cliente~~ (decidido, §4); ~~hora de salida~~ (decidido, §4: bolsas a las 10:45 con retraso avisado: correo + panel); ~~envío del viernes~~ (decidido, §4: se revisa el jueves 15:30); papeles de resinas del indicador de calidad.
 3. Comentar en el PR #1 las correcciones y las decisiones, pedir la aprobación al propietario y fusionar.
 4. Escribir la Tarea 2 en `docs/AGENTE_BASE_DE_DATOS.md`.

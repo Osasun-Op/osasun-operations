@@ -87,7 +87,7 @@ Cada trabajador tiene una app supervisora que le dice qué hacer, le mantiene el
 | Cierre con envío | Recuento de 17:55 a 18:10, salida a Nacex a las 18:10 y vuelta hacia las 18:25 para cerrar. |
 | Cierre sin envío | Recuento y cierre de 18:15 a 18:30. |
 
-**Viernes:** si hace falta, envío a Gipuzkoa/Durango por la mañana.
+**Viernes:** si hace falta, envío a Gipuzkoa/Durango por la mañana. Se decide el **jueves a las 15:30**, en la misma revisión del envío de ese día (decisión del propietario, 26/10/2026).
 
 ### En cualquier momento (eventos)
 - **Llega mercancía:** se abre y se comprueba en el momento.
