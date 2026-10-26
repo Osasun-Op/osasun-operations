@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.10 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 en curso: reparto y stock.
+**Versión:** 1.11 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 en curso: reparto y stock.
 
 ---
 
@@ -87,7 +87,7 @@ Cada trabajador tiene una app supervisora que le dice qué hacer, le mantiene el
 | Cierre con envío | Recuento de 17:55 a 18:10, salida a Nacex a las 18:10 y vuelta hacia las 18:25 para cerrar. |
 | Cierre sin envío | Recuento y cierre de 18:15 a 18:30. |
 
-**Viernes:** si hace falta, envío a Gipuzkoa/Durango por la mañana. Se decide el **jueves a las 15:30**, en la misma revisión del envío de ese día (decisión del propietario, 26/10/2026). El envío del viernes se prepara **antes de las 10:45**, junto con las bolsas, y quien sale a repartir lo deja en Nacex de camino.
+**Viernes:** si hace falta, envío a Gipuzkoa/Durango por la mañana. Se decide el **jueves a las 15:30**, en la misma revisión del envío de ese día (decisión del propietario, 26/10/2026). El envío del viernes se prepara **antes de las 10:45**, junto con las bolsas, y quien sale a repartir lo deja en Nacex de camino. **Reparto y envío el mismo día antes del recuento de la mañana:** al calcular lo que falta para el envío, primero se apartan las cajas del reparto de ese día (decisión del propietario, 26/10/2026).
 
 ### En cualquier momento (eventos)
 - **Llega mercancía:** se abre y se comprueba en el momento.
@@ -434,3 +434,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.8 | 26/10/2026 | Papeles de resinas fuera de la V1. PR #1 aprobado y fusionado: `MODELO_DATOS.md`, `CONTRATOS.md`, `REGLAS_CALCULO.md` y `PLAN_TECNICO.md` son la base técnica (los ajusta la Tarea 2). Tarea 2 encargada. |
 | 1.9 | 26/10/2026 | Revisión de la Tarea 2 (PR #2). Acceso con cuenta de Google. Envío del viernes antes de las 10:45. |
 | 1.10 | 26/10/2026 | PR #2 aprobado y fusionado: estructura base y jornada automática en pruebas. Tarea 3 encargada. |
+| 1.11 | 26/10/2026 | Revisión de la Tarea 3 (PR #3). El envío descuenta el reparto del mismo día antes del recuento. |
