@@ -198,6 +198,7 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
 - Stock: se recalcula, no se arrastra.
 - Compras y recogidas: siguen abiertas hasta que él confirma que ya lo tiene.
 - Tareas de Administración: pasan al día siguiente como arrastradas.
+- **Tareas fijas obligatorias** (minis, resinas, control de materiales, limpieza de resinas…): pasan al día siguiente como arrastradas y constan en el cierre con su motivo. Las ligadas a una hora o un turno (recuento, Nacex, salida del reparto, efectivo) no se arrastran: constan en el cierre como no hechas (decisión del propietario, 26/10/2026).
 
 ### 6.6 Problemas e incidencias
 **Botón «Tengo un problema»**, con cinco tipos: falta material · no encuentro algo · no sé cómo hacerlo · algo no funciona · otro.
