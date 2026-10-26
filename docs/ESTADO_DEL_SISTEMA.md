@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.3 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Sin desarrollo iniciado.
+**Versión:** 1.4 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD (PR #1) revisada. Sin desarrollo iniciado.
 
 ---
 
@@ -134,6 +134,9 @@ El operario pega el texto en la app. La app:
 5. Genera la lista de producción con lo que falta.
 6. Organiza la jornada según la línea `SALE:`. Si falta esa línea, se lo pregunta al operario.
 
+- **Tiendas en el texto:** se escriben igual que en la hoja de stock: BILBAO, ALGORTA, DONOSTI, BARAKALDO, RENTERIA, BASAURI, PORTU, GIPUZKOA; Durango como DURANGO o LAUDIO (decisión del propietario, 26/10/2026).
+- **Reparto corregido:** si se pega una versión nueva el mismo día, sustituye a la anterior. Se recalcula lo que falta producir sin perder las cajas ya hechas; las bolsas de tiendas que no cambian se conservan y las que cambian se vuelven a comprobar caja a caja (decisión del propietario, 26/10/2026).
+
 El envío a Gipuzkoa/Durango sigue el mismo camino: él propone, Administración aprueba por WhatsApp y él pega la versión final.
 
 **R2. Stock negativo en una tienda** = encargo de cliente pendiente. Hay que llevar esas cajas además de la reposición normal. Es información de contexto para el operario: la app no modifica las cantidades del reparto.
@@ -141,10 +144,10 @@ El envío a Gipuzkoa/Durango sigue el mismo camino: él propone, Administración
 **R3. Stock del almacén (+35 %).** Se usa CONTEO DE CAJAS TOTAL:
 - `contador = cajas hechas en todas partes − consumo semanal` (0 significa una semana cubierta).
 - `objetivo = +35 % del consumo semanal`.
-- `cajas a hacer = objetivo − contador`, si sale positivo.
+- `cajas a hacer = objetivo − contador`, si sale positivo, **redondeado hacia arriba** (D1, decidido 26/10/2026).
 - La lista se ordena por consumo semanal, de mayor a menor. Es aceptable que las referencias que menos se venden se queden en torno a +20 %.
-- **Los minis quedan fuera de esta regla.**
-- **Categorías que rotan (Invernadero, Indoor):** se calcula por categoría. Dentro de cada una se aplica FIFO, con un mínimo de 2 variedades de invernadero y 2 de indoor.
+- **Los minis quedan fuera de esta regla.** El único mini es **MINIBUDS MIX 10g**.
+- **Categorías que rotan (Invernadero, Indoor):** se calcula por categoría. Dentro de cada una se aplica FIFO, con un mínimo de 2 variedades de invernadero y 2 de indoor. **El FIFO lo decide el operario:** la app indica las cajas de la categoría y las variedades con granel, y él usa primero el granel más antiguo, que reconoce en el almacén.
 - **Sin granel no se produce.** Al operario le aparece la tarea «Avisa a Administración: falta X».
 
 **R4. Aviso del jueves (cobertura a 2 semanas).** En cada producto se compara el total en gramos (almacén más tiendas, de PRINCIPAL) con 2 × la necesidad semanal. Invernadero e Indoor se valoran sumando toda la categoría, porque se compran 2 o 3 variedades a la vez. La app prepara la lista explicando cada aviso. El operario la revisa, comprueba el granel físicamente y la envía a Administración.
@@ -209,11 +212,17 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
 
 ### 6.7 Avisos
 - **El operario solo ve tareas:** pendientes, en curso y acabadas. Nunca avisos de tiempo ni de presión. Excepciones, que también son tareas: una tarea nueva durante el reparto le llega al Pixel, y un problema sin resolver reaparece a los 30 minutos.
-- **Administración solo recibe el cierre** (ver la decisión abierta D2). La advertencia de conflicto al lanzar una tarea no es un aviso: se ve mientras se crea.
+- **Administración solo recibe el cierre:** uno por turno (13:00 y 18:30 de lunes a jueves; 13:00 el viernes), **por correo** (D2 y D3, decididos 26/10/2026). La advertencia de conflicto al lanzar una tarea no es un aviso: se ve mientras se crea.
 
 ### 6.8 Métricas
 - Hora de inicio y fin de cada tarea.
 - Ritmo de empaquetado: cajas por hora frente a su media (V1.1).
+
+### 6.10 Duraciones de referencia (para avisar de conflictos)
+- **Producción:** ~1 minuto por caja. La duración de la producción del reparto se calcula con las cajas que faltan.
+- **Bolsas:** ~3 minutos por tienda. Más de 3 minutos indica que se ha olvidado algo.
+- **Tareas de Administración:** Administración indica una duración orientativa al lanzarla. Solo sirve para detectar conflictos; la tarea termina cuando el operario la marca.
+- Del mapa: recuento 15 min, limpieza de resinas 30 min, ruta del reparto ~2 h.
 
 ### 6.9 Aprobación que se convierte en autonomía
 Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/Durango, pedido de packaging) pueden pasar a «las hace él solo» con un ajuste.
@@ -261,7 +270,7 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 
 ### Administración
 - **Inicio (móvil):** en qué está el almacén ahora, problemas abiertos, pendientes que se arrastran, tareas de hoy y botón **Nueva tarea**.
-- **Nueva tarea:** qué · para quién (almacén por defecto) · cuándo (hoy, un día o antes de una hora) · urgente (no por defecto) · por qué (opcional).
+- **Nueva tarea:** qué · para quién (almacén por defecto) · cuándo (hoy, un día o antes de una hora) · duración orientativa · urgente (no por defecto) · por qué (opcional).
 - **Cierre:** llega al móvil. Contiene lo hecho con su resultado, lo no hecho con su motivo, los problemas (tiempo y solución), las incidencias (tiempo), los pendientes arrastrados y lo que toca mañana. Los viernes, además, el indicador de calidad.
 - **Ordenador:** histórico e indicadores.
 - **Aprobaciones:** en la V1 siguen por WhatsApp.
@@ -304,8 +313,10 @@ Notas:
 - El título real del documento es **«STOCK OSASUN-CLAUDE»**, con guion.
 - La pestaña real es **«STOCK ALMACEN DIARIO»**, sin tilde, y **no registra fecha**. Afecta a la verificación del recuento (R5, V1.1); se resolverá al llegar a la V1.1. En este documento, «STOCK ALMACÉN DIARIO» se refiere a esa pestaña.
 
+- Pestañas que usa la V1: `PRINCIPAL` (catálogo, cajas y granel del almacén en la columna R), `CONTEO DE CAJAS TOTAL` (la columna «CAJAS TOTALES HECHAS» ya es el contador: hechas − consumo; incluye «INVERNADERO TOTAL» e «INDOOR TOTAL») y `ALMACEN` (categorías; el grupo indoor se llama «INDOOR POPS»). Las pestañas de tienda no se leen en la V1.
+
 ### Nombres irregulares detectados
-«V2 » con espacio final · Krush en «20gr» · «T BALLS / GELATO DRY» (dos productos en una fila) · **T BALLS y KRUSH tienen formatos distintos en PRINCIPAL y en CONTEO DE CAJAS TOTAL**. La app normaliza espacios y mayúsculas. La limpieza se hace en PRINCIPAL cuando Administración lo decida.
+«V2 » con espacio final · Krush en «20gr» · «T BALLS / GELATO DRY» (dos productos en una fila). Comprobado por el coordinador el 26/10/2026: los formatos de T BALLS (2g/4g) y KRUSH (20gr) **ya coinciden** entre PRINCIPAL y CONTEO DE CAJAS TOTAL. La app normaliza espacios y mayúsculas. La limpieza se hace en PRINCIPAL cuando Administración lo decida.
 
 ### Consulta de Sheets por los agentes
 Los agentes pueden **consultar** Sheets con los conectores de Google de la cuenta de Claude del propietario, que tienen sus permisos completos. **Nunca escriben con ellos.** La app usa siempre la cuenta técnica de solo lectura.
@@ -387,13 +398,13 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 
 | # | Tema | Estado |
 | --- | --- | --- |
-| D1 | Redondeo de las cajas a hacer en R3 (propuesta: hacia arriba) | Por confirmar |
-| D2 | Cierre: uno al terminar la jornada (18:30 de lunes a jueves, 13:00 el viernes) o uno por turno | Por confirmar |
-| D3 | Canal del cierre al móvil (notificación de la app o correo) | Se decide al desarrollar |
+| D1 | Redondeo de las cajas a hacer en R3 | **Decidido:** hacia arriba |
+| D2 | Cierre: uno al terminar la jornada o uno por turno | **Decidido:** uno por turno |
+| D3 | Canal del cierre al móvil | **Decidido:** correo |
 | D4 | Confirmar si las tiradas de vapers siguen repartidas entre 2 tipos | Por confirmar |
 | D5 | Comprobar si los avisos por correo del formulario de incidencias de tiendas le llegan al operario | Por comprobar |
 | P1 | Limpieza de Drive: carpetas ordenadas, archivar copias y «ERROR PLANTILLA…» | Pendiente, fuera de la V1 |
-| P2 | Limpieza de nombres irregulares en PRINCIPAL (incluye formatos de T BALLS y KRUSH distintos entre PRINCIPAL y CONTEO) | Pendiente |
+| P2 | Limpieza de nombres irregulares en PRINCIPAL («V2 », «20gr», «T BALLS / GELATO DRY») | Pendiente |
 | P3 | Cuenta de GitHub de Osasun y repositorio privado `Osasun-Op/osasun-operations` | Hecho: creado y conectado al proyecto (lectura) |
 | E2-1 | Etapa 2: las variedades indoor agrupadas en tiendas hacen que algunas se queden atrás | Para la Etapa 2 |
 | E2-2 | Etapa 2: comparar la reposición apuntada por la tienda con lo enviado; si no cuadra, se soluciona o se avisa | Para la Etapa 2 |
@@ -408,3 +419,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.1 | 26/10/2026 | Repositorio creado y conectado. El agente de base de datos trabajará en Claude Code en la web. |
 | 1.2 | 26/10/2026 | El propietario autoriza dar claves de API a los agentes. Añadidas las reglas de custodia de claves (§10, condición 5). |
 | 1.3 | 26/10/2026 | Nombres reales de la hoja verificados por el agente de BD (§9). Regla de consulta de Sheets por los agentes. El coordinador pasa a una sesión de Claude Code en la nube con acceso directo al repositorio. |
+| 1.4 | 26/10/2026 | Revisión del PR #1. Decididos D1 (redondeo hacia arriba), D2 (cierre por turno) y D3 (correo). Duraciones de referencia (§6.10) y duración orientativa en Nueva tarea. Tiendas en el reparto, reparto corregido, minis y FIFO (§5). Pestañas de la V1 y formatos de T BALLS/KRUSH comprobados (§9). |

@@ -64,17 +64,12 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 
 ## 8. Estado actual y siguiente acción
 
-**Tarea 1 del agente de base de datos:** entregada en el PR #1 («Tarea 1 — Propuesta técnica base de datos», rama `tarea-1-propuesta-tecnica-bd`), con `MODELO_DATOS.md`, `CONTRATOS.md`, `REGLAS_CALCULO.md` y `PLAN_TECNICO.md`. **Pendiente de revisión.**
+**Tarea 1 del agente de base de datos:** entregada en el PR #1 (rama `tarea-1-propuesta-tecnica-bd`). **Revisada: OK, con dos correcciones** (quitar la duda de formatos de T BALLS/KRUSH, que ya coinciden en la hoja; añadir el envío por Nacex del viernes por la mañana a las plantillas).
 
-**Pasos, en este orden:**
-1. Revisar los cuatro documentos del PR #1 contra `ESTADO_DEL_SISTEMA.md` y dar tu veredicto al propietario.
-2. Resolver con el propietario, **de una en una y con recomendación**, las decisiones que pide el agente:
-   - D1: redondeo de R3 (el agente propone hacia arriba).
-   - D2: cierre por jornada o por turno.
-   - D3: canal del cierre (correo o notificación de la app).
-   - Duraciones aproximadas de las tareas, para avisar de conflictos.
-   - Cuentas: proyecto Supabase de pruebas y cuenta técnica de Google de solo lectura (guiar al propietario paso a paso).
-   - Dudas de negocio: cómo se escribe cada tienda en el reparto; qué referencias son los «minis»; cómo saber qué variedad es más antigua para aplicar FIFO en Invernadero e Indoor; qué pasa si se vuelve a pegar un reparto corregido.
-3. Registrar las decisiones en `ESTADO_DEL_SISTEMA.md`.
-4. Dejar las correcciones en el PR #1, pedir al propietario la aprobación y fusionar.
-5. Escribir la Tarea 2 en `docs/AGENTE_BASE_DE_DATOS.md`.
+**Hecho (26/10/2026):** D1, D2 y D3 decididas; duraciones de referencia; tiendas, minis, FIFO y reparto corregido. Todo está registrado en `ESTADO_DEL_SISTEMA.md` v1.4.
+
+**Pasos que quedan, en este orden:**
+1. Cuentas: guiar al propietario, paso a paso, para crear el proyecto Supabase de pruebas, la cuenta técnica de Google de solo lectura y el servicio de envío de correo (D3).
+2. Dudas secundarias del agente, de una en una: tiendas del envío a Gipuzkoa/Durango (qué es GIPUZKOA frente a DONOSTI y RENTERIA); obligatorias no terminadas (¿se arrastran?); quién registra el pedido de cliente; hora de salida cuando sale Administración; hora de revisión del envío del viernes; papeles de resinas del indicador de calidad.
+3. Comentar en el PR #1 las correcciones y las decisiones, pedir la aprobación al propietario y fusionar.
+4. Escribir la Tarea 2 en `docs/AGENTE_BASE_DE_DATOS.md`.
