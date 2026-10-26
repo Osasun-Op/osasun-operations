@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.2 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** propuesta aprobada (PR #1) con las decisiones de la revisión incorporadas. Tarea 2: construidas en pruebas las tablas marcadas con ✅.
+**Versión:** 0.3 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 y 3).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -85,6 +85,8 @@ Las tareas del mapa semanal (§4) como configuración. Lista inicial en `PLAN_TE
 | hora_limite | time | «Antes de…». |
 | duracion_min | int | Para detectar conflictos (§6.10). |
 | condicion | ver abajo | |
+| condiciones_extra | text[] | Condiciones de estado que también deben cumplirse (ej. Nacex del viernes: hay envío **y** sale el operario). |
+| urgente | bool | Escalón 3 de `tarea_activa` (ej. recepción de mercancía, que se atiende en el momento). |
 | requiere_codigo | text | No aparece hasta que esa otra tarea del día esté hecha (ej. el efectivo tras la salida). |
 | contenido | `simple` · `produccion_reparto` · `bolsas` · `stock_35` · `recuento` | |
 | obligatoria | bool | §6.3. |
@@ -139,15 +141,16 @@ Restricciones: único (jornada, clave) · **una sola tarea `en_curso` por jornad
 
 **Tareas de Administración:** filas con `origen = administracion` (no una tabla aparte). La decisión ante un conflicto («qué cede») queda en `registro_eventos`.
 
-En Tarea 3 se añade `reparto_id` (FK a `repartos`).
+`reparto_id` (FK a `repartos`): tareas creadas por el reparto o el envío (Tarea 3).
 
-### 3.7 `tarea_elementos` (Tarea 3)
+### 3.7 `tarea_elementos` ✅
 Referencias de producción y cajas de cada bolsa.
 
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | tarea_id | FK | |
 | tipo | `referencia_produccion` · `caja_bolsa` | |
+| lote | text | Lista dentro de la tarea: `reparto`, `envio`, o el turno (`manana`/`tarde`) en la de stock. Único (tarea, tipo, lote, destino, producto, formato). |
 | producto, formato, categoria | text | Tal como en PRINCIPAL. |
 | destino_id | FK → centros_trabajo | Tienda o destino de la bolsa. |
 | cantidad, cantidad_hecha | int | `cantidad_hecha` se fija con un valor absoluto (idempotente). |
@@ -157,16 +160,16 @@ Referencias de producción y cajas de cada bolsa.
 | estado | `pendiente` · `en_curso` · `hecho` | |
 | iniciado_en, terminado_en | timestamptz | Base del ritmo de cajas/hora (V1.1, previsto, no implementado). |
 
-### 3.8 `repartos` y `reparto_lineas` (Tarea 3)
+### 3.8 `repartos` y `reparto_lineas` ✅
 Texto pegado y su interpretación (R1), para el reparto y para el envío.
 
-`repartos`: jornada_id · tipo (`reparto` · `envio`) · texto_original · huella (hash) · fecha_en_texto · sale · estado (`con_errores` · `aceptado` · `sustituido`) · sustituye_a (FK) · lectura_id · pegado_por · pegado_en. Único (jornada, tipo, huella).
+`repartos`: jornada_id · tipo (`reparto` · `envio`) · texto_original · huella (hash del texto) · fecha_en_texto · sale · estado (`con_errores` · `aceptado` · `sustituido`) · sustituye_a (FK) · lectura_id · resultado (jsonb) · pegado_por · pegado_en. **Un solo aceptado por jornada y tipo**; pegar el mismo texto otra vez devuelve el resultado guardado (huella igual).
 
 **Reparto corregido** (decisión del propietario, §5 R1): la versión nueva pasa a `aceptado` y la anterior a `sustituido`. Se recalcula lo que falta producir **sin perder las cajas ya hechas**; las bolsas de tiendas sin cambios se conservan y las que cambian se vuelven a comprobar caja a caja.
 
 `reparto_lineas`: reparto_id · num_linea · texto · clase (`cabecera` · `sale` · `tienda` · `producto` · `vacia` · `no_reconocida`) · destino_id · cantidad · producto · formato · error.
 
-### 3.9 `eventos_jornada` (Tarea 3)
+### 3.9 `eventos_jornada` (Tarea 4, con `registrar_evento`)
 Lo que pasa «en cualquier momento» (§4): `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers`. jornada_id · tipo · detalle · registrado_por · registrado_en · id_cliente único. El **pedido de cliente** lo registra quien lo recibe: el operario con su botón o Administración como tarea nueva (§4).
 
 ### 3.10 `problemas` (Tarea 4)
@@ -190,8 +193,11 @@ Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_mi
 Diario de todo lo que pasa (principio 7). Solo se añade. ocurrido_en · persona_id (nulo = sistema) · jornada_id · tarea_id · tipo · datos.
 Tipos en uso: `jornada_generada`, `tarea_creada`, `tarea_retirada`, `tarea_recuperada`, `tarea_arrastrada`, `sale_fijado`, `envio_fijado`, `tarea_iniciada`, `tarea_terminada`, `motivo_anotado`.
 
-### 3.15 `lecturas_sheets` (Tarea 3)
-Cada lectura de `STOCK OSASUN-CLAUDE` ya interpretada: leido_en · motivo · correcto · error · datos. Solo deja constancia de con qué datos se calculó cada cosa.
+### 3.15 `lecturas_sheets` ✅
+Cada lectura de `STOCK OSASUN-CLAUDE` ya interpretada: leido_en · motivo (`reparto` · `envio` · `stock`) · persona_id · correcto · error · datos. Solo deja constancia de con qué datos se calculó cada cosa.
+
+### 3.16 `motor.solicitudes_servidor` ✅
+Solicitudes internas de un solo uso (caducan a los 5 minutos) para llamar a las funciones del servidor desde la base de datos sin claves (pruebas y, en la Tarea 4, tareas programadas). No se publica en la API; RLS con política que no deja ver nada a ningún usuario.
 
 ## 4. Estados
 
@@ -208,7 +214,7 @@ pendiente ──iniciar──▶ en_curso ──terminar──▶ hecha
                                               y se crea una copia en la nueva jornada
 ```
 - `hecha` y `arrastrada` son finales; `cancelada` también, salvo la retirada por condición.
-- Solo se termina una tarea en curso. Una tarea con lista no se da por `hecha` hasta que todos sus elementos están `hecho`, salvo que el operario la termine indicando motivo (Tarea 3).
+- Solo se termina una tarea en curso. Una tarea con lista queda `hecha` sola cuando todos sus elementos están `hecho`; antes, solo si el operario la termina indicando motivo.
 
 ### 4.2 Elemento: `pendiente → en_curso → hecho`. Solo un elemento `en_curso` por tarea.
 ### 4.3 Problema: `abierto → (sin_respuesta) → resuelto`. «Resuelto» exige una línea de solución.
@@ -232,7 +238,9 @@ pendiente ──iniciar──▶ en_curso ──terminar──▶ hecha
 | Repetir una condición (SALE:, envío, reparto, evento) | La clave de la tarea es el código (más un sufijo por evento) | ✅ 02 |
 | Repetir «crear», «abrir problema», «incidencia» | `id_cliente` único | Tareas 3–4 |
 | Pulsar dos veces «iniciar» o «Terminada» | Cambios condicionados al estado; la segunda devuelve lo ya hecho | ✅ 02 |
-| Tocar una caja dos veces | `cantidad_hecha` se fija con un valor absoluto | Tarea 3 |
+| Tocar una caja dos veces | `cantidad_hecha` se fija con un valor absoluto | ✅ 07 |
+| Pegar el mismo reparto dos veces | Huella del texto; un solo aceptado por jornada y tipo | ✅ 07 |
+| Pedir la lista de stock dos veces en el turno | Un lote por turno; candado por jornada | ✅ 07 |
 | Dos tareas activas a la vez | Índice único parcial | ✅ 02 |
 | Arrastrar dos veces | Clave `arrastre:<id de la original>` | ✅ 03 |
 
