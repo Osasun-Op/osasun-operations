@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.4 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD (PR #1) revisada. Sin desarrollo iniciado.
+**Versión:** 1.5 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD (PR #1) revisada. Sin desarrollo iniciado.
 
 ---
 
@@ -406,6 +406,7 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | P1 | Limpieza de Drive: carpetas ordenadas, archivar copias y «ERROR PLANTILLA…» | Pendiente, fuera de la V1 |
 | P2 | Limpieza de nombres irregulares en PRINCIPAL («V2 », «20gr», «T BALLS / GELATO DRY») | Pendiente |
 | P3 | Cuenta de GitHub de Osasun y repositorio privado `Osasun-Op/osasun-operations` | Hecho: creado y conectado al proyecto (lectura) |
+| P4 | Proyecto Supabase de pruebas | Hecho (26/10/2026): ref `rvypswuoafnjwqdwxjvo`, región Irlanda (eu-west-1). Acceso de los agentes mediante el conector de Supabase de Claude, sin claves pegadas. Renombrar a «osasun-pruebas». Antes de crear producción se decide cómo se separa su acceso. |
 | E2-1 | Etapa 2: las variedades indoor agrupadas en tiendas hacen que algunas se queden atrás | Para la Etapa 2 |
 | E2-2 | Etapa 2: comparar la reposición apuntada por la tienda con lo enviado; si no cuadra, se soluciona o se avisa | Para la Etapa 2 |
 
@@ -420,3 +421,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.2 | 26/10/2026 | El propietario autoriza dar claves de API a los agentes. Añadidas las reglas de custodia de claves (§10, condición 5). |
 | 1.3 | 26/10/2026 | Nombres reales de la hoja verificados por el agente de BD (§9). Regla de consulta de Sheets por los agentes. El coordinador pasa a una sesión de Claude Code en la nube con acceso directo al repositorio. |
 | 1.4 | 26/10/2026 | Revisión del PR #1. Decididos D1 (redondeo hacia arriba), D2 (cierre por turno) y D3 (correo). Duraciones de referencia (§6.10) y duración orientativa en Nueva tarea. Tiendas en el reparto, reparto corregido, minis y FIFO (§5). Pestañas de la V1 y formatos de T BALLS/KRUSH comprobados (§9). |
+| 1.5 | 26/10/2026 | Proyecto Supabase de pruebas creado y conectado mediante el conector de Claude (P4). |

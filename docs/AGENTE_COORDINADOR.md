@@ -69,7 +69,7 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 **Hecho (26/10/2026):** D1, D2 y D3 decididas; duraciones de referencia; tiendas, minis, FIFO y reparto corregido. Todo está registrado en `ESTADO_DEL_SISTEMA.md` v1.4.
 
 **Pasos que quedan, en este orden:**
-1. Cuentas: guiar al propietario, paso a paso, para crear el proyecto Supabase de pruebas, la cuenta técnica de Google de solo lectura y el servicio de envío de correo (D3).
+1. Cuentas: proyecto Supabase de pruebas **hecho** (ref `rvypswuoafnjwqdwxjvo`; falta renombrarlo a «osasun-pruebas»). Queda guiar al propietario, paso a paso, para crear la cuenta técnica de Google de solo lectura y el servicio de envío de correo (D3).
 2. Dudas secundarias del agente, de una en una: tiendas del envío a Gipuzkoa/Durango (qué es GIPUZKOA frente a DONOSTI y RENTERIA); obligatorias no terminadas (¿se arrastran?); quién registra el pedido de cliente; hora de salida cuando sale Administración; hora de revisión del envío del viernes; papeles de resinas del indicador de calidad.
 3. Comentar en el PR #1 las correcciones y las decisiones, pedir la aprobación al propietario y fusionar.
 4. Escribir la Tarea 2 en `docs/AGENTE_BASE_DE_DATOS.md`.
