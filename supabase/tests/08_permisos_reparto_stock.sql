@@ -57,11 +57,15 @@ declare
   r jsonb;
 begin
   perform pg_temp.comprobar('Operario: ve su reparto y sus líneas, no los de otra persona',
-    (select count(*) from public.repartos) = 1
+    (select count(*) from public.repartos r join public.jornadas j on j.id = r.jornada_id
+      where j.fecha = '2026-11-03') = 1
     and (select count(*) from public.repartos r join public.jornadas j on j.id = r.jornada_id
-         where j.persona_id = '00000000-0000-4000-a000-000000000003') = 0);
+         where j.persona_id <> auth.uid()) = 0);
   perform pg_temp.comprobar('Operario: ve solo los elementos de sus tareas',
-    (select count(*) from public.tarea_elementos) = 2);
+    (select count(*) from public.tarea_elementos e join public.tareas t on t.id = e.tarea_id
+      join public.jornadas j on j.id = t.jornada_id where j.fecha = '2026-11-03') = 2
+    and (select count(*) from public.tarea_elementos e join public.tareas t on t.id = e.tarea_id
+      join public.jornadas j on j.id = t.jornada_id where j.persona_id <> auth.uid()) = 0);
   perform pg_temp.comprobar('Operario: no ve las lecturas de la hoja (son de Administración)',
     (select count(*) from public.lecturas_sheets) = 0);
   perform pg_temp.comprobar('Operario: no escribe directamente en repartos, líneas, elementos ni lecturas',
@@ -112,8 +116,10 @@ declare
   r jsonb := public.marcar_cajas(gen_random_uuid(), 1);
 begin
   perform pg_temp.comprobar('Administración: ve todos los repartos, elementos y lecturas',
-    (select count(*) from public.repartos) = 2 and (select count(*) from public.tarea_elementos) = 4
-    and (select count(*) from public.lecturas_sheets) = 2);
+    (select count(*) from public.repartos r join public.jornadas j on j.id = r.jornada_id where j.fecha = '2026-11-03') = 2
+    and (select count(*) from public.tarea_elementos e join public.tareas t on t.id = e.tarea_id
+         join public.jornadas j on j.id = t.jornada_id where j.fecha = '2026-11-03') = 4
+    and (select count(*) from public.lecturas_sheets) >= 2);
   perform pg_temp.comprobar('Administración: marcar cajas es del operario (NO_AUTORIZADO)',
     r -> 'error' ->> 'codigo' = 'NO_AUTORIZADO', r::text);
 end;

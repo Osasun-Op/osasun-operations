@@ -4,6 +4,11 @@
 -- Las dos llamadas a la vez se prueban en 06_concurrencia_*.sql.
 
 begin;
+-- Aísla la prueba de las jornadas reales del operario de pruebas (la tarea
+-- programada crea una cada día): sin pendientes que arrastrar. Se deshace al final.
+update public.tareas set estado = 'hecha'
+ where estado in ('pendiente', 'en_curso', 'bloqueada')
+   and jornada_id in (select id from public.jornadas where persona_id = '00000000-0000-4000-a000-000000000001');
 create temp table _r (n serial, prueba text, ok boolean, detalle text) on commit drop;
 
 create function pg_temp.comprobar(p_prueba text, p_ok boolean, p_detalle text default null)
