@@ -326,6 +326,7 @@ begin
 
   -- «Sin granel no se produce»: la tarea «Avisa a Administración: falta X».
   for v_falta in select jsonb_array_elements_text(coalesce(p_faltas, '[]')) loop
+    v_id := null;
     insert into public.tareas (jornada_id, clave, origen, titulo, obligatoria, disponible_desde, duracion_min, no_terminada, orden)
     values (p_jornada, 'avisa_falta:' || upper(regexp_replace(v_falta, '\s', '', 'g')), 'evento',
             'Avisa a Administración: falta ' || v_falta, true, p_ahora, 2, 'nada', 60)
