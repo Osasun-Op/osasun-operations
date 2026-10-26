@@ -408,7 +408,7 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | P3 | Cuenta de GitHub de Osasun y repositorio privado `Osasun-Op/osasun-operations` | Hecho: creado y conectado al proyecto (lectura) |
 | P4 | Proyecto Supabase de pruebas | Hecho (26/10/2026): ref `rvypswuoafnjwqdwxjvo`, región Irlanda (eu-west-1). Acceso de los agentes mediante el conector de Supabase de Claude, sin claves pegadas. Renombrar a «osasun-pruebas». Antes de crear producción se decide cómo se separa su acceso. |
 | P5 | Cuenta técnica de Google (solo lectura) | Hecho (26/10/2026): `osasun-lector-sheets@osasun-operations.iam.gserviceaccount.com`, permiso Lector sobre `STOCK OSASUN-CLAUDE`, comprobado por el coordinador. Proyecto de Google Cloud `osasun-operations` con Google Sheets API activada. La clave se creará al programar la lectura y se guardará como secreto de Supabase. |
-| P6 | La hoja `STOCK OSASUN-CLAUDE` tiene activado «cualquier persona con el enlace puede ver» | Pendiente de decisión del propietario |
+| P6 | La hoja `STOCK OSASUN-CLAUDE` tiene activado «cualquier persona con el enlace puede ver» | **Decidido (26/10/2026):** se mantiene así hasta terminar la Etapa 3; entonces se revisa |
 | E2-1 | Etapa 2: las variedades indoor agrupadas en tiendas hacen que algunas se queden atrás | Para la Etapa 2 |
 | E2-2 | Etapa 2: comparar la reposición apuntada por la tienda con lo enviado; si no cuadra, se soluciona o se avisa | Para la Etapa 2 |
 
@@ -424,4 +424,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.3 | 26/10/2026 | Nombres reales de la hoja verificados por el agente de BD (§9). Regla de consulta de Sheets por los agentes. El coordinador pasa a una sesión de Claude Code en la nube con acceso directo al repositorio. |
 | 1.4 | 26/10/2026 | Revisión del PR #1. Decididos D1 (redondeo hacia arriba), D2 (cierre por turno) y D3 (correo). Duraciones de referencia (§6.10) y duración orientativa en Nueva tarea. Tiendas en el reparto, reparto corregido, minis y FIFO (§5). Pestañas de la V1 y formatos de T BALLS/KRUSH comprobados (§9). |
 | 1.5 | 26/10/2026 | Proyecto Supabase de pruebas creado y conectado mediante el conector de Claude (P4). |
-| 1.6 | 26/10/2026 | Cuenta técnica de Google creada y comprobada (P5). Detectado acceso público por enlace a la hoja de stock (P6). |
+| 1.6 | 26/10/2026 | Cuenta técnica de Google creada y comprobada (P5). Acceso público por enlace a la hoja de stock (P6): se mantiene hasta terminar la Etapa 3. |
