@@ -444,6 +444,7 @@ declare
   j public.jornadas;
   v_tarea uuid;
   v_sig uuid;
+  v_prox uuid;
   s public.tareas;
 begin
   v_jornada := motor.generar_jornada(p_persona, motor.fecha_local(p_ahora));
@@ -453,12 +454,17 @@ begin
   select * into j from public.jornadas where id = v_jornada;
 
   v_tarea := motor.elegir_tarea(v_jornada, p_ahora, null);
+  -- «Lo que viene después»: lo que tocaría sin la tarea actual; pero si antes
+  -- llega una tarea con hora (o el siguiente turno), se muestra esa.
   v_sig := motor.elegir_tarea(v_jornada, p_ahora, v_tarea);
-  if v_sig is null then
-    select t.id into v_sig from public.tareas t
-     where t.jornada_id = v_jornada and t.estado = 'pendiente'
-       and t.disponible_desde > p_ahora and t.id is distinct from v_tarea
-     order by t.disponible_desde, t.orden limit 1;
+  select t.id into v_prox from public.tareas t
+   where t.jornada_id = v_jornada and t.estado = 'pendiente'
+     and t.disponible_desde > p_ahora and t.id is distinct from v_tarea
+   order by t.disponible_desde, t.orden limit 1;
+  if v_prox is not null
+     and (v_sig is null
+          or (select motor.escalon(t) > 4 from public.tareas t where t.id = v_sig)) then
+    v_sig := v_prox;
   end if;
   select * into s from public.tareas where id = v_sig;
 
