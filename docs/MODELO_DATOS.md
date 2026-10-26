@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.3 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 y 3).
+**Versión:** 0.4 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2, 3 y 4).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -108,8 +108,9 @@ Un día de trabajo de una persona. **Único (persona, fecha)**: la jornada se ge
 | sale | `operario` · `administracion` · nulo | De la línea `SALE:`. Nulo = aún no se sabe. |
 | hay_envio | bool | Lunes: siempre `true`. Viernes: `true` si el jueves se decidió envío. |
 | envio_dia_siguiente | bool | El jueves a las 15:30 se decide el envío del viernes por la mañana (§4). |
-| estado | `abierta` · `cerrada` | |
+| estado | `abierta` · `cerrada` | Pasa a `cerrada` al generarse el cierre de su último turno. |
 | generada_en | timestamptz | |
+| arrastre_hecho | bool | `false` en una jornada preparada antes de su día (tarea de Administración para otro día): el arrastre se hace al llegar el día (Tarea 4). |
 
 ### 3.6 `tareas` ✅
 Las tareas concretas de una jornada.
@@ -169,29 +170,29 @@ Texto pegado y su interpretación (R1), para el reparto y para el envío.
 
 `reparto_lineas`: reparto_id · num_linea · texto · clase (`cabecera` · `sale` · `tienda` · `producto` · `vacia` · `no_reconocida`) · destino_id · cantidad · producto · formato · error.
 
-### 3.9 `eventos_jornada` (Tarea 4, con `registrar_evento`)
-Lo que pasa «en cualquier momento» (§4): `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers`. jornada_id · tipo · detalle · registrado_por · registrado_en · id_cliente único. El **pedido de cliente** lo registra quien lo recibe: el operario con su botón o Administración como tarea nueva (§4).
+### 3.9 `eventos_jornada` ✅ (Tarea 4, con `registrar_evento`)
+Lo que pasa «en cualquier momento» (§4): `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers`. jornada_id · tipo · detalle · tarea_id (la tarea que creó) · registrado_por · registrado_en · id_cliente único. El **pedido de cliente** lo registra quien lo recibe: el operario con su botón o Administración como tarea nueva (§4).
 
-### 3.10 `problemas` (Tarea 4)
-Botón «Tengo un problema» (§6.6): jornada_id · tarea_id · tipo (`falta_material` · `no_encuentro` · `no_se_hacerlo` · `no_funciona` · `otro`) · descripcion · estado (`abierto` · `sin_respuesta` · `resuelto`) · abierto_en · llamada_en · whatsapp_en · proxima_llamada_en (**WhatsApp + 30 min**, decidido) · solucion · resuelto_en · id_cliente.
+### 3.10 `problemas` ✅ (Tarea 4)
+Botón «Tengo un problema» (§6.6): jornada_id · tarea_id · persona_id · tipo (`falta_material` · `no_encuentro` · `no_se_hacerlo` · `no_funciona` · `otro`) · descripcion · estado (`abierto` · `sin_respuesta` · `resuelto`) · abierto_en · llamada_en · llamadas · whatsapp_en · proxima_llamada_en (**WhatsApp + 30 min**, decidido; configurable en `problema_minutos_reaparicion`) · solucion · resuelto_en · resuelto_por · id_cliente. **Un solo problema abierto por tarea** (índice único parcial). La tarea «Llama a Administración» es una tarea de la jornada con origen `problema` y clave `problema:<id>:<n.º de llamada>`.
 
 Previsto, no implementado (V1.1): la «solución directa» para `falta_material` saldrá del catálogo de materiales.
 
-### 3.11 `incidencias` (Tarea 4)
-Botón «Incidencia»: jornada_id · tarea_id · descripcion · iniciada_en · terminada_en · id_cliente.
+### 3.11 `incidencias` ✅ (Tarea 4)
+Botón «Incidencia»: jornada_id · persona_id · tarea_id (la que estaba en curso) · descripcion · iniciada_en · terminada_en · id_cliente. **Una sola abierta por persona.**
 
-### 3.12 `cierres` (Tarea 4)
-**Uno por turno** (D2): jornada_id · turno · contenido (jsonb congelado) · generado_en · enviado_en · canal (**correo**, D3). Único (jornada, turno).
+### 3.12 `cierres` ✅ (Tarea 4)
+**Uno por turno** (D2): jornada_id · turno · contenido (jsonb congelado) · generado_en · envio_reclamado_en (el envío se reclama una sola vez: nunca dos correos) · enviado_en · canal (**correo**, D3) · error_envio. Único (jornada, turno).
 Contenido: hecho y resultado; no hecho y motivo; problemas (tiempo y solución); incidencias (tiempo); arrastrados; retrasos de la salida cruzados con las cajas del reparto y las incidencias de la mañana; lo de mañana; los viernes, el indicador de calidad (**solo «limpieza hecha»**; los papeles de resinas quedan fuera de la V1).
 
 ### 3.13 `configuracion` ✅
 clave · centro_id (nulo = general) · valor jsonb. Único (clave, centro) también con centro nulo.
 
-Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_min_por_caja` (1), `duracion_min_por_bolsa` (3). Solo en pruebas: `entorno` ("pruebas"). El resto (35 %, redondeo, minis, minutos de problemas, Sheets) llega con su tarea.
+Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_min_por_caja` (1), `duracion_min_por_bolsa` (3). Tarea 4: `problema_minutos_reaparicion` (30), `correo_remitente`. Solo en cada entorno, nunca en el repositorio: `entorno` ("pruebas"), `url_proyecto` y `correo_administracion` (destino de los cierres y avisos). El resto (35 %, redondeo, minis, minutos de problemas, Sheets) llega con su tarea.
 
 ### 3.14 `registro_eventos` ✅
 Diario de todo lo que pasa (principio 7). Solo se añade. ocurrido_en · persona_id (nulo = sistema) · jornada_id · tarea_id · tipo · datos.
-Tipos en uso: `jornada_generada`, `tarea_creada`, `tarea_retirada`, `tarea_recuperada`, `tarea_arrastrada`, `sale_fijado`, `envio_fijado`, `tarea_iniciada`, `tarea_terminada`, `motivo_anotado`.
+Tipos en uso: `jornada_generada`, `jornada_preparada`, `tarea_creada`, `tarea_retirada`, `tarea_recuperada`, `tarea_arrastrada`, `tarea_cancelada`, `sale_fijado`, `envio_fijado`, `tarea_iniciada`, `tarea_terminada`, `tarea_pausada`, `motivo_anotado`, `problema_abierto`, `problema_llamada`, `problema_resuelto`, `incidencia_iniciada`, `incidencia_terminada`, `evento_registrado`, `salida_retrasada`, `conflicto_decidido`, `cierre_generado`, `correo_encolado`, `correo_reclamado`, `correo_enviado`, `correo_fallido`.
 
 ### 3.15 `lecturas_sheets` ✅
 Cada lectura de `STOCK OSASUN-CLAUDE` ya interpretada: leido_en · motivo (`reparto` · `envio` · `stock`) · persona_id · correcto · error · datos. Solo deja constancia de con qué datos se calculó cada cosa.
@@ -236,7 +237,9 @@ pendiente ──iniciar──▶ en_curso ──terminar──▶ hecha
 | Generar la jornada dos veces (programada + apertura, dos pestañas) | Único (persona, fecha) + candado por persona y fecha; único (jornada, clave) | ✅ 02, 06 |
 | Dos llamadas a la vez | El candado hace esperar a la segunda, que devuelve la misma jornada | ✅ 06 |
 | Repetir una condición (SALE:, envío, reparto, evento) | La clave de la tarea es el código (más un sufijo por evento) | ✅ 02 |
-| Repetir «crear», «abrir problema», «incidencia» | `id_cliente` único | Tareas 3–4 |
+| Repetir «crear», «abrir problema», «incidencia», «evento», «retrasar» | `id_cliente` único (y candado al crear una tarea de Administración) | ✅ 09, 10 |
+| Generar el cierre de un turno dos veces | Único (jornada, turno) + candado; la tarea programada solo cierra turnos sin cierre | ✅ 10 |
+| Enviar el correo de un cierre o aviso dos veces | Se reclama una sola vez (`envio_reclamado_en` o registro `correo_reclamado`) | ✅ 10 |
 | Pulsar dos veces «iniciar» o «Terminada» | Cambios condicionados al estado; la segunda devuelve lo ya hecho | ✅ 02 |
 | Tocar una caja dos veces | `cantidad_hecha` se fija con un valor absoluto | ✅ 07 |
 | Pegar el mismo reparto dos veces | Huella del texto; un solo aceptado por jornada y tipo | ✅ 07 |
@@ -254,7 +257,7 @@ pendiente ──iniciar──▶ en_curso ──terminar──▶ hecha
 | jornadas, tareas (y en sus tareas: elementos, repartos, eventos, problemas, incidencias) | Solo lo de **su** jornada | Lee todo |
 | cierres, registro_eventos, lecturas_sheets | Nada | Lee todo |
 
-Escritura directa en tablas: **nadie** (ni operario ni Administración). Sin sesión (`anon`): nada. Probado en la prueba 04.
+Escritura directa en tablas: **nadie** (ni operario ni Administración). Sin sesión (`anon`): nada. Probado en las pruebas 04, 08 y 11.
 
 ## 7. Dudas del modelo
 

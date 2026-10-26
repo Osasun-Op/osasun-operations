@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 0.3 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3).
+**Versión:** 0.4 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -12,9 +12,9 @@
 | --- | --- | --- |
 | **Postgres de Supabase** | Tablas, permisos (RLS) y funciones: motor de tareas, problemas, incidencias, cierres. | ✅ base (Tarea 2) |
 | **Supabase Auth** | Usuarios (Administración y operario). Altas solo por invitación. | En pruebas: 2 usuarios ficticios |
-| **2 funciones del servidor (Edge Functions)** | `pegar_reparto` y `lista_stock`: las únicas que leen Google Sheets (R1 y R3). La lectura (`google.ts`, `hoja.ts`) está separada del cálculo (`r1.ts`, `r3.ts`). | ✅ Tarea 3 |
-| **Tareas programadas (pg_cron)** | Generar la jornada a las 06:00 y los cierres de cada turno. | ✅ jornada (Tarea 2) |
-| **Correo** | Cierres por turno y aviso de retraso de la salida (D3). | Se crea al programar el cierre (Tarea 4) |
+| **3 funciones del servidor (Edge Functions)** | `pegar_reparto` y `lista_stock`: las únicas que leen Google Sheets (R1 y R3). La lectura (`google.ts`, `hoja.ts`) está separada del cálculo (`r1.ts`, `r3.ts`). `enviar_correo`: envía cierres y avisos con Resend (`correo.ts`). | ✅ Tareas 3 y 4 |
+| **Tareas programadas (pg_cron)** | Generar la jornada a las 06:00 y los cierres de cada turno. | ✅ jornada (Tarea 2) y cierres (Tarea 4) |
+| **Correo (Resend, plan gratuito)** | Cierres por turno y aviso de retraso de la salida (D3). La base de datos pide el envío por `pg_net` a `enviar_correo` con una solicitud interna de un solo uso; la clave `RESEND_API_KEY` es un secreto de las funciones del servidor y el destino (`correo_administracion`) está en la configuración del entorno. | ✅ Tarea 4 |
 | **Realtime de Supabase** | Que una tarea nueva aparezca sola en el Chromebook o el Pixel. | Con la primera pantalla que lo use |
 
 No hay servidor propio, ni cola de mensajes, ni copia del stock en la base de datos.
@@ -68,20 +68,32 @@ Desempates: `orden` de la plantilla y hora de creación. **«Lo que viene despu�
 
 **Punto de encaje (§6.4):** una tarea con hora o urgente **nunca interrumpe** a mitad de una referencia o de una bolsa. Se evalúa al terminar un elemento (referencia de producción, o **bolsa completa de una tienda**, decidido) o una tarea (Tarea 3).
 
-### 2.4 Conflictos al crear una tarea de Administración (§6.4) — Tarea 4
+### 2.4 Conflictos al crear una tarea de Administración (§6.4) ✅ Tarea 4
 ```
 ventana     = desde ahora (o el inicio del día elegido) hasta la hora límite (o el final del turno)
 disponible  = minutos de turno en la ventana − bloques fijos (ruta del reparto ~2 h, Nacex)
 necesario   = Σ duración de las obligatorias pendientes que vencen en la ventana + duración de la nueva
 conflicto   = necesario > disponible
 ```
+Cómo está hecho (`motor.conflicto`, `motor.duracion_estimada`):
+- «Final del turno» = el del turno en que empieza la ventana. Los bloques fijos son las tareas pendientes de salida del reparto y Nacex con su hora y duración (solo lo que cae dentro de la ventana).
+- «Vencen en la ventana» = obligatorias y de Administración pendientes, en curso o bloqueadas cuya hora límite (o su hora) es anterior al final de la ventana, incluidas las que ya han vencido. Las que no tienen hora no cuentan.
+- Duración de cada una: producción y lista de stock = cajas que faltan de sus referencias × 1 min; bolsas = tiendas pendientes × 3 min; el resto, su duración (sin duración, 0).
+- Decisiones: `despues` (la que cede pierde su hora límite), `manana` (deja de salir hoy y se arrastra), `cancelar`, `no_crear`; todas en el registro (`conflicto_decidido`).
 **Duraciones** (§6.10, decidido): producción = cajas que faltan × 1 min; bolsas = 3 min por tienda; recuento 15 min; limpieza de resinas 30 min; ruta del reparto ~2 h; tareas de Administración: la **duración orientativa obligatoria** que pone Administración al crearla.
 Con conflicto, la tarea no se crea: Administración ve, mientras la crea, qué obligatorias quedan en riesgo y decide qué cede. La decisión queda en el registro.
 
-### 2.5 Problemas (§6.6) — Tarea 4
+### 2.5 Problemas (§6.6) ✅ Tarea 4
 - Abrir un problema bloquea la tarea; el operario sigue con la siguiente.
 - «No contestan» → WhatsApp → **a los 30 minutos del WhatsApp** (decidido) vuelve a aparecer «Llama a Administración» (escalón 2).
-- La regla de los 5 minutos se mide (abierto → solución) y sale en el cierre. La app no muestra cuentas atrás al operario (§6.7).
+- La regla de los 5 minutos se mide (abierto → solución) y sale en el cierre (`mas_de_5_min`). La app no muestra cuentas atrás al operario (§6.7).
+- Las urgentes (de Administración o la recepción de mercancía) entran al terminar la referencia o la tienda en curso (punto de encaje, Tarea 3), por orden de llegada.
+
+### 2.5 bis Cierre por turno (D2, D3) ✅ Tarea 4
+- La tarea programada `generar_cierres_turno` se lanza a y media y en punto de 11, 12, 16 y 17 UTC de lunes a viernes; `motor.generar_cierres_programados` cierra los turnos de hoy cuyo horario ya ha terminado y aún no tienen cierre (13:00 y 18:30 de lunes a jueves, 13:00 el viernes, en verano e invierno). Si una ejecución falla, la siguiente lo recupera.
+- `motor.generar_cierre` congela el contenido (`CONTRATOS.md` §4.4), cierra la jornada tras el último turno y pide el correo. Único (jornada, turno): nunca hay dos cierres del mismo turno.
+- Correo: `enviar_correo` reclama el envío una sola vez; si Resend falla, queda `error_envio` y no se reintenta solo (así nunca llegan dos correos del mismo cierre).
+- Turno de cada tarea: el de su plantilla; si no tiene, por su hora (antes o después del inicio de la tarde); sin hora, cuenta en el último cierre del día.
 
 ### 2.6 Plantillas cargadas (Tarea 2, del mapa semanal §4) ✅
 Obligatoria/flexible según §6.3; lo que no aparece allí va como flexible. Todo se ajusta sin código.
@@ -115,8 +127,8 @@ Obligatoria/flexible según §6.3; lo que no aparece allí va como flexible. Tod
 
 Si sale Administración, el tiempo hasta las 12:45 queda para la cola de tiempo libre (sin tarea especial).
 
-### 2.7 Retraso de la salida (§4, decidido) — Tarea 3
-La tarea de bolsas (a las 10:45 en la mesa de salida) tiene los botones «Retrasar 15 min» y «Retrasar 30 min» (`retrasar_salida`). Cada retraso mueve la hora de salida, avisa en el momento a quien sale (correo y panel si es Administración), queda registrado y el cierre lo cruza con las cajas del reparto y las incidencias de la mañana.
+### 2.7 Retraso de la salida (§4, decidido) ✅ Tarea 4
+La tarea de bolsas (a las 10:45 en la mesa de salida) tiene los botones «Retrasar 15 min» y «Retrasar 30 min» (`retrasar_salida`). Cada retraso mueve la hora límite de bolsas, producción del reparto y envío del viernes, y la hora de la salida (y Nacex del viernes); queda registrado (`salida_retrasada`); si sale Administración se le envía en el momento el correo «Salida retrasada a las HH:MM» y se ve en `estado_actual`; el cierre de la mañana lo cruza con las cajas del reparto y las incidencias de la mañana.
 
 ## 3. Lectura de Google Sheets ✅ (Tarea 3)
 
@@ -209,12 +221,12 @@ Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 | --- | --- | --- |
 | Jornada | Plantillas (§2.6), generación (§2.1), elección (§2.3) | ✅ 01 (semana simulada), 05 |
 | Duplicados | Restricciones únicas, candado, `id_cliente` | ✅ 02, 06 |
-| Reparto | R1 (`REGLAS_CALCULO.md` §2), casos R1-01…21 | ✅ unitarias R1 y 07; reparto real con la hoja |
+| Reparto | R1 (`REGLAS_CALCULO.md` §2), casos R1-01…24 | ✅ unitarias R1 y 07; reparto real con la hoja; envío antes del recuento ✅ 09 |
 | Stock (+35 %) | R3 (§3), casos R3-01…20 | ✅ unitarias R3 y 07; lista real del 26/10 en el PR #3 |
-| Tareas de Administración | Encaje (§2.3), conflicto (§2.4) | Orden ✅ 05; conflicto, Tarea 4 |
-| Problemas | §2.5 | Escalón 2 ✅ 05; flujo, Tarea 4 |
-| Cierre | `cierres` + correo | Tarea 4 |
-| Permisos | §5 | ✅ 04 |
+| Tareas de Administración | Encaje (§2.3), conflicto (§2.4) | ✅ 05, 10 |
+| Problemas | §2.5 | ✅ 05, 09 |
+| Cierre | §2.5 bis, `cierres` + correo | ✅ 10; envío real en el PR de la Tarea 4 |
+| Permisos | §5 | ✅ 04, 08, 11 |
 | Dispositivos · Uso real | Mismas funciones para Chromebook y Pixel; pantallas de Lovable | Con las pantallas |
 
 ## 11. Propuestas

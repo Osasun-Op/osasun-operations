@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 0.3 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 y 3).
+**Versión:** 0.4 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2, 3 y 4).
 
 > Esto es lo único que las pantallas (Lovable) pueden usar. Cualquier dato o función nueva se pide al coordinador (§11 de `ESTADO_DEL_SISTEMA.md`).
 
@@ -37,13 +37,13 @@
 | `iniciar_tarea` · `terminar_tarea` · `anotar_motivo` | BD | ✔ | — | ✅ Tarea 2 |
 | `iniciar_elemento` · `terminar_elemento` · `marcar_cajas` | BD | ✔ | — | ✅ Tarea 3 |
 | `pegar_reparto` · `lista_stock` | Servidor | ✔ | ✔ (`lista_stock`, consulta) | ✅ Tarea 3 |
-| `retrasar_salida` | BD | ✔ | — | Pendiente (no estaba en la Tarea 3) |
-| `registrar_evento` | BD | ✔ | ✔ | Pendiente (no estaba en la Tarea 3) |
-| `abrir_problema` · `problema_llamada` · `resolver_problema` | BD | ✔ | ✔ (`resolver_problema`) | Tarea 4 |
-| `iniciar_incidencia` · `terminar_incidencia` | BD | ✔ | — | Tarea 4 |
-| `crear_tarea_admin` · `cancelar_tarea` · `estado_actual` | BD | — | ✔ | Tarea 4 |
-| `cierre` · `cierres_recientes` | BD | — | ✔ | Tarea 4 |
-| `generar_jornada` · `generar_cierre` | Internas | — | — | `generar_jornada` ✅ |
+| `retrasar_salida` | BD | ✔ | — | ✅ Tarea 4 |
+| `registrar_evento` | BD | ✔ | ✔ (solo `pedido_cliente`) | ✅ Tarea 4 |
+| `abrir_problema` · `problema_llamada` · `resolver_problema` | BD | ✔ | ✔ (`resolver_problema`) | ✅ Tarea 4 |
+| `iniciar_incidencia` · `terminar_incidencia` | BD | ✔ | — | ✅ Tarea 4 |
+| `crear_tarea_admin` · `cancelar_tarea` · `estado_actual` | BD | — | ✔ | ✅ Tarea 4 |
+| `cierre` · `cierres_recientes` | BD | — | ✔ | ✅ Tarea 4 |
+| `generar_jornada` · `generar_cierre` · `enviar_correo` | Internas | — | — | ✅ |
 
 ## 3. Operario
 
@@ -100,14 +100,17 @@ Para que una tarea que no se va a hacer conste en el cierre con su motivo. No ca
 - **Salida:** `{ "elemento": { id, estado, cantidad, cantidad_hecha }, "tarea_activa": {...} }`.
 - **Errores:** `CANTIDAD_FUERA_DE_RANGO`, `OTRO_ELEMENTO_EN_CURSO`, `OTRA_TAREA_EN_CURSO`, `NO_ENCONTRADO`, `ESTADO_NO_VALIDO`.
 
-### 3.6 `retrasar_salida(minutos)` — pendiente
+### 3.6 `retrasar_salida(id_cliente, minutos)` ✅
 Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas listas en la mesa de salida a las 10:45, §4).
 - **Entrada:** `minutos` (15 o 30) e `id_cliente`.
-- **Efecto:** mueve la hora límite de las bolsas y la hora de salida, avisa en el momento a quien sale de la nueva hora (si es Administración, correo corto «Salida retrasada a las HH:MM» y aviso en `estado_actual`), y lo registra. El cierre lo cruza con las cajas del reparto y las incidencias de la mañana.
-- **Salida:** `{ "nueva_hora_salida": "11:00", "tarea_activa": {...} }`.
+- **Efecto:** suma los minutos a la hora límite de las bolsas, de la producción del reparto y del envío del viernes, y a la hora de la salida (y de Nacex el viernes). Se puede retrasar varias veces (cada vez desde la última hora). Queda registrado. Si sale Administración, se le envía en el momento un correo «Salida retrasada a las HH:MM» y se ve en `estado_actual`. El cierre de la mañana lo cruza con las cajas del reparto y las incidencias de la mañana.
+- **Salida:** `{ "nueva_hora_salida": "11:00", "minutos": 15, "aviso": "correo"|"sin_aviso", "tarea_activa": {...} }`. Repetir con el mismo `id_cliente` devuelve lo mismo sin mover nada.
+- **Errores:** `DATOS_NO_VALIDOS` (no es 15 ni 30), `SIN_TAREA` (aún no hay bolsas: falta pegar el reparto), `ESTADO_NO_VALIDO` (las bolsas ya están listas), `SIN_JORNADA`.
 
-### 3.7 `registrar_evento(id_cliente, tipo, detalle)` — pendiente
-`llega_mercancia`, `pedido_cliente` (botón «Pedido de cliente»; Administración también puede crearlo como tarea), `no_quedan_vapers`. Crea la tarea correspondiente. **Salida:** la tarea creada y la nueva `tarea_activa`.
+### 3.7 `registrar_evento(id_cliente, tipo, detalle?)` ✅
+`llega_mercancia` (recepción, urgente), `pedido_cliente` (botón «Pedido de cliente»), `no_quedan_vapers` (tirada de vapers). Crea la tarea correspondiente en la jornada de hoy; el `detalle` pasa a ser su «por qué». Administración solo puede registrar `pedido_cliente`, que va a la jornada del operario del almacén.
+- **Salida:** `{ "evento_id", "tarea": {...}, "tarea_activa": {...} }` (`tarea_activa` solo al operario). Repetir con el mismo `id_cliente` no duplica.
+- **Errores:** `DATOS_NO_VALIDOS`, `NO_AUTORIZADO` (Administración con otro tipo), `SIN_JORNADA`.
 
 ### 3.8 `pegar_reparto` (función del servidor) ✅
 - **Entrada:** `{ texto, tipo: "reparto"|"envio", sale?: "operario"|"administracion", confirmar_fecha?: true }`
@@ -142,17 +145,19 @@ Lista de producción para el stock del almacén (R3, cola A). Se calcula una vez
 
 **Quién llama a las funciones del servidor:** la sesión del usuario (cabecera `Authorization`, como hace `supabase.functions.invoke`) o una solicitud interna de un solo uso creada por la base de datos (cabecera `x-solicitud`). Las funciones comprueban la sesión ellas mismas.
 
-### 3.10 Problemas e incidencias — Tarea 4
+### 3.10 Problemas e incidencias ✅
 | Función | Entrada | Efecto |
 | --- | --- | --- |
-| `abrir_problema` | `id_cliente, tarea_id, tipo, descripcion` | La tarea pasa a `bloqueada`. Devuelve los pasos: «Si en 1 minuto no está resuelto, llama a Administración». |
-| `problema_llamada` | `problema_id, contestada` | `false`: registra la llamada y el WhatsApp; vuelve a aparecer «Llama a Administración» **30 min después del WhatsApp**. |
-| `resolver_problema` | `problema_id, solucion` | Solución obligatoria (una línea). La tarea vuelve a `pendiente`. También Administración. |
-| `iniciar_incidencia` · `terminar_incidencia` | `id_cliente, descripcion` · `incidencia_id` | Qué y por qué en una línea; sin aprobación; queda registrada con su tiempo. |
+| `abrir_problema` | `id_cliente, tarea_id, tipo, descripcion` | `tipo`: `falta_material` · `no_encuentro` · `no_se_hacerlo` · `no_funciona` · `otro`. La tarea pasa a `bloqueada` y el operario sigue con la siguiente. Devuelve `{ problema, pasos, tarea_activa }`; `pasos`: «Si en 1 minuto no está resuelto, llama a Administración.» (con `no_encuentro`: «Llama a Administración ahora.»). |
+| `problema_llamada` | `problema_id, contestada` | `true`: pide escribir la solución. `false`: registra la llamada y el WhatsApp; **30 min después del WhatsApp** aparece la tarea «Llama a Administración: …» (escalón 2). Cada llamada deja hecha la anterior. |
+| `resolver_problema` | `problema_id, solucion` | Solución obligatoria (una línea). La tarea vuelve a `pendiente` y se retira la llamada pendiente. También Administración, para cualquier problema. Devuelve `{ problema }` con `minutos_hasta_solucion`. |
+| `iniciar_incidencia` · `terminar_incidencia` | `id_cliente, descripcion` · `incidencia_id` | Qué y por qué en una línea; sin aprobación; guarda la tarea que estaba en curso y queda registrada con su tiempo (`minutos`). Una sola abierta a la vez. |
 
-## 4. Administración — Tarea 4
+**Errores:** `PROBLEMA_YA_ABIERTO` (la tarea ya tiene uno), `SOLUCION_OBLIGATORIA`, `INCIDENCIA_YA_ABIERTA`, `DATOS_NO_VALIDOS`, `NO_ENCONTRADO` (no es suyo), `ESTADO_NO_VALIDO` (la tarea no está abierta hoy). Resolver o llamar sobre un problema ya resuelto devuelve `aviso: PROBLEMA_YA_RESUELTO`, sin error.
 
-### 4.1 `crear_tarea_admin`
+## 4. Administración ✅ (Tarea 4)
+
+### 4.1 `crear_tarea_admin` ✅
 | Campo | Obligatorio | Notas |
 | --- | --- | --- |
 | `id_cliente` | sí | |
@@ -165,27 +170,40 @@ Lista de producción para el stock del almacén (R3, cola A). Se calcula una vez
 | `confirmar` | no | `false` = solo comprobar conflicto. |
 | `decision_conflicto` | si hay conflicto | `{ "cede": "<tarea_id>", "accion": "despues|manana|cancelar" }` o `{ "accion": "no_crear" }` |
 
-- Si **no cabe**, no la crea y devuelve `CONFLICTO` con las obligatorias en riesgo; Administración decide qué cede. La decisión queda en el registro.
-- **Salida:** `{ tarea_id, encaje: "...", conflicto: null }`. **Errores:** `CONFLICTO`, `FECHA_PASADA`.
+- **Ventana** (`PLAN_TECNICO.md` §2.4): desde ahora (o el inicio del día elegido) hasta la hora de `antes_de` o, si no hay hora, hasta el final del turno en que empieza.
+- Si **no cabe**, no la crea y devuelve `CONFLICTO` con `conflicto: { disponible_min, necesario_min, minutos_que_faltan, obligatorias_en_riesgo: [{ tarea_id, titulo, vence, duracion_min }] }`. Administración repite la llamada con `decision_conflicto`:
+  - `despues`: la que cede pierde su hora límite (se hace después de la nueva).
+  - `manana`: la que cede deja de salir hoy y pasa al día siguiente como arrastrada.
+  - `cancelar`: la que cede queda cancelada con su motivo.
+  - `no_crear`: no se crea nada.
+  La decisión queda en el registro (`conflicto_decidido`).
+- `confirmar: false` solo comprueba: `{ tarea_id: null, comprobado: true, encaje, conflicto }` (o el error `CONFLICTO`).
+- Una tarea para otro día prepara la jornada de ese día; lo pendiente se arrastra igualmente al llegar el día.
+- **Salida:** `{ tarea_id, tarea, encaje: "...", conflicto: null|{...}, decision }`. Repetir con el mismo `id_cliente` devuelve la misma tarea (`ya_creada: true`).
+- **Errores:** `CONFLICTO`, `FECHA_PASADA` (día u hora pasados, o su jornada de hoy ya terminó), `SIN_JORNADA` (ese día no trabaja), `DATOS_NO_VALIDOS` (sin duración, sin qué, «cuando» o decisión no válidos), `NO_ENCONTRADO` (`para_quien`).
 
-### 4.2 `cancelar_tarea(tarea_id, motivo)`
-Pasa la tarea a `cancelada`. Motivo obligatorio.
+### 4.2 `cancelar_tarea(tarea_id, motivo)` ✅
+Pasa la tarea a `cancelada` con su motivo (obligatorio) y retira la llamada pendiente si tenía un problema abierto. **Salida:** `{ tarea }`. Ya cancelada: `aviso: YA_CANCELADA`. **Errores:** `DATOS_NO_VALIDOS`, `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya hecha o arrastrada).
 
-### 4.3 `estado_actual()`
-Inicio del móvil: en qué está el almacén ahora, problemas abiertos, incidencia en curso, arrastradas, tareas de hoy, **retrasos de la salida** y estado de la última lectura de Sheets.
+### 4.3 `estado_actual()` ✅
+Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, operario, jornada: { id, sale, hay_envio, estado }, en_curso: tarea con sus elementos, problemas_abiertos: [...], incidencia_en_curso, arrastradas: [...], hoy: [{ id, titulo, estado, origen, obligatoria, urgente, hora, motivo }], retrasos_salida: [{ a_las, minutos, nueva_hora, sale, aviso }], lectura_sheets: { ultima_correcta, ultimo_error } }`.
 
-### 4.4 `cierre(cierre_id)` · `cierres_recientes(limite)`
-Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes), enviado **por correo**. Contenido: `MODELO_DATOS.md` §3.12. `calidad` solo los viernes y solo `{ "limpieza_viernes": true|false }`.
+### 4.4 `cierre(cierre_id)` · `cierres_recientes(limite)` ✅
+Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según el horario), generado solo y enviado **por correo**, una sola vez.
+- `cierre` → `{ id, fecha, turno, generado_en, enviado_en, canal, contenido, texto }` (`texto` = el del correo).
+- `cierres_recientes(limite = 10, máx. 50)` → `{ cierres: [{ id, fecha, turno, generado_en, enviado_en, hechas, sin_hacer, problemas, incidencias }] }`.
+- **Contenido** (`MODELO_DATOS.md` §3.12): `hecho` [{ titulo, resultado, hora }] · `no_hecho` [{ titulo, estado, motivo, pasa_a_manana }] (obligatorias y de Administración de ese turno; las de todo el día, en el último) · `problemas` [{ tarea, descripcion, abierto, minutos, mas_de_5_min, solucion, estado, llamadas }] · `incidencias` [{ descripcion, inicio, fin, minutos }] · `arrastrados` { llegaron (primer turno), pasan_a_manana (último turno) } · `retrasos_salida` y `cruce_retrasos` { cajas_reparto, cajas_a_producir, cajas_producidas, tiendas, incidencias_manana, minutos_incidencias_manana } (turno de mañana, si hubo retraso) · `siguiente` (lo que queda para la tarde, o lo que toca el próximo día de trabajo) · `calidad` solo el viernes y solo `{ "limpieza_viernes": true|false }`.
 
 ## 5. Internas (no las llaman las pantallas)
 
 | Función | Quién la llama | Qué hace |
 | --- | --- | --- |
 | `motor.generar_jornada(persona, fecha)` ✅ | Tarea programada de las 06:00 y `tarea_activa` | Crea la jornada, arrastra lo pendiente y crea las tareas del día. Idempotente. |
-| `motor.generar_cierre(jornada, turno)` | Tarea programada al final de cada turno | Congela el cierre y lo envía por correo. Idempotente. |
+| `motor.generar_cierre(jornada, turno, ahora)` ✅ | Tarea programada `generar_cierres_turno` (a y media y en punto de 11, 12, 16 y 17 UTC, lunes a viernes: cubre las 13:00 y las 18:30 de Madrid en verano e invierno) | Congela el cierre, cierra la jornada tras el último turno y pide el correo. Idempotente. |
+| `enviar_correo` (función del servidor) ✅ | Solo la base de datos, con solicitud interna de un solo uso (`x-solicitud`); las pantallas no pueden | Reclama el envío (`servidor_correo_reclamar`), lo manda con Resend (secreto `RESEND_API_KEY`) y anota el resultado (`servidor_correo_resultado`). Nunca envía dos veces el mismo cierre o aviso. |
 | `prueba.fijar_condicion(jornada, condicion, valor)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Simula `SALE:`, envío y eventos hasta que tengan su función real. Nadie tiene permiso para usarla. |
 | `prueba.invocar(funcion, persona, cuerpo)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Llama a una función del servidor desde la base de datos con una solicitud interna. |
-| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_guardar_stock` · `servidor_canjear_solicitud` ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
+| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_resultado` ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
 
 ## 6. Trazabilidad con las pantallas de §8
 
@@ -194,6 +212,8 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes), enviad
 | Chromebook: una tarea, su porqué, Terminada / Tengo un problema / Incidencia, «lo que viene después» | `tarea_activa`, `iniciar_tarea`, `terminar_tarea`, `abrir_problema`, `iniciar_incidencia` |
 | Listas de producción (él elige el orden) | `tarea_activa` (elementos), `iniciar_elemento`, `terminar_elemento`, `lista_stock` |
 | Bolsas en el Pixel (una tienda por pantalla, toca cada caja; retrasar 15/30 min) | `tarea_activa`, `marcar_cajas`, `retrasar_salida` |
+| Botones «Llega mercancía», «Pedido de cliente», «No quedan vapers» | `registrar_evento` |
+| Tengo un problema (llamar, no contestan, solución) | `abrir_problema`, `problema_llamada`, `resolver_problema` |
 | Pegar el reparto | `pegar_reparto` |
 | Inicio de Administración (móvil) | `estado_actual` |
 | Nueva tarea (qué, para quién, cuándo, duración, urgente, por qué) | `crear_tarea_admin` |
