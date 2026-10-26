@@ -74,6 +74,8 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 
 **Acceso a la app:** con cuenta de Google. El cliente de Google (OAuth) se crea en la Tarea 5, con guía al propietario.
 
-**Tarea 3:** encargada en `docs/AGENTE_BASE_DE_DATOS.md`. El propietario debe crear la **clave JSON** de la cuenta técnica (Google Cloud → Cuentas de servicio → osasun-lector-sheets → Claves → Añadir clave → JSON) y escribirla en Supabase cuando el agente la pida. Nunca en el chat.
+**Tarea 3:** aprobada y fusionada (PR #3). Dudas resueltas en su comentario.
 
-**Siguiente:** cuando termine, revisar el PR de la Tarea 3, comprobar pruebas en solo lectura y contrastar la lista de stock real con la hoja.
+**Tarea 4:** encargada. El propietario crea la cuenta gratuita de Resend **con el correo que recibirá los cierres** y escribe la clave en Supabase cuando el agente la pida.
+
+**Siguiente:** revisar el PR de la Tarea 4. Después, la Tarea 5 (pantallas en Lovable y acceso con Google): hay que redactar las instrucciones del agente de almacén (Lovable) y guiar al propietario para crear el cliente OAuth de Google.

@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.3 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.4 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -62,11 +62,51 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 3** (sección 7). Empieza leyendo el comentario del coordinador en el PR #2 y `ESTADO_DEL_SISTEMA.md` v1.9.
+**Tarea 4** (sección 7). Empieza leyendo el comentario del coordinador en el PR #3 y `ESTADO_DEL_SISTEMA.md` v1.11.
 
 ---
 
-## 7. TAREA 3 (activa): reparto y stock, leyendo la hoja, en pruebas
+## 7. TAREA 4 (activa): problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo, en pruebas
+
+**Objetivo:** completar en pruebas todo el motor de la V1 que no depende de las pantallas, de modo que la base de datos cumpla los criterios de §13 «Tareas de Administración», «Problemas» y «Cierre».
+
+### Entorno y accesos
+- Solo pruebas: ref **`rvypswuoafnjwqdwxjvo`**. Mismas prohibiciones que en las tareas anteriores.
+- **Correo:** servicio **Resend**, en plan gratuito. Su clave va como secreto de las funciones del servidor (`RESEND_API_KEY`) y la escribe el propietario en el panel, cuando tú la pidas con la herramienta de secretos. Sin dominio propio, Resend solo envía al correo con el que se creó la cuenta, y en la V1 basta con eso.
+- El **correo de destino** de Administración va en `configuracion` del proyecto de pruebas, **no en el repositorio**.
+
+### Pasos
+1. **Del PR #3:** el envío pegado antes del recuento de la mañana descuenta el reparto aceptado ese día (comentario del coordinador), con sus pruebas.
+2. **Migraciones:** `problemas`, `incidencias`, `eventos_jornada` y `cierres` (`MODELO_DATOS.md`), con RLS y sin escritura directa.
+3. **Problemas e incidencias** (`CONTRATOS.md` §3.6 y §3.7): `abrir_problema`, `problema_llamada`, `resolver_problema` (también para Administración), `iniciar_incidencia` y `terminar_incidencia`. Tiene que funcionar la reaparición de «Llama a Administración» a los 30 minutos desde el WhatsApp.
+4. **Eventos:** `registrar_evento` (llega mercancía, pedido de cliente, no quedan vapers), que crea la tarea condicionada. Administración también puede registrar un pedido de cliente.
+5. **Tareas de Administración:** `crear_tarea_admin`, con la **duración orientativa obligatoria** y la detección de conflicto (`PLAN_TECNICO.md` §2.4, con las duraciones de `ESTADO_DEL_SISTEMA.md` §6.10); `cancelar_tarea` y `estado_actual`.
+6. **Retraso de la salida:** `retrasar_salida(minutos)` con 15 o 30 minutos, sobre la tarea de las bolsas de las 10:45. Queda registrado y, si sale Administración, se le avisa en el momento por correo («Salida retrasada a las HH:MM») y se muestra en `estado_actual`.
+7. **Cierre por turno** (D2): se genera solo a las 13:00 y a las 18:30 de lunes a jueves, y a las 13:00 el viernes, en hora de Madrid. Contenido de `ESTADO_DEL_SISTEMA.md` §8 «Cierre», más los retrasos de la salida cruzados con las cajas del reparto y las incidencias de la mañana. El viernes, el indicador de calidad es solo «limpieza hecha». Se envía por correo (D3) y se consulta con `cierre` y `cierres_recientes`. Es idempotente: nunca se envían dos correos del mismo cierre.
+8. **Pruebas automáticas:**
+   - Flujo de problemas: abrir, llamar, sin respuesta, reaparición a los 30 minutos y solución obligatoria.
+   - Incidencias.
+   - Las urgentes entran al terminar la referencia en curso.
+   - Conflicto al crear una tarea, con la decisión «qué cede» registrada.
+   - Retraso de la salida.
+   - Cierre de cada turno con datos correctos y una sola vez.
+   - Permisos: el operario no ve cierres ni puede usar funciones de Administración.
+9. **Prueba real:** envía **un** cierre y **un** aviso de retraso de prueba al correo de Administración, y deja constancia en el PR (asunto y hora, sin datos sensibles).
+10. **Avisos de seguridad** de Supabase: ninguno nuevo.
+
+### Criterios de aceptación
+- Todas las pruebas pasan, y en el PR se ve la salida.
+- Pruebas coincide exactamente con el repositorio.
+- Ninguna clave ni correo personal en el repositorio ni en el PR.
+
+### Entrega
+- Pull Request titulado **«Tarea 4 — Problemas, tareas de Administración y cierre (pruebas)»**.
+- Descripción: un resumen de **10 líneas como máximo** en lenguaje de negocio, la salida de las pruebas y las dudas.
+
+---
+
+## 7.1 TAREA 3 (fusionada en el PR #3): reparto y stock, leyendo la hoja, en pruebas
+
 
 **Objetivo:** que en pruebas funcionen **pegar el reparto** (R1) y la **lista de stock +35 %** (R3), leyendo `STOCK OSASUN-CLAUDE` en solo lectura con la cuenta técnica, y que el operario pueda ir marcando referencias y cajas. Sin problemas, incidencias, tareas de Administración ni cierres: eso es la Tarea 4.
 
@@ -177,3 +217,4 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 | 1.1 | 26/10/2026 | Tarea 1 entregada (PR #1). Nuevo sistema de «Tarea activa» y comentarios en PR. Regla de consulta de Sheets. |
 | 1.2 | 26/10/2026 | Tarea 1 aprobada y fusionada. Tarea 2 activa: estructura base y jornada automática en pruebas. |
 | 1.3 | 26/10/2026 | Tarea 2 aprobada y fusionada. Tarea 3 activa: reparto y stock con lectura de Sheets, en pruebas. |
+| 1.4 | 26/10/2026 | Tarea 3 aprobada y fusionada. Tarea 4 activa: problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo. |

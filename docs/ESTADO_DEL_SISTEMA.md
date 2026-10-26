@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.11 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 en curso: reparto y stock.
+**Versión:** 1.12 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tarea 4 en curso: problemas, tareas de Administración y cierre.
 
 ---
 
@@ -435,3 +435,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.9 | 26/10/2026 | Revisión de la Tarea 2 (PR #2). Acceso con cuenta de Google. Envío del viernes antes de las 10:45. |
 | 1.10 | 26/10/2026 | PR #2 aprobado y fusionado: estructura base y jornada automática en pruebas. Tarea 3 encargada. |
 | 1.11 | 26/10/2026 | Revisión de la Tarea 3 (PR #3). El envío descuenta el reparto del mismo día antes del recuento. |
+| 1.12 | 26/10/2026 | PR #3 aprobado y fusionado: reparto y stock con lectura de Sheets, en pruebas. Tarea 4 encargada. Servicio de correo: Resend (plan gratuito). |
