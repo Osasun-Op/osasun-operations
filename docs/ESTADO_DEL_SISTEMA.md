@@ -139,6 +139,8 @@ El operario pega el texto en la app. La app:
 
 El envío a Gipuzkoa/Durango sigue el mismo camino: él propone, Administración aprueba por WhatsApp y él pega la versión final.
 
+- **Destinos del envío (decisión del propietario, 26/10/2026):** el envío lleva un solo bloque **GIPUZKOA** (se calcula con la pestaña GIPUZKOA de la hoja) y va entero a Rentería por Nacex; allí la persona de Rentería lo reparte entre Donosti y Rentería según su criterio. Donosti y Rentería son las únicas tiendas en franquicia. Cada pestaña de tienda es de su tienda. **Durango**, cuando abra, irá como bloque propio con sus necesidades.
+
 **R2. Stock negativo en una tienda** = encargo de cliente pendiente. Hay que llevar esas cajas además de la reposición normal. Es información de contexto para el operario: la app no modifica las cantidades del reparto.
 
 **R3. Stock del almacén (+35 %).** Se usa CONTEO DE CAJAS TOTAL:
