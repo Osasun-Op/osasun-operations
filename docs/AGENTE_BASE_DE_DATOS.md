@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.2 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.3 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -62,11 +62,48 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 2** (sección 7). Empieza leyendo el comentario del coordinador en el PR #1 y `ESTADO_DEL_SISTEMA.md` v1.7.
+**Tarea 3** (sección 7). Empieza leyendo el comentario del coordinador en el PR #2 y `ESTADO_DEL_SISTEMA.md` v1.9.
 
 ---
 
-## 7. TAREA 2 (activa): estructura base y jornada automática, en pruebas
+## 7. TAREA 3 (activa): reparto y stock, leyendo la hoja, en pruebas
+
+**Objetivo:** que en pruebas funcionen **pegar el reparto** (R1) y la **lista de stock +35 %** (R3), leyendo `STOCK OSASUN-CLAUDE` en solo lectura con la cuenta técnica, y que el operario pueda ir marcando referencias y cajas. Sin problemas, incidencias, tareas de Administración ni cierres: eso es la Tarea 4.
+
+### Entorno y accesos
+- Solo pruebas: ref **`rvypswuoafnjwqdwxjvo`**, con el conector de Supabase. Mismas prohibiciones que en la Tarea 2.
+- **Clave de la cuenta técnica** (`osasun-lector-sheets@osasun-operations.iam.gserviceaccount.com`, permiso Lector ya comprobado): pídela como secreto de las funciones del servidor con la herramienta de secretos del conector (el propietario escribe el valor en el panel de Supabase; nunca pasa por el chat ni por el repositorio). Antes de pedirla, avisa en tu sesión de que el propietario debe tener preparado el archivo de clave. El coordinador le guía para crearlo.
+- Alcance de Google: **solo `spreadsheets.readonly`**. Nunca escribes en Sheets.
+
+### Pasos
+1. **Correcciones del PR #2:** recepción de mercancía en el escalón 3, duración de los minis a nulo, envío del viernes antes de las 10:45 (comentario del coordinador). Cada una con su prueba.
+2. **Migraciones:** `tarea_elementos`, `repartos`, `reparto_lineas` y `lecturas_sheets` (`MODELO_DATOS.md` v0.2), con RLS y sin escritura directa, como en la Tarea 2.
+3. **Funciones del servidor** `pegar_reparto` y `lista_stock` (`CONTRATOS.md` §3.9 y §3.10). Leen la hoja por encabezados y nombres, no por celdas fijas, y guardan cada lectura en `lecturas_sheets`. El cálculo de R1 y R3 se hace en código separado de la lectura, para poder probarlo sin la hoja.
+4. **Reparto corregido** (decisión del propietario): la versión nueva sustituye a la anterior y se conserva lo hecho (`ESTADO_DEL_SISTEMA.md` §5 R1).
+5. **Funciones de BD:** `iniciar_elemento`, `terminar_elemento` y `marcar_cajas`, con el punto de encaje (al terminar una referencia o una tienda entera). La duración de la producción del reparto = cajas que faltan × 1 min, y la de las bolsas = 3 min por tienda (`ESTADO_DEL_SISTEMA.md` §6.10).
+6. **Pruebas automáticas:**
+   - Todos los casos R1 y R3 de `REGLAS_CALCULO.md` como pruebas unitarias, con datos fijos.
+   - Hoja no disponible y estructura cambiada.
+   - Idempotencia: el mismo reparto dos veces, la lista dos veces en el turno y marcar la misma caja dos veces.
+   - Reparto corregido con trabajo ya hecho.
+   - Permisos de las tablas nuevas.
+7. **Prueba con la hoja real:** una ejecución de `lista_stock` en pruebas con los datos de hoy. Pega en el PR la lista resultante (referencia, consumo, contador, cajas y motivo) para que el propietario la compare con su propio cálculo.
+8. **Avisos de seguridad** de Supabase: ninguno nuevo.
+
+### Criterios de aceptación
+- Todas las pruebas pasan, y en el PR se ve la salida.
+- Pruebas coincide exactamente con las migraciones y las funciones del repositorio.
+- La hoja solo se lee: el alcance de la cuenta es de solo lectura.
+- Ninguna clave en el repositorio ni en el PR.
+
+### Entrega
+- Pull Request titulado **«Tarea 3 — Reparto y stock (lectura de Sheets, pruebas)»**.
+- Descripción: un resumen de **10 líneas como máximo** en lenguaje de negocio, la salida de las pruebas, la lista de stock real del paso 7 y las dudas.
+
+---
+
+## 7.2 TAREA 2 (fusionada en el PR #2): estructura base y jornada automática, en pruebas
+
 
 **Objetivo:** que en el proyecto de **pruebas** exista la base de datos mínima y que la **jornada del operario se genere sola** cada día con las tareas correctas, sin duplicados y con los permisos bien puestos. Sin Google Sheets, sin repartos, sin problemas y sin cierres: eso llega en las Tareas 3 y 4.
 
@@ -101,7 +138,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
-## 7.1 TAREA 1 (fusionada en el PR #1): propuesta técnica de la V1
+## 7.3 TAREA 1 (fusionada en el PR #1): propuesta técnica de la V1
 
 **Objetivo:** diseñar, sin construir, todo lo que la base de datos necesita para la V1 descrita en `ESTADO_DEL_SISTEMA.md` (§12, V1).
 
@@ -139,3 +176,4 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 | 1.0 | 26/10/2026 | Instrucciones iniciales y Tarea 1. |
 | 1.1 | 26/10/2026 | Tarea 1 entregada (PR #1). Nuevo sistema de «Tarea activa» y comentarios en PR. Regla de consulta de Sheets. |
 | 1.2 | 26/10/2026 | Tarea 1 aprobada y fusionada. Tarea 2 activa: estructura base y jornada automática en pruebas. |
+| 1.3 | 26/10/2026 | Tarea 2 aprobada y fusionada. Tarea 3 activa: reparto y stock con lectura de Sheets, en pruebas. |

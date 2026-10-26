@@ -70,6 +70,10 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 
 **Plan acordado con el propietario (briefing del 26/10/2026):** T2 estructura base y jornada · T3 lectura de Sheets (reparto y stock) · T4 problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo · T5 pantallas (Lovable) · T6 semana en paralelo y puesta en marcha.
 
-**Tarea 2:** encargada en `docs/AGENTE_BASE_DE_DATOS.md`. Esperando a que el propietario la arranque.
+**Tarea 2:** aprobada y fusionada (PR #2). Correcciones (recepción en el escalón 3, minis, envío del viernes) incluidas en la Tarea 3.
 
-**Siguiente:** cuando el propietario diga que ha terminado, leer el PR de la Tarea 2, comprobar en pruebas (solo lectura: tablas y avisos) que coincide con las migraciones, y dar el veredicto.
+**Acceso a la app:** con cuenta de Google. El cliente de Google (OAuth) se crea en la Tarea 5, con guía al propietario.
+
+**Tarea 3:** encargada en `docs/AGENTE_BASE_DE_DATOS.md`. El propietario debe crear la **clave JSON** de la cuenta técnica (Google Cloud → Cuentas de servicio → osasun-lector-sheets → Claves → Añadir clave → JSON) y escribirla en Supabase cuando el agente la pida. Nunca en el chat.
+
+**Siguiente:** cuando termine, revisar el PR de la Tarea 3, comprobar pruebas en solo lectura y contrastar la lista de stock real con la hoja.

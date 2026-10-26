@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.9 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 en curso: estructura base y jornada automática en pruebas.
+**Versión:** 1.10 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 en curso: reparto y stock.
 
 ---
 
@@ -433,3 +433,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.7 | 26/10/2026 | Dudas secundarias del PR #1: destinos del envío, obligatorias no terminadas, pedidos de cliente y bolsas a las 10:45 con aviso de retraso. |
 | 1.8 | 26/10/2026 | Papeles de resinas fuera de la V1. PR #1 aprobado y fusionado: `MODELO_DATOS.md`, `CONTRATOS.md`, `REGLAS_CALCULO.md` y `PLAN_TECNICO.md` son la base técnica (los ajusta la Tarea 2). Tarea 2 encargada. |
 | 1.9 | 26/10/2026 | Revisión de la Tarea 2 (PR #2). Acceso con cuenta de Google. Envío del viernes antes de las 10:45. |
+| 1.10 | 26/10/2026 | PR #2 aprobado y fusionado: estructura base y jornada automática en pruebas. Tarea 3 encargada. |
