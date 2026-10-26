@@ -64,12 +64,12 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 
 ## 8. Estado actual y siguiente acción
 
-**Tarea 1 del agente de base de datos:** entregada en el PR #1 (rama `tarea-1-propuesta-tecnica-bd`). **Revisada: OK, con dos correcciones** (quitar la duda de formatos de T BALLS/KRUSH, que ya coinciden en la hoja; añadir el envío por Nacex del viernes por la mañana a las plantillas).
+**Tarea 1:** aprobada y fusionada (PR #1). Todas las decisiones están en `ESTADO_DEL_SISTEMA.md` v1.8, y las correcciones y decisiones técnicas, en el comentario del coordinador en el PR #1.
 
-**Hecho (26/10/2026):** D1, D2 y D3 decididas; duraciones de referencia; tiendas, minis, FIFO y reparto corregido. Todo está registrado en `ESTADO_DEL_SISTEMA.md` v1.4.
+**Cuentas:** Supabase de pruebas `rvypswuoafnjwqdwxjvo` (pendiente de renombrar a «osasun-pruebas»), con el conector de Supabase conectado. Cuenta de servicio de Google con permiso Lector, comprobada. El servicio de correo se crea en la Tarea 4.
 
-**Pasos que quedan, en este orden:**
-1. Cuentas: proyecto Supabase de pruebas **hecho** (ref `rvypswuoafnjwqdwxjvo`; falta renombrarlo a «osasun-pruebas»). Cuenta técnica de Google **hecha y comprobada** (P5). P6 decidido (se mantiene el enlace público hasta terminar la Etapa 3). El servicio de envío de correo (D3) se crea cuando se programe el cierre, no antes.
-2. Dudas secundarias del agente, de una en una: ~~tiendas del envío~~ (decidido, §5 R1 de ESTADO); ~~obligatorias no terminadas~~ (decidido, §6.5); ~~pedido de cliente~~ (decidido, §4); ~~hora de salida~~ (decidido, §4: bolsas a las 10:45 con retraso avisado: correo + panel); ~~envío del viernes~~ (decidido, §4: se revisa el jueves 15:30); ~~papeles de resinas~~ (fuera de la V1). **Todas resueltas.**
-3. Comentar en el PR #1 las correcciones y las decisiones, pedir la aprobación al propietario y fusionar.
-4. Escribir la Tarea 2 en `docs/AGENTE_BASE_DE_DATOS.md`.
+**Plan acordado con el propietario (briefing del 26/10/2026):** T2 estructura base y jornada · T3 lectura de Sheets (reparto y stock) · T4 problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo · T5 pantallas (Lovable) · T6 semana en paralelo y puesta en marcha.
+
+**Tarea 2:** encargada en `docs/AGENTE_BASE_DE_DATOS.md`. Esperando a que el propietario la arranque.
+
+**Siguiente:** cuando el propietario diga que ha terminado, leer el PR de la Tarea 2, comprobar en pruebas (solo lectura: tablas y avisos) que coincide con las migraciones, y dar el veredicto.

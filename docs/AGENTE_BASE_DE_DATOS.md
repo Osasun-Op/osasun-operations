@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.1 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.2 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -62,11 +62,46 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 1 está entregada (PR #1) y en revisión. No empieces nada hasta que aparezca aquí una tarea nueva.
+**Tarea 2** (sección 7). Empieza leyendo el comentario del coordinador en el PR #1 y `ESTADO_DEL_SISTEMA.md` v1.7.
 
 ---
 
-## 7. TAREA 1 (entregada, en revisión): propuesta técnica de la V1
+## 7. TAREA 2 (activa): estructura base y jornada automática, en pruebas
+
+**Objetivo:** que en el proyecto de **pruebas** exista la base de datos mínima y que la **jornada del operario se genere sola** cada día con las tareas correctas, sin duplicados y con los permisos bien puestos. Sin Google Sheets, sin repartos, sin problemas y sin cierres: eso llega en las Tareas 3 y 4.
+
+### Entorno
+- Solo el proyecto Supabase de pruebas: ref **`rvypswuoafnjwqdwxjvo`** (eu-west-1). Accedes con el **conector de Supabase** de la cuenta de Claude del propietario. No necesitas ni pides claves.
+- **Prohibido:** cualquier otro proyecto, crear proyectos o ramas de Supabase (tienen coste), cambiar el plan o la facturación, leer Google Sheets desde Supabase y crear usuarios reales.
+
+### Pasos
+1. **Planos al día.** Incorpora a `MODELO_DATOS.md`, `CONTRATOS.md`, `REGLAS_CALCULO.md` y `PLAN_TECNICO.md` (versión 0.2) las correcciones y decisiones del comentario del coordinador en el PR #1. Quita las dudas ya resueltas.
+2. **Migraciones** en `supabase/migrations/`, en el repositorio. Aplica cada una a pruebas **después** de escribirla en el repositorio, nunca al revés. Solo las tablas que necesita esta tarea: `centros_trabajo`, `personas`, `horarios`, `plantillas_tarea`, `configuracion`, `jornadas`, `tareas` y `registro_eventos`. El resto llega en su tarea.
+3. **Permisos:** RLS en todas las tablas, ninguna escritura directa y funciones que comprueban el rol, según `MODELO_DATOS.md` §6 y `PLAN_TECNICO.md` §5.
+4. **Funciones:** `generar_jornada` (con los arrastres de §6.5 ya decididos), `tarea_activa` (regla de `PLAN_TECNICO.md` §2.3), `iniciar_tarea`, `terminar_tarea`, `anotar_motivo` y `mi_perfil`. Para las tareas condicionadas que aún no tienen función propia (`SALE:`, envío, eventos), añade **una función de prueba**, solo usable en pruebas, que fije la condición. Está para simular la semana, no la usarán las pantallas.
+5. **Carga inicial:** el almacén y las tiendas con sus alias; los horarios del operario; las plantillas de `PLAN_TECNICO.md` §2.6, corregidas (bolsas a las 10:45 con retraso, Nacex del viernes, duraciones de §6.10); y la configuración. **Usuarios de prueba** con correos ficticios: un operario y una administración.
+6. **Generación programada** cada día a las 06:00, hora de Madrid.
+7. **Pruebas automáticas** en el repositorio, repetibles, que se ejecuten contra pruebas y dejen la base como estaba:
+   - **Semana simulada de lunes a viernes:** días con y sin envío, días en que sale el operario y días en que sale Administración. Cada tarea aparece el día y a la hora correctos (criterio «Jornada» de §13).
+   - **Idempotencia:** generar dos veces, dos llamadas a la vez e iniciar o terminar dos veces no duplican nada.
+   - **Arrastres:** una obligatoria de plantilla no terminada pasa al día siguiente; una ligada a hora o turno no pasa.
+   - **Permisos:** el operario no ve la jornada de otra persona, no escribe directamente en ninguna tabla y no puede usar funciones de Administración.
+   - **Orden de `tarea_activa`:** un caso por cada escalón de la regla.
+8. **Revisión de seguridad:** ejecuta los avisos de seguridad y rendimiento de Supabase. Al entregar no debe quedar ninguno de seguridad.
+
+### Criterios de aceptación
+- Todas las pruebas pasan, y en el PR se ve la salida de la ejecución.
+- La estructura de pruebas coincide exactamente con las migraciones del repositorio.
+- Nada fuera del alcance de esta tarea.
+- Ninguna clave en el repositorio.
+
+### Entrega
+- Pull Request titulado **«Tarea 2 — Estructura base y jornada automática (pruebas)»**.
+- Descripción del PR: un resumen de **10 líneas como máximo** en lenguaje de negocio, la salida de las pruebas y las dudas, si las hay.
+
+---
+
+## 7.1 TAREA 1 (fusionada en el PR #1): propuesta técnica de la V1
 
 **Objetivo:** diseñar, sin construir, todo lo que la base de datos necesita para la V1 descrita en `ESTADO_DEL_SISTEMA.md` (§12, V1).
 
@@ -103,3 +138,4 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 | --- | --- | --- |
 | 1.0 | 26/10/2026 | Instrucciones iniciales y Tarea 1. |
 | 1.1 | 26/10/2026 | Tarea 1 entregada (PR #1). Nuevo sistema de «Tarea activa» y comentarios en PR. Regla de consulta de Sheets. |
+| 1.2 | 26/10/2026 | Tarea 1 aprobada y fusionada. Tarea 2 activa: estructura base y jornada automática en pruebas. |
