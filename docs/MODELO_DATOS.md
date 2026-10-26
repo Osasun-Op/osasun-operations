@@ -1,19 +1,20 @@
-# OSASUN OPERATIONS — Modelo de datos (propuesta V1)
+# OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.1 (propuesta, pendiente de aprobación) · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Tarea:** 1
+**Versión:** 0.2 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** propuesta aprobada (PR #1) con las decisiones de la revisión incorporadas. Tarea 2: construidas en pruebas las tablas marcadas con ✅.
 
-> Documento de diseño. No hay nada construido. Todo lo que aquí aparece es lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12).
-> Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad (un campo vacío, un valor de estado).
+> Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
+> ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
 
 ---
 
 ## 1. Principios del modelo
 
 - **Supabase manda en tareas, jornadas y registros. Google Sheets manda en stock, consumos y catálogo** (§9). Por eso **no hay tabla de productos ni de stock**: el catálogo se lee de PRINCIPAL cada vez que hace falta y se guarda una copia fechada de cada lectura (`lecturas_sheets`) solo para trazabilidad.
-- **Genérico desde el día 1:** centros, personas, horarios y plantillas son datos, no código. El almacén es una fila de `centros_trabajo`. Las tiendas también se dan de alta como centros (las necesitamos como destinos del reparto), lo que deja preparada la Etapa 2 sin tablas nuevas.
+- **Genérico desde el día 1:** centros, personas, horarios y plantillas son datos, no código. El almacén es una fila de `centros_trabajo`. Las tiendas también se dan de alta como centros (son destinos del reparto), lo que deja preparada la Etapa 2 sin tablas nuevas.
 - **Nadie escribe directamente en las tablas** desde las pantallas. Toda escritura pasa por las funciones de `CONTRATOS.md`. Las tablas tienen RLS activado y solo permisos de lectura donde corresponde.
 - **Idempotencia por restricciones únicas**, no por disciplina de las pantallas (ver §5).
 - **Horas:** todas las marcas de tiempo son `timestamptz`. La fecha de una jornada es la fecha local de `Europe/Madrid`.
+- **Tres esquemas:** `public` (tablas y las funciones que publica la API), `motor` (lógica interna; no se publica) y `prueba` (solo para simular en el entorno de pruebas; nadie tiene permiso).
 
 ## 2. Mapa de entidades
 
@@ -31,275 +32,166 @@ registro_eventos   (todo lo anterior deja rastro aquí)
 lecturas_sheets    (copia fechada de cada lectura de Sheets)
 ```
 
-13 tablas en total. No hay más.
-
 ## 3. Entidades
 
-### 3.1 `centros_trabajo`
+### 3.1 `centros_trabajo` ✅
 Lugares donde se trabaja o a los que se envía.
 
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | id | uuid PK | |
+| codigo | text único | Identificador estable: `ALMACEN`, `BILBAO`, `GIPUZKOA`… |
 | nombre | text | «Almacén», «Bilbao», «Durango»… |
-| tipo | enum `almacen` · `tienda` | |
-| nombre_en_sheets | text | Nombre de la pestaña/columna en `STOCK OSASUN-CLAUDE`. Ej.: Durango → `LAUDIO` (§9: «la app debe tratar LAUDIO como Durango»). |
-| alias | text[] | Otras formas en que aparece en el texto del reparto. Ej.: Durango → `{DURANGO, LAUDIO}`. Comparación normalizada (§3 de `REGLAS_CALCULO.md`). |
+| tipo | `almacen` · `tienda` · `destino` | `destino` = bloque de envío que no es una tienda (GIPUZKOA). |
+| nombre_en_sheets | text | Pestaña en `STOCK OSASUN-CLAUDE`. Durango → `LAUDIO`. |
+| alias | text[] | Cómo aparece en el texto del reparto. Comparación normalizada (`REGLAS_CALCULO.md` §2.1). |
 | activo | bool | |
 
-Carga inicial: Almacén y las tiendas que aparecen en Sheets (BILBAO, ALGORTA, DONOSTI, BARAKALDO, RENTERIA, BASAURI, LAUDIO→Durango, PORTU, GIPUZKOA). Los alias exactos están en las dudas (§7).
+Carga inicial (decisión del propietario, §5 R1): BILBAO, ALGORTA, DONOSTI, BARAKALDO, RENTERIA, BASAURI, PORTU (Portugalete), cada una con su nombre como alias; **Durango** con alias `DURANGO` y `LAUDIO` (pestaña LAUDIO), **inactiva hasta que abra**; **GIPUZKOA** como destino del envío (pestaña GIPUZKOA, va entero a Rentería por Nacex).
 
-### 3.2 `personas`
+### 3.2 `personas` ✅
 Una fila por usuario de Supabase Auth. Sin credenciales compartidas (§3).
 
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | id | uuid PK = `auth.users.id` | |
 | nombre | text | |
-| rol | enum `administracion` · `operario` | Los permisos se deciden con este campo en la base de datos. |
-| centro_id | uuid FK → centros_trabajo | Centro en el que trabaja (el operario, el almacén). Administración: nulo = todos. |
-| telefono | text | El de Administración se usa para el botón de llamada del Pixel. |
+| rol | `administracion` · `operario` | Los permisos se deciden con este campo en la base de datos. |
+| centro_id | FK → centros_trabajo | Centro en el que trabaja. Administración: nulo = todos. |
+| telefono | text | El de Administración alimenta el botón de llamada del Pixel. |
 | activo | bool | |
 
-### 3.3 `horarios`
-Turnos de cada persona por día de la semana (§3: L–J 08:30–13:00 y 15:30–18:30; V 08:30–13:00).
+### 3.3 `horarios` ✅
+Turnos de cada persona por día de la semana (§3: L–J 08:30–13:00 y 15:30–18:30; V 08:30–13:00). Único (persona, día, turno).
 
 | Campo | Tipo | Notas |
 | --- | --- | --- |
-| id | uuid PK | |
 | persona_id | FK → personas | |
-| dia_semana | smallint 1–7 | 1 = lunes. |
-| turno | enum `manana` · `tarde` | |
+| dia_semana | 1–7 | 1 = lunes. |
+| turno | `manana` · `tarde` | |
 | hora_inicio, hora_fin | time | |
 
-Único: (persona_id, dia_semana, turno).
-
-### 3.4 `plantillas_tarea`
-Las tareas del mapa semanal (§4) convertidas en configuración. De aquí sale la jornada de cada día.
+### 3.4 `plantillas_tarea` ✅
+Las tareas del mapa semanal (§4) como configuración. Lista inicial en `PLAN_TECNICO.md` §2.6.
 
 | Campo | Tipo | Notas |
 | --- | --- | --- |
-| id | uuid PK | |
-| centro_id | FK | |
-| codigo | text único | Identificador estable: `recuento_manana`, `minis`, `nacex_salida`… |
-| titulo | text | Lo que ve el operario. |
-| porque | text | Una frase (§8). Puede estar vacía en la V1; el texto definitivo es V1.1. |
-| programacion | enum `con_hora` · `dia_semana` · `condicionada` · `cola_libre` | Tipos de §6.1. Las «lanzadas por Administración» no tienen plantilla. |
-| dias_semana | smallint[] | Días en que aplica. |
-| turno | enum `manana` · `tarde` | |
-| hora_inicio | time nulo | Para `con_hora`. |
-| hora_limite | time nulo | «Antes de…» (ej. producción antes de la salida, Nacex antes de 18:10). |
-| duracion_min | int nulo | Duración prevista, para detectar conflictos (§6.4). Ej.: recuento 15. |
-| condicion | enum nulo | `sale_operario` · `sale_administracion` · `hay_envio` · `no_hay_envio` · `reparto_pegado` · `envio_pegado` · `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers`. Solo estos valores; añadir uno es una migración. |
-| contenido | enum | `simple` · `produccion_reparto` · `bolsas` · `stock_35` · `recuento`. Indica si la tarea lleva elementos y cómo se calculan. |
-| obligatoria | bool | §6.3: es un ajuste de cada tarea. |
-| prioridad_cola | enum nulo `A` · `C` · `D` | Solo para `cola_libre` (§4, cola de tiempo libre). |
-| no_terminada | enum `recalcular` · `sigue_abierta` · `arrastrar` · `nada` | §6.5. Stock = `recalcular`; compras/recogidas = `sigue_abierta`; ver duda §7 para las obligatorias. |
-| modo | enum `autonoma` · `necesita_aprobacion` | §6.9. En la V1 las aprobaciones siguen por WhatsApp; el campo solo deja preparado el cambio a «las hace él solo». |
-| orden | int | Desempate entre tareas del mismo momento. |
-| activa | bool | |
+| centro_id, codigo | | Único (centro, código). |
+| titulo, porque | text | El porqué puede ir vacío en la V1 (su texto es V1.1). |
+| programacion | `con_hora` · `dia_semana` · `condicionada` · `cola_libre` | §6.1. |
+| dias_semana | smallint[] | |
+| turno | `manana` · `tarde` · nulo | Desde cuándo está disponible si no tiene hora. |
+| hora_inicio | time | Para `con_hora`. |
+| hora_limite | time | «Antes de…». |
+| duracion_min | int | Para detectar conflictos (§6.10). |
+| condicion | ver abajo | |
+| requiere_codigo | text | No aparece hasta que esa otra tarea del día esté hecha (ej. el efectivo tras la salida). |
+| contenido | `simple` · `produccion_reparto` · `bolsas` · `stock_35` · `recuento` | |
+| obligatoria | bool | §6.3. |
+| prioridad_cola | `A` · `C` · `D` | Solo cola de tiempo libre. |
+| no_terminada | `recalcular` · `sigue_abierta` · `arrastrar` · `nada` | §6.5 (ver §4.6). |
+| modo | `autonoma` · `necesita_aprobacion` | §6.9. |
+| orden, activa | | |
 
-La lista inicial de plantillas está en `PLAN_TECNICO.md` §2.6.
+**Condiciones** (añadir una es una migración):
+- **De estado del día** (se evalúan al generar y cuando cambian): `sale_operario`, `sale_administracion`, `hay_envio`, `no_hay_envio`.
+- **De algo que pasa** (la tarea se crea cuando pasa): `reparto_pegado`, `envio_pegado`, `llega_mercancia`, `pedido_cliente`, `no_quedan_vapers`.
 
-### 3.5 `jornadas`
-Un día de trabajo de una persona.
+### 3.5 `jornadas` ✅
+Un día de trabajo de una persona. **Único (persona, fecha)**: la jornada se genera una sola vez (§6.2).
 
 | Campo | Tipo | Notas |
 | --- | --- | --- |
-| id | uuid PK | |
-| persona_id, centro_id | FK | |
-| fecha | date | Fecha local. |
-| sale | enum nulo `operario` · `administracion` | De la línea `SALE:` (R1). Nulo = aún no se sabe. |
-| hay_envio | bool | Envío a Gipuzkoa/Durango aprobado ese día. El lunes empieza a `true` (§4: «el lunes siempre hay envío»). |
-| estado | enum `abierta` · `cerrada` | |
+| persona_id, centro_id, fecha | | |
+| sale | `operario` · `administracion` · nulo | De la línea `SALE:`. Nulo = aún no se sabe. |
+| hay_envio | bool | Lunes: siempre `true`. Viernes: `true` si el jueves se decidió envío. |
+| envio_dia_siguiente | bool | El jueves a las 15:30 se decide el envío del viernes por la mañana (§4). |
+| estado | `abierta` · `cerrada` | |
 | generada_en | timestamptz | |
 
-**Único: (persona_id, fecha).** Es la garantía de que la jornada se genera una sola vez (§6.2).
-
-### 3.6 `tareas`
-Las tareas concretas de una jornada, vengan de una plantilla, de Administración o de un evento.
+### 3.6 `tareas` ✅
+Las tareas concretas de una jornada.
 
 | Campo | Tipo | Notas |
 | --- | --- | --- |
-| id | uuid PK | |
-| jornada_id | FK | |
-| clave | text | Clave de idempotencia dentro de la jornada (ver §5). |
-| origen | enum `plantilla` · `administracion` · `reparto` · `evento` · `problema` · `arrastre` | |
+| jornada_id, clave | | **Único (jornada, clave)**: clave de idempotencia (§5). |
+| origen | `plantilla` · `administracion` · `reparto` · `evento` · `problema` | Una tarea arrastrada conserva su origen. |
 | plantilla_id | FK nulo | |
-| titulo, porque | text | Copiados de la plantilla o escritos por Administración. |
-| contenido | enum | Igual que en la plantilla. |
-| obligatoria | bool | |
-| prioridad_cola | enum nulo | |
-| hora_programada | timestamptz nulo | Tareas con hora. |
-| hora_limite | timestamptz nulo | «Antes de…». |
-| urgente | bool | Solo tareas de Administración (§6.4). |
-| duracion_min | int nulo | |
-| estado | enum | `pendiente` · `en_curso` · `hecha` · `bloqueada` · `arrastrada` · `cancelada` (§6.5, sin añadir ninguno). |
-| iniciada_en, terminada_en | timestamptz nulo | Hora real (§6.4: «si empieza tarde, se registra la hora real»). |
-| resultado | text nulo | Lo hecho y su resultado, para el cierre. |
-| motivo_no_hecha | text nulo | Para el cierre. |
-| tarea_origen_id | FK → tareas nulo | Tarea de la que viene un arrastre. |
-| reparto_id | FK nulo | Tareas generadas por un reparto/envío. |
-| creada_por | FK → personas nulo | Nulo = sistema. |
-| id_cliente | uuid nulo, único | Lo manda la pantalla al crear una tarea de Administración: un reintento no duplica. |
+| titulo, porque, contenido, obligatoria, prioridad_cola, orden | | Copiados de la plantilla o escritos por Administración. |
+| condicion | text | La de la plantilla (para retirarla si deja de cumplirse). |
+| requiere_clave | text | Clave de la tarea del día que debe estar hecha antes. |
+| disponible_desde | timestamptz | Su hora, o el inicio de su turno. Antes no aparece. |
+| hora_programada | timestamptz | Tareas con hora. |
+| hora_limite | timestamptz | «Antes de…». |
+| urgente | bool | Tareas de Administración (§6.4). |
+| duracion_min | int | Obligatoria en las de Administración (§8, «duración orientativa»); solo sirve para conflictos. |
+| no_terminada | | Copiada de la plantilla; las de Administración, `arrastrar`. |
+| estado | `pendiente` · `en_curso` · `hecha` · `bloqueada` · `arrastrada` · `cancelada` | §6.5, sin añadir ninguno. |
+| retirada_por_condicion | bool | Cancelada porque su condición dejó de cumplirse (ej. ya hay envío: el recuento de las 18:15 se retira). Vuelve si la condición se cumple otra vez. |
+| iniciada_en, terminada_en | timestamptz | Hora real. |
+| resultado, motivo_no_hecha | text | Para el cierre. |
+| tarea_origen_id | FK → tareas | Tarea de la que viene un arrastre. |
+| creada_por | FK → personas | Nulo = sistema. |
+| id_cliente | uuid único | Para que un reintento al crear no duplique. |
 | creada_en | timestamptz | |
 
-**Tareas de Administración:** son filas de `tareas` con `origen = administracion` (no una tabla aparte). Llevan `urgente`, `hora_limite` u `hora_programada`, `porque` opcional y `creada_por`. La decisión tomada ante un conflicto («qué cede») se guarda en `registro_eventos`.
+Restricciones: único (jornada, clave) · **una sola tarea `en_curso` por jornada** (índice único parcial).
 
-Restricciones:
-- Único (jornada_id, clave).
-- **Una sola tarea `en_curso` por jornada** (índice único parcial). Dos pestañas no pueden tener dos tareas activas.
+**Tareas de Administración:** filas con `origen = administracion` (no una tabla aparte). La decisión ante un conflicto («qué cede») queda en `registro_eventos`.
 
-### 3.7 `tarea_elementos`
-Las piezas de una tarea con lista: referencias de producción y cajas de cada bolsa.
+En Tarea 3 se añade `reparto_id` (FK a `repartos`).
+
+### 3.7 `tarea_elementos` (Tarea 3)
+Referencias de producción y cajas de cada bolsa.
 
 | Campo | Tipo | Notas |
 | --- | --- | --- |
-| id | uuid PK | |
 | tarea_id | FK | |
-| tipo | enum `referencia_produccion` · `caja_bolsa` | |
-| producto, formato | text | Tal como están en PRINCIPAL (el formato puede ir vacío en productos sin formato). |
-| categoria | text nulo | Invernadero, Indoor… (para R3 por categoría). |
-| destino_id | FK → centros_trabajo nulo | Tienda de la bolsa. |
-| cantidad | int | Cajas a hacer o a meter. |
-| cantidad_hecha | int | Cajas hechas o metidas. Se fija con un valor absoluto, nunca se suma (idempotente). |
-| motivo | text nulo | Frase de prioridad (R3) o aviso (ej. «sin granel»). |
-| orden_sugerido | int | El operario elige el orden; esto solo es la sugerencia (§8). |
-| calculo | jsonb | Datos usados en el cálculo (pedido, en almacén, consumo, contador…) y la `lectura_id`. Permite comprobar cada número. |
-| estado | enum `pendiente` · `en_curso` · `hecho` | |
-| iniciado_en, terminado_en | timestamptz nulo | Base del ritmo de cajas/hora (V1.1, previsto, no implementado: no requiere nada más). |
+| tipo | `referencia_produccion` · `caja_bolsa` | |
+| producto, formato, categoria | text | Tal como en PRINCIPAL. |
+| destino_id | FK → centros_trabajo | Tienda o destino de la bolsa. |
+| cantidad, cantidad_hecha | int | `cantidad_hecha` se fija con un valor absoluto (idempotente). |
+| motivo | text | Frase de prioridad (R3) o aviso. |
+| orden_sugerido | int | El operario decide el orden. |
+| calculo | jsonb | Datos usados y `lectura_id`. |
+| estado | `pendiente` · `en_curso` · `hecho` | |
+| iniciado_en, terminado_en | timestamptz | Base del ritmo de cajas/hora (V1.1, previsto, no implementado). |
 
-### 3.8 `repartos` y `reparto_lineas`
-El texto pegado y su interpretación (R1). Sirve tanto para el reparto de la mañana como para el envío a Gipuzkoa/Durango.
+### 3.8 `repartos` y `reparto_lineas` (Tarea 3)
+Texto pegado y su interpretación (R1), para el reparto y para el envío.
 
-`repartos`
+`repartos`: jornada_id · tipo (`reparto` · `envio`) · texto_original · huella (hash) · fecha_en_texto · sale · estado (`con_errores` · `aceptado` · `sustituido`) · sustituye_a (FK) · lectura_id · pegado_por · pegado_en. Único (jornada, tipo, huella).
 
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| id | uuid PK | |
-| jornada_id | FK | |
-| tipo | enum `reparto` · `envio` | |
-| texto_original | text | Íntegro, tal cual se pegó. |
-| huella | text | Hash del texto normalizado: pegar dos veces lo mismo no duplica. |
-| fecha_en_texto | date nulo | De la línea `REPARTO dd/mm`. |
-| sale | enum nulo | De la línea `SALE:` o de la respuesta del operario. |
-| estado | enum `con_errores` · `aceptado` · `sustituido` | |
-| lectura_id | FK → lecturas_sheets | Datos de Sheets con los que se calculó. |
-| pegado_por, pegado_en | | |
+**Reparto corregido** (decisión del propietario, §5 R1): la versión nueva pasa a `aceptado` y la anterior a `sustituido`. Se recalcula lo que falta producir **sin perder las cajas ya hechas**; las bolsas de tiendas sin cambios se conservan y las que cambian se vuelven a comprobar caja a caja.
 
-Único: (jornada_id, tipo, huella).
+`reparto_lineas`: reparto_id · num_linea · texto · clase (`cabecera` · `sale` · `tienda` · `producto` · `vacia` · `no_reconocida`) · destino_id · cantidad · producto · formato · error.
 
-`reparto_lineas`
+### 3.9 `eventos_jornada` (Tarea 3)
+Lo que pasa «en cualquier momento» (§4): `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers`. jornada_id · tipo · detalle · registrado_por · registrado_en · id_cliente único. El **pedido de cliente** lo registra quien lo recibe: el operario con su botón o Administración como tarea nueva (§4).
 
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| id | uuid PK | |
-| reparto_id | FK | |
-| num_linea | int | Línea del texto original. |
-| texto | text | Línea original. |
-| clase | enum `cabecera` · `sale` · `tienda` · `producto` · `vacia` · `no_reconocida` | |
-| destino_id | FK nulo | Tienda bajo la que está la línea. |
-| cantidad | int nulo | |
-| producto, formato | text nulo | Nombre del catálogo reconocido. |
-| error | text nulo | Código de error de `REGLAS_CALCULO.md` §2.6. |
+### 3.10 `problemas` (Tarea 4)
+Botón «Tengo un problema» (§6.6): jornada_id · tarea_id · tipo (`falta_material` · `no_encuentro` · `no_se_hacerlo` · `no_funciona` · `otro`) · descripcion · estado (`abierto` · `sin_respuesta` · `resuelto`) · abierto_en · llamada_en · whatsapp_en · proxima_llamada_en (**WhatsApp + 30 min**, decidido) · solucion · resuelto_en · id_cliente.
 
-### 3.9 `eventos_jornada`
-Lo que pasa «en cualquier momento» (§4) y activa tareas condicionadas: llega mercancía, pedido de cliente, no quedan vapers.
+Previsto, no implementado (V1.1): la «solución directa» para `falta_material` saldrá del catálogo de materiales.
 
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| id | uuid PK | |
-| jornada_id | FK | |
-| tipo | enum `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers` | |
-| detalle | text | Una línea. |
-| registrado_por, registrado_en | | |
-| id_cliente | uuid único | Reintentos sin duplicar. |
+### 3.11 `incidencias` (Tarea 4)
+Botón «Incidencia»: jornada_id · tarea_id · descripcion · iniciada_en · terminada_en · id_cliente.
 
-### 3.10 `problemas`
-Botón «Tengo un problema» (§6.6).
+### 3.12 `cierres` (Tarea 4)
+**Uno por turno** (D2): jornada_id · turno · contenido (jsonb congelado) · generado_en · enviado_en · canal (**correo**, D3). Único (jornada, turno).
+Contenido: hecho y resultado; no hecho y motivo; problemas (tiempo y solución); incidencias (tiempo); arrastrados; retrasos de la salida cruzados con las cajas del reparto y las incidencias de la mañana; lo de mañana; los viernes, el indicador de calidad (**solo «limpieza hecha»**; los papeles de resinas quedan fuera de la V1).
 
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| id | uuid PK | |
-| jornada_id, tarea_id | FK | La tarea pasa a `bloqueada` mientras el problema está abierto. |
-| tipo | enum `falta_material` · `no_encuentro` · `no_se_hacerlo` · `no_funciona` · `otro` | |
-| descripcion | text | |
-| estado | enum `abierto` · `sin_respuesta` · `resuelto` | `sin_respuesta` = llamó, no le cogieron y envió WhatsApp. |
-| abierto_en | timestamptz | |
-| llamada_en | timestamptz nulo | |
-| whatsapp_en | timestamptz nulo | |
-| proxima_llamada_en | timestamptz nulo | `whatsapp_en + 30 min` (configurable). Cuando se alcanza, vuelve a aparecer la tarea de llamar. |
-| solucion | text nulo | Una línea. Obligatoria para resolver. |
-| resuelto_en | timestamptz nulo | |
-| id_cliente | uuid único | |
+### 3.13 `configuracion` ✅
+clave · centro_id (nulo = general) · valor jsonb. Único (clave, centro) también con centro nulo.
 
-Previsto, no implementado (V1.1): la «solución directa» de la app para `falta_material` saldrá del catálogo de materiales.
+Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_min_por_caja` (1), `duracion_min_por_bolsa` (3). Solo en pruebas: `entorno` ("pruebas"). El resto (35 %, redondeo, minis, minutos de problemas, Sheets) llega con su tarea.
 
-### 3.11 `incidencias`
-Botón «Incidencia» (§6.6): imprevisto de más de 3 minutos.
+### 3.14 `registro_eventos` ✅
+Diario de todo lo que pasa (principio 7). Solo se añade. ocurrido_en · persona_id (nulo = sistema) · jornada_id · tarea_id · tipo · datos.
+Tipos en uso: `jornada_generada`, `tarea_creada`, `tarea_retirada`, `tarea_recuperada`, `tarea_arrastrada`, `sale_fijado`, `envio_fijado`, `tarea_iniciada`, `tarea_terminada`, `motivo_anotado`.
 
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| id | uuid PK | |
-| jornada_id | FK | |
-| tarea_id | FK nulo | Tarea que estaba en curso. |
-| descripcion | text | Qué es y por qué, en una línea. |
-| iniciada_en, terminada_en | timestamptz | |
-| id_cliente | uuid único | |
-
-### 3.12 `cierres`
-El resumen que llega al móvil de Administración.
-
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| id | uuid PK | |
-| jornada_id | FK | |
-| turno | enum nulo | Nulo = cierre del día completo. Permite cualquiera de las dos opciones de la decisión D2 sin cambiar la tabla. |
-| contenido | jsonb | Copia congelada: hecho y resultado, no hecho y motivo, problemas (tiempo y solución), incidencias (tiempo), arrastrados, lo de mañana y, el viernes, el indicador de calidad. |
-| generado_en | timestamptz | |
-| enviado_en | timestamptz nulo | |
-| canal | text nulo | Según D3. |
-
-Único: (jornada_id, turno).
-
-### 3.13 `configuracion`
-Valores ajustables sin tocar código.
-
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| clave | text | |
-| centro_id | FK nulo | Nulo = general. |
-| valor | jsonb | |
-
-Claves de la V1: `stock_objetivo_pct` (35), `redondeo_stock` (según D1), `problema_minutos_llamar` (1), `problema_minutos_solucion` (5), `problema_minutos_reaparicion` (30), `incidencia_minutos_minimos` (3), `sheets_documento_id`, `sheets_pestanas` (nombres confirmados, ver `PLAN_TECNICO.md` §3.2), `hora_generacion_jornada`, `minis_excluidos` (referencias fuera de R3).
-
-Único: (clave, centro_id).
-
-### 3.14 `registro_eventos`
-Diario de todo lo que pasa (trazabilidad, principio 7). Solo se añade; nunca se modifica ni se borra.
-
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| id | bigint PK | |
-| ocurrido_en | timestamptz | |
-| persona_id | FK nulo | Nulo = sistema (tareas programadas). |
-| jornada_id, tarea_id | FK nulo | |
-| tipo | text | `tarea_iniciada`, `tarea_terminada`, `elemento_terminado`, `tarea_desplazada`, `conflicto_decidido`, `reparto_pegado`, `lectura_sheets_fallida`… |
-| datos | jsonb | Antes/después y parámetros. |
-
-### 3.15 `lecturas_sheets`
-Cada lectura de `STOCK OSASUN-CLAUDE`, ya interpretada.
-
-| Campo | Tipo | Notas |
-| --- | --- | --- |
-| id | uuid PK | |
-| leido_en | timestamptz | |
-| motivo | text | `reparto`, `stock_35`… |
-| correcto | bool | |
-| error | text nulo | Qué falló (red, permiso, estructura de la hoja cambiada…). |
-| datos | jsonb | Catálogo, cajas en almacén, granel, contador y consumo por referencia y categoría. |
-
-No es una copia del stock para trabajar con ella: solo deja constancia de con qué datos se calculó cada cosa.
+### 3.15 `lecturas_sheets` (Tarea 3)
+Cada lectura de `STOCK OSASUN-CLAUDE` ya interpretada: leido_en · motivo · correcto · error · datos. Solo deja constancia de con qué datos se calculó cada cosa.
 
 ## 4. Estados
 
@@ -308,49 +200,54 @@ No es una copia del stock para trabajar con ella: solo deja constancia de con qu
 pendiente ──iniciar──▶ en_curso ──terminar──▶ hecha
    ▲  │                  │  │
    │  │                  │  └─ llega una tarea con hora/urgente al terminar
-   │  │                  │     la referencia o bolsa en curso ──▶ pendiente (conserva lo hecho)
+   │  │                  │     la referencia o la bolsa (tienda) en curso ──▶ pendiente (conserva lo hecho)
    │  │                  └──abrir problema──▶ bloqueada ──resolver──▶ pendiente
-   │  └──cancelar (solo Administración)──▶ cancelada
-   └──── (al día siguiente, si no_terminada = arrastrar/sigue_abierta) ──▶ arrastrada
+   │  ├──cancelar (Administración)──▶ cancelada
+   │  └──su condición deja de cumplirse──▶ cancelada (retirada_por_condicion; vuelve si se cumple otra vez)
+   └──── al generar el día siguiente, si no_terminada = arrastrar/sigue_abierta ──▶ arrastrada
                                               y se crea una copia en la nueva jornada
 ```
-- `hecha`, `cancelada` y `arrastrada` son finales.
-- Una tarea con lista no se da por `hecha` hasta que todos sus elementos están `hecho`, salvo que el operario la termine indicando motivo (ver `CONTRATOS.md` §3.3).
+- `hecha` y `arrastrada` son finales; `cancelada` también, salvo la retirada por condición.
+- Solo se termina una tarea en curso. Una tarea con lista no se da por `hecha` hasta que todos sus elementos están `hecho`, salvo que el operario la termine indicando motivo (Tarea 3).
 
 ### 4.2 Elemento: `pendiente → en_curso → hecho`. Solo un elemento `en_curso` por tarea.
-
 ### 4.3 Problema: `abierto → (sin_respuesta) → resuelto`. «Resuelto» exige una línea de solución.
-
 ### 4.4 Jornada: `abierta → cerrada` (al generarse el último cierre del día).
+### 4.5 Reparto: `con_errores` (no genera tareas) · `aceptado` · `sustituido` (por una versión corregida).
 
-### 4.5 Reparto: `con_errores` (no genera tareas) · `aceptado` (genera tareas) · `sustituido` (ver duda §7).
+### 4.6 Lo no terminado (§6.5, decidido)
+| Política | Qué pasa al día siguiente | Plantillas |
+| --- | --- | --- |
+| `arrastrar` | Pasa como arrastrada y consta en el cierre con su motivo | Minis, resinas, control de materiales, limpieza de resinas, recepción, pedido de cliente, vapers, tareas de Administración |
+| `sigue_abierta` | Igual, hasta que confirma que lo tiene | Compras y recogidas (V1.1) |
+| `recalcular` | No pasa: se vuelve a calcular | Stock (+35 %) |
+| `nada` | No pasa: consta en el cierre como no hecha | Ligadas a hora o turno: recuentos, Nacex, salida, efectivo, revisión, reparto del día, bolsas |
 
 ## 5. Idempotencia (cómo se garantiza «no duplica nada»)
 
-| Situación | Garantía |
-| --- | --- |
-| Generar la jornada dos veces (tarea programada + primera apertura, dos pestañas) | Único (persona_id, fecha) en `jornadas` y (jornada_id, clave) en `tareas`. La clave de una tarea de plantilla es su `codigo`. |
-| Pegar el mismo reparto dos veces | Único (jornada_id, tipo, huella) en `repartos`. Las tareas que genera tienen clave `reparto:<id>:produccion` y `reparto:<id>:bolsas`. |
-| Repetir «crear tarea», «abrir problema», «incidencia» por un corte de red | `id_cliente` único generado por la pantalla. |
-| Pulsar dos veces «Terminada» o «iniciar» | Cambios de estado condicionados al estado actual; la segunda llamada devuelve el estado ya alcanzado sin error. |
-| Tocar una caja dos veces | `cantidad_hecha` se fija con el valor absoluto que manda la pantalla. |
-| Dos tareas activas a la vez | Índice único parcial: una sola `en_curso` por jornada. |
+| Situación | Garantía | Probado |
+| --- | --- | --- |
+| Generar la jornada dos veces (programada + apertura, dos pestañas) | Único (persona, fecha) + candado por persona y fecha; único (jornada, clave) | ✅ 02, 06 |
+| Dos llamadas a la vez | El candado hace esperar a la segunda, que devuelve la misma jornada | ✅ 06 |
+| Repetir una condición (SALE:, envío, reparto, evento) | La clave de la tarea es el código (más un sufijo por evento) | ✅ 02 |
+| Repetir «crear», «abrir problema», «incidencia» | `id_cliente` único | Tareas 3–4 |
+| Pulsar dos veces «iniciar» o «Terminada» | Cambios condicionados al estado; la segunda devuelve lo ya hecho | ✅ 02 |
+| Tocar una caja dos veces | `cantidad_hecha` se fija con un valor absoluto | Tarea 3 |
+| Dos tareas activas a la vez | Índice único parcial | ✅ 02 |
+| Arrastrar dos veces | Clave `arrastre:<id de la original>` | ✅ 03 |
 
-## 6. Permisos (resumen; detalle en `PLAN_TECNICO.md` §5)
+## 6. Permisos (detalle en `PLAN_TECNICO.md` §5)
 
 | Tabla | Operario | Administración |
 | --- | --- | --- |
-| centros_trabajo, plantillas_tarea, horarios, configuracion | Lee lo de su centro | Lee todo |
-| jornadas, tareas, tarea_elementos, repartos, reparto_lineas, eventos_jornada, problemas, incidencias | Lee solo lo de **su** jornada | Lee todo |
+| centros_trabajo | Lee todos (son los destinos de las bolsas) | Lee todos |
+| plantillas_tarea, configuracion | Lee las de su centro (y la configuración general) | Lee todo |
+| personas, horarios | Solo los suyos | Lee todo |
+| jornadas, tareas (y en sus tareas: elementos, repartos, eventos, problemas, incidencias) | Solo lo de **su** jornada | Lee todo |
 | cierres, registro_eventos, lecturas_sheets | Nada | Lee todo |
-| personas | Solo su propia fila | Lee todo |
 
-Escritura directa en tablas: **nadie** (ni operario ni Administración). Solo mediante funciones. La clave maestra solo la usan las funciones del servidor.
+Escritura directa en tablas: **nadie** (ni operario ni Administración). Sin sesión (`anon`): nada. Probado en la prueba 04.
 
 ## 7. Dudas del modelo
 
-1. **Alias de tiendas en el texto del reparto:** ¿cómo escribe Administración cada tienda? (ej. «PORTU» o «PORTUGALETE», «DONOSTI» o «SAN SEBASTIÁN», «DURANGO» o «LAUDIO»). Necesito la lista exacta.
-2. **Destinos del envío a Gipuzkoa/Durango:** ¿el texto lleva cabeceras DONOSTI, RENTERIA, GIPUZKOA y DURANGO, o solo «GIPUZKOA» y «DURANGO»? ¿Qué es la pestaña GIPUZKOA de Sheets respecto a DONOSTI y RENTERIA?
-3. **Tareas obligatorias de plantilla que no se terminan** (ej. minis del lunes): §6.5 no lo dice. ¿Se arrastran al día siguiente o solo constan en el cierre como no hechas?
-4. **Volver a pegar un reparto distinto el mismo día** (Administración lo corrige): ¿se sustituye el anterior? Si ya hay bolsas empezadas, ¿qué pasa con lo hecho?
-5. **Pedido de cliente:** ¿lo registra el operario (evento) o lo lanza Administración como tarea?
+1. **Durango:** la he dado de alta **inactiva** porque «irá como bloque propio cuando abra». ¿Correcto, o ya aparece en los repartos?
