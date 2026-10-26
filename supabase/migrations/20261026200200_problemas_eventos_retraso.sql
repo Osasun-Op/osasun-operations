@@ -453,7 +453,7 @@ begin
   insert into public.registro_eventos (tipo, persona_id, jornada_id, tarea_id, datos)
   values ('salida_retrasada', p_persona, j.id, v_bolsas.id,
           jsonb_build_object('minutos', p_minutos, 'nueva_hora', motor.hora_texto(v_nueva), 'sale', j.sale,
-                             'id_cliente', p_id_cliente,
+                             'id_cliente', p_id_cliente, 'a_las', p_ahora,
                              'aviso', case when j.sale = 'administracion' then 'correo' else 'sin_aviso' end))
   returning id into v_evento;
   if j.sale = 'administracion' then
