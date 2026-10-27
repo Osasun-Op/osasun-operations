@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.18 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.19 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -283,7 +283,7 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 
 ## 8. Interfaces (punto 4, aprobado)
 
-**Estilo:** blanco y negro, sin colores, con inspiración en Apple y Holded. Las referencias se distinguen por tipografía: el formato (4 g / 10 g) grande y en negrita, y la categoría escrita debajo.
+**Estilo:** blanco y negro, sin colores, con inspiración en Apple y Holded. **Marca (27/10/2026):** logotipo «ŌSASUN», isotipo «Ō» (favicon e icono) y tipografía geométrica cercana a la del lema. Las formas de colores de la marca solo se usan como acento en la pantalla de entrada; las pantallas de trabajo siguen siendo monocromas. Las referencias se distinguen por tipografía: el formato (4 g / 10 g) grande y en negrita, y la categoría escrita debajo.
 
 ### Operario
 - **Chromebook:**
@@ -467,3 +467,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.16 | 27/10/2026 | Botón «Incidencia» con las situaciones generales del manual; nuevo botón «Cerrar tarea» para lo pedido sin recoger y lo que se ha quedado atrás (§6.6 y §8). |
 | 1.17 | 27/10/2026 | Nuevo modelo de incidencias (quién la resuelve, importancia, correo a Administración, «Cerrar incidencias»); «Tengo un problema» pasa a ser «Estoy bloqueado»; dos botones abajo; el reparto lo puede pegar también Administración y hay «Modificar reparto». |
 | 1.18 | 27/10/2026 | El propietario contrata Lovable Pro (el plan gratuito se quedó sin créditos en la Tarea 2 de pantallas). |
+| 1.19 | 27/10/2026 | Marca de Osasun aplicada a las pantallas (logotipo, isotipo y tipografía); las formas de colores solo en la pantalla de entrada. Tarea 2 de Lovable terminada. |
