@@ -55,7 +55,8 @@ carga as (
   select md5(
     (select string_agg(format('%s %s %s %s %s %s', codigo, nombre, tipo, nombre_en_sheets, alias::text, activo), E'\n' order by codigo) from public.centros_trabajo)
     || (select string_agg(format('%s %s', clave, valor::text), E'\n' order by clave) from public.configuracion
-        where clave not in ('entorno', 'correo_administracion'))  -- propias de cada entorno
+        where clave not in ('entorno', 'correo_administracion', 'cuentas_autorizadas',
+                            'operario_por_defecto', 'telefono_administracion'))  -- propias de cada entorno
     || (select string_agg(row(p.codigo, p.titulo, p.programacion, p.dias_semana, p.turno, p.hora_inicio, p.hora_limite,
                               p.duracion_min, p.condicion, p.requiere_codigo, p.contenido, p.obligatoria, p.prioridad_cola,
                               p.no_terminada, p.modo, p.orden, p.activa)::text, E'\n' order by p.codigo)

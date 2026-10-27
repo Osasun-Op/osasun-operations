@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.4 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2, 3 y 4).
+**Versión:** 0.5 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 5).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -183,12 +183,13 @@ Botón «Incidencia»: jornada_id · persona_id · tarea_id (la que estaba en cu
 
 ### 3.12 `cierres` ✅ (Tarea 4)
 **Uno por turno** (D2): jornada_id · turno · contenido (jsonb congelado) · generado_en · envio_reclamado_en (el envío se reclama una sola vez: nunca dos correos) · enviado_en · canal (**correo**, D3) · error_envio. Único (jornada, turno).
+Su correo se sigue en `motor.correos` (§3.16 bis).
 Contenido: hecho y resultado; no hecho y motivo; problemas (tiempo y solución); incidencias (tiempo); arrastrados; retrasos de la salida cruzados con las cajas del reparto y las incidencias de la mañana; lo de mañana; los viernes, el indicador de calidad (**solo «limpieza hecha»**; los papeles de resinas quedan fuera de la V1).
 
 ### 3.13 `configuracion` ✅
 clave · centro_id (nulo = general) · valor jsonb. Único (clave, centro) también con centro nulo.
 
-Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_min_por_caja` (1), `duracion_min_por_bolsa` (3). Tarea 4: `problema_minutos_reaparicion` (30), `correo_remitente`. Solo en cada entorno, nunca en el repositorio: `entorno` ("pruebas"), `url_proyecto` y `correo_administracion` (destino de los cierres y avisos). El resto (35 %, redondeo, minis, minutos de problemas, Sheets) llega con su tarea.
+Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_min_por_caja` (1), `duracion_min_por_bolsa` (3). Tarea 4: `problema_minutos_reaparicion` (30), `correo_remitente`. Tarea 5: `correo_max_intentos` (3), `correo_minutos_reintento` (5); en pruebas, `cierres_sin_correo` (el operario ficticio desde el 03/11/2026). Solo en cada entorno, nunca en el repositorio: `entorno` ("pruebas"), `url_proyecto`, `correo_administracion` (destino de los cierres y avisos), `cuentas_autorizadas` (quién puede entrar, con su rol, centro y horario), `operario_por_defecto` y `telefono_administracion`. El resto (35 %, redondeo, minis, minutos de problemas, Sheets) llega con su tarea.
 
 ### 3.14 `registro_eventos` ✅
 Diario de todo lo que pasa (principio 7). Solo se añade. ocurrido_en · persona_id (nulo = sistema) · jornada_id · tarea_id · tipo · datos.
@@ -199,6 +200,12 @@ Cada lectura de `STOCK OSASUN-CLAUDE` ya interpretada: leido_en · motivo (`repa
 
 ### 3.16 `motor.solicitudes_servidor` ✅
 Solicitudes internas de un solo uso (caducan a los 5 minutos) para llamar a las funciones del servidor desde la base de datos sin claves (pruebas y, en la Tarea 4, tareas programadas). No se publica en la API; RLS con política que no deja ver nada a ningún usuario.
+
+### 3.16 bis `motor.correos` ✅ (Tarea 5)
+Un correo por cierre o aviso de retraso: tipo · ref · estado (`pendiente` → `enviando` → `enviado`; si Resend lo rechaza, `reintentar` a los 5 min hasta 3 intentos y después `fallido`; sin respuesta a tiempo, `dudoso`, sin reintento) · intentos · proximo_intento_en · asunto · ultimo_error · enviado_en. Único (tipo, ref): nunca dos correos del mismo cierre. Interna (RLS sin acceso); los fallidos y dudosos se ven en `estado_actual`.
+
+### 3.17 Acceso (Tarea 5) ✅
+Solo con Google y solo las cuentas de `cuentas_autorizadas`: el hook de Supabase Auth impide crear el usuario de cualquier otra. Al crearse el usuario de una cuenta autorizada se crea su `personas` (mismo id que el usuario) con su rol, centro y horario.
 
 ## 4. Estados
 

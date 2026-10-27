@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 0.4 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4).
+**Versión:** 0.5 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -11,11 +11,11 @@
 | Pieza | Para qué | Estado |
 | --- | --- | --- |
 | **Postgres de Supabase** | Tablas, permisos (RLS) y funciones: motor de tareas, problemas, incidencias, cierres. | ✅ base (Tarea 2) |
-| **Supabase Auth** | Usuarios (Administración y operario). Altas solo por invitación. | En pruebas: 2 usuarios ficticios |
+| **Supabase Auth** | Usuarios (Administración y operario), **solo con Google** y solo las cuentas de `cuentas_autorizadas` (hook «Before User Created»); al entrar por primera vez se da de alta su persona. | ✅ Tarea 5 |
 | **3 funciones del servidor (Edge Functions)** | `pegar_reparto` y `lista_stock`: las únicas que leen Google Sheets (R1 y R3). La lectura (`google.ts`, `hoja.ts`) está separada del cálculo (`r1.ts`, `r3.ts`). `enviar_correo`: envía cierres y avisos con Resend (`correo.ts`). | ✅ Tareas 3 y 4 |
 | **Tareas programadas (pg_cron)** | Generar la jornada a las 06:00 y los cierres de cada turno. | ✅ jornada (Tarea 2) y cierres (Tarea 4) |
 | **Correo (Resend, plan gratuito)** | Cierres por turno y aviso de retraso de la salida (D3). La base de datos pide el envío por `pg_net` a `enviar_correo` con una solicitud interna de un solo uso; la clave `RESEND_API_KEY` es un secreto de las funciones del servidor y el destino (`correo_administracion`) está en la configuración del entorno. | ✅ Tarea 4 |
-| **Realtime de Supabase** | Que una tarea nueva aparezca sola en el Chromebook o el Pixel. | Con la primera pantalla que lo use |
+| **Realtime de Supabase** | Que una tarea nueva aparezca sola en el Chromebook o el Pixel: `tareas` y `tarea_elementos` publicadas. | ✅ Tarea 5 |
 
 No hay servidor propio, ni cola de mensajes, ni copia del stock en la base de datos.
 
@@ -77,8 +77,10 @@ conflicto   = necesario > disponible
 ```
 Cómo está hecho (`motor.conflicto`, `motor.duracion_estimada`):
 - «Final del turno» = el del turno en que empieza la ventana. Los bloques fijos son las tareas pendientes de salida del reparto y Nacex con su hora y duración (solo lo que cae dentro de la ventana).
-- «Vencen en la ventana» = obligatorias y de Administración pendientes, en curso o bloqueadas cuya hora límite (o su hora) es anterior al final de la ventana, incluidas las que ya han vencido. Las que no tienen hora no cuentan.
+- «Vencen en la ventana» = obligatorias y de Administración pendientes, en curso o bloqueadas cuya hora límite (o su hora) cae dentro de la ventana. Las que no tienen hora no cuentan.
 - Duración de cada una: producción y lista de stock = cajas que faltan de sus referencias × 1 min; bolsas = tiendas pendientes × 3 min; el resto, su duración (sin duración, 0).
+- Solo cuentan las que vencen **dentro** de la ventana (las ya vencidas no se ponen en riesgo).
+- **Solo hay conflicto si queda en riesgo alguna obligatoria** (§6.4, corrección del PR #4). Si no cabe pero no hay obligatorias en riesgo, se crea y se avisa en el encaje de los minutos que faltan; lo que no termine pasa al día siguiente.
 - Decisiones: `despues` (la que cede pierde su hora límite), `manana` (deja de salir hoy y se arrastra), `cancelar`, `no_crear`; todas en el registro (`conflicto_decidido`).
 **Duraciones** (§6.10, decidido): producción = cajas que faltan × 1 min; bolsas = 3 min por tienda; recuento 15 min; limpieza de resinas 30 min; ruta del reparto ~2 h; tareas de Administración: la **duración orientativa obligatoria** que pone Administración al crearla.
 Con conflicto, la tarea no se crea: Administración ve, mientras la crea, qué obligatorias quedan en riesgo y decide qué cede. La decisión queda en el registro.
@@ -92,7 +94,7 @@ Con conflicto, la tarea no se crea: Administración ve, mientras la crea, qué o
 ### 2.5 bis Cierre por turno (D2, D3) ✅ Tarea 4
 - La tarea programada `generar_cierres_turno` se lanza a y media y en punto de 11, 12, 16 y 17 UTC de lunes a viernes; `motor.generar_cierres_programados` cierra los turnos de hoy cuyo horario ya ha terminado y aún no tienen cierre (13:00 y 18:30 de lunes a jueves, 13:00 el viernes, en verano e invierno). Si una ejecución falla, la siguiente lo recupera.
 - `motor.generar_cierre` congela el contenido (`CONTRATOS.md` §4.4), cierra la jornada tras el último turno y pide el correo. Único (jornada, turno): nunca hay dos cierres del mismo turno.
-- Correo: `enviar_correo` reclama el envío una sola vez; si Resend falla, queda `error_envio` y no se reintenta solo (así nunca llegan dos correos del mismo cierre).
+- Correo (`motor.correos`): `enviar_correo` reclama cada intento una sola vez. Si Resend responde con un error (no aceptó el correo), se reintenta a los 5 min (tarea programada `reintentar_correos`, cada minuto), hasta 3 intentos; si no responde a tiempo (dudoso), no se reintenta para no enviarlo dos veces. El fallo final queda en `error_envio` y en `estado_actual` (corrección del PR #4).
 - Turno de cada tarea: el de su plantilla; si no tiene, por su hora (antes o después del inicio de la tarde); sin hora, cuenta en el último cierre del día.
 
 ### 2.6 Plantillas cargadas (Tarea 2, del mapa semanal §4) ✅
@@ -165,7 +167,8 @@ Máximo 10 s y un reintento. Si sigue fallando, el cálculo **no se hace** y la 
 - Lo que nace después (tablas o funciones nuevas) nace cerrado: los privilegios por defecto están retirados.
 - Todas las funciones fijan `search_path` vacío.
 - **Lovable usa solo la clave pública**. La clave maestra solo existe como secreto de las funciones del servidor.
-- Probado con cada rol en la prueba 04 (operario, Administración, usuario sin ficha y sin sesión).
+- **Acceso (Tarea 5):** solo Google (correo y contraseña desactivados en Supabase Auth). El hook `hook_antes_de_crear_usuario` (solo lo puede usar `supabase_auth_admin`) rechaza cualquier cuenta que no esté en `cuentas_autorizadas`; quien no tiene ficha de persona no puede usar nada (`NO_AUTORIZADO`) ni ve ninguna fila.
+- Probado con cada rol en las pruebas 04, 08, 11 y 12 (operario, Administración, usuario sin ficha, cuenta no autorizada y sin sesión).
 
 ## 6. Copias de seguridad
 - **Producción en plan Pro:** copia diaria automática con 7 días de retención.
@@ -226,7 +229,7 @@ Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 | Tareas de Administración | Encaje (§2.3), conflicto (§2.4) | ✅ 05, 10 |
 | Problemas | §2.5 | ✅ 05, 09 |
 | Cierre | §2.5 bis, `cierres` + correo | ✅ 10; envío real en el PR de la Tarea 4 |
-| Permisos | §5 | ✅ 04, 08, 11 |
+| Permisos | §5 | ✅ 04, 08, 11, 12 (acceso) |
 | Dispositivos · Uso real | Mismas funciones para Chromebook y Pixel; pantallas de Lovable | Con las pantallas |
 
 ## 11. Propuestas
