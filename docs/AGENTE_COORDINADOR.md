@@ -80,7 +80,7 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 
 **Pantallas:** repositorio aparte de Lovable (`osasun-pantallas`), **sin integración de Supabase** (solo clave pública). Decidido por el propietario el 27/10/2026.
 
-**Tareas 5 y 6 (agente de BD):** fusionadas (PR #5 y #6). Eder (operario) y el propietario (Administración) están dados de alta en pruebas, con el teléfono guardado. **Tarea 7** (ajustes de la primera prueba real) encargada. Cuando se fusione, enviar a Lovable los cambios de botones («Incidencia» con 5 opciones y «Cerrar tarea» en lugar de «Ha pasado algo»), los ajustes de la revisión de su Tarea 1 y su Tarea 2 (Pixel).
+**Tareas 5, 6 y 7 (agente de BD):** fusionadas (PR #5, #6 y #7). Motor completo con el nuevo modelo de incidencias (v1.17) y `CONTRATOS.md` 0.7. Sin tarea activa para el agente de BD: la próxima saldrá de la revisión de Lovable o del panel de Administración.
 
 **Pantallas (Lovable):** el coordinador maneja Lovable directamente con el conector de Lovable de esta sesión.
 - Proyecto: «Osasun Display Hub», id `71cbb37f-27f3-4f33-bc11-616f565c9d82`, espacio «Osasun's Lovable» (plan gratuito). Editor: https://lovable.dev/projects/71cbb37f-27f3-4f33-bc11-616f565c9d82 · Previsualización: https://id-preview--71cbb37f-27f3-4f33-bc11-616f565c9d82.lovable.app
@@ -88,5 +88,6 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - El Knowledge del proyecto contiene las reglas permanentes (resumen de `AGENTE_ALMACEN.md`, 10.000 caracteres como máximo). Las tareas se envían con `send_message` e incluyen el extracto de `CONTRATOS.md` que necesitan (Lovable no puede leer este repositorio).
 - GitHub: conexión con Osasun-Op hecha. Comprobar si el proyecto está enlazado a un repositorio (`osasun-pantallas`); no es imprescindible, porque la revisión se puede hacer con `read_file` y `get_diff`.
 - **Tarea 1 de Lovable** (acceso y Chromebook): entregada y revisada el 27/10/2026. **OK**: solo clave pública y solo `rpc` y `functions.invoke`, sin escrituras directas ni base de datos de Lovable. Ajustes para el siguiente mensaje a Lovable: «cajas» en vez de «unidades»; los estados de los elementos son `pendiente`, `en_curso` y `hecho`; `PROBLEMA_YA_ABIERTO` trae `problema` e `INCIDENCIA_YA_ABIERTA` trae `incidencia_id`; usar `incidencia_abierta` y `problemas_abiertos` de `tarea_activa` cuando el agente de BD los publique (Tarea 6), en lugar de `sessionStorage`; «Terminada» desactivado si la tarea está pendiente.
-- Falta la **prueba real con cuentas**: Site URL en Supabase (propietario); el propietario entra (debe ver «Panel de Administración: próximamente») y Eder entra (pantalla del operario).
+- **Tarea 2 de Lovable** (nueva pantalla del operario con 2 botones, Incidencia en pasos, Cerrar incidencias, Pegar/Modificar reparto y móvil con bolsas) enviada el 27/10/2026 (`umsg_01m5ym75j4fax8qntfr2kmx5zg`). Pendiente de revisar.
+- Prueba real con cuentas (hecha el 27/10 con la Tarea 1): Site URL en Supabase (propietario); el propietario entra (debe ver «Panel de Administración: próximamente») y Eder entra (pantalla del operario).
 - Después: poner la Site URL de Supabase Auth en la previsualización (lo hace el propietario) y probar el acceso con Google.

@@ -62,11 +62,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 7** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` v1.16 (§4, §6.6 y §8).
+**Ninguna.** La Tarea 7 está fusionada (PR #7). No empieces nada hasta que aparezca aquí una tarea nueva.
 
 ---
 
-## 7. TAREA 7 (activa): incidencias, reparto y «nunca sin tarea», en pruebas
+## 7. TAREA 7 (fusionada en el PR #7): incidencias, reparto y «nunca sin tarea», en pruebas
 
 Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_SISTEMA.md` **v1.17**: §4 («Nunca sin tarea»), §5 R1 y §6.6 («Incidencias»). Si algo no encaja con lo ya construido, propón la forma más simple antes de rehacer nada.
 
@@ -279,3 +279,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.5 | 27/10/2026 | Tarea 4 aprobada y fusionada. Tarea 5 activa: acceso con Google y guía para las pantallas. |
 | 1.6 | 27/10/2026 | Tarea 5 aprobada y fusionada. Tarea 6 activa: ajustes de la revisión. |
 | 1.7 | 27/10/2026 | Tarea 6 fusionada. Tarea 7 activa: ajustes de la primera prueba real (nunca sin tarea, «Pega el reparto», Incidencia y Cerrar tarea). |
+| 1.8 | 27/10/2026 | Tarea 7 fusionada. Sin tarea activa. |
