@@ -9,6 +9,10 @@ update public.tareas set estado = 'hecha'
    and jornada_id in (select id from public.jornadas where persona_id = '00000000-0000-4000-a000-000000000001');
 -- Correo de destino ficticio solo para esta prueba (el real está en la configuración del entorno).
 update public.configuracion set clave = 'correo_administracion_real' where clave = 'correo_administracion' and centro_id is null;
+-- El operario de pruebas es el operario por defecto y sus cierres se envían (dentro de la prueba).
+insert into public.configuracion (clave, centro_id, valor) values
+  ('operario_por_defecto', null, '"00000000-0000-4000-a000-000000000001"'), ('cierres_sin_correo', null, '[]')
+on conflict (clave, centro_id) do update set valor = excluded.valor;
 create temp table _r (n serial, prueba text, ok boolean, detalle text) on commit drop;
 
 create function pg_temp.comprobar(p_prueba text, p_ok boolean, p_detalle text default null)
@@ -63,6 +67,7 @@ declare
   c3 uuid := gen_random_uuid();
   c4 uuid := gen_random_uuid();
   n integer;
+  v_ref text;
 begin
   j := motor.generar_jornada(op, '2026-11-10');
   update public.tareas set estado = 'hecha', terminada_en = '2026-11-10 08:50+01', iniciada_en = '2026-11-10 08:45+01',
@@ -159,6 +164,13 @@ begin
   perform pg_temp.comprobar('Decisión «cancelar»: la que cede queda cancelada con su motivo',
     (select estado = 'cancelada' and motivo_no_hecha like 'Cede ante «Contar palés»%' from public.tareas where id = v_t2), r::text);
 
+  -- No cabe, pero no hay obligatorias en riesgo: se crea y se avisa (corrección del PR #4).
+  r := pg_temp.crear(gen_random_uuid(), 'Revisar facturas', '{"tipo": "antes_de", "fecha": "2026-11-10", "hora": "17:00"}', 120,
+                     '2026-11-10 16:00+01');
+  perform pg_temp.comprobar('No cabe (120 > 60 min) pero sin obligatorias en riesgo: se crea y avisa de que no le da tiempo entera',
+    (r ->> 'tarea_id') is not null and r -> 'conflicto' = 'null'::jsonb and (r ->> 'minutos_que_faltan')::int = 60
+    and r ->> 'encaje' like '%No le da tiempo entera (faltan unos 60 min)%', r::text);
+
   -- Cancelar tarea -------------------------------------------------------------------
   v_t2 := (select id from public.tareas where jornada_id = j and titulo = 'Contar palés');
   r := motor.cancelar_tarea_de(adm, v_t2, ' ', '2026-11-10 09:40+01');
@@ -247,6 +259,7 @@ begin
   perform public.servidor_correo_resultado('cierre', v_cierre::text, true, 'resend:abc');
   perform pg_temp.comprobar('Resultado del envío: queda enviado por correo',
     (select enviado_en is not null and canal = 'correo' from public.cierres where id = v_cierre));
+  perform motor.encolar_correo('retraso', (select id::text from public.registro_eventos where jornada_id = j and tipo = 'salida_retrasada'));
   r := public.servidor_correo_reclamar('retraso',
          (select id::text from public.registro_eventos where jornada_id = j and tipo = 'salida_retrasada'));
   r2 := public.servidor_correo_reclamar('retraso',
@@ -254,6 +267,13 @@ begin
   perform pg_temp.comprobar('Retraso: asunto «Salida retrasada a las 11:00», una sola vez',
     r ->> 'asunto' = 'Salida retrasada a las 11:00' and not (r2 ->> 'enviar')::boolean, r::text);
 
+  -- Reintentos (corrección del PR #4): sin respuesta a tiempo → dudoso, no se reintenta.
+  v_ref := (select id::text from public.registro_eventos where jornada_id = j and tipo = 'salida_retrasada');
+  perform public.servidor_correo_respuesta('retraso', v_ref, 'dudoso', 'Resend no responde: tiempo agotado');
+  perform pg_temp.comprobar('Respuesta dudosa: no se reintenta (ni a los 10 min) y se ve en estado_actual',
+    (select estado = 'dudoso' and intentos = 1 from motor.correos where tipo = 'retraso' and ref = v_ref)
+    and motor.reintentar_correos(now() + interval '10 minutes') = 0
+    and motor.estado_actual_de(now()) -> 'correos_no_enviados' @> '[{"tipo": "retraso", "estado": "dudoso", "intentos": 1}]');
   -- Cierre de la tarde (martes 18:30) ----------------------------------------------------
   perform motor.resolver_problema_de(adm, (select id from public.problemas where jornada_id = j and estado <> 'resuelto'),
                                      'Pilas nuevas', '2026-11-10 15:40+01');
@@ -269,6 +289,34 @@ begin
     r -> 'arrastrados' -> 'pasan_a_manana' @> '["Ordenar estantería"]'
     and r -> 'siguiente' ->> 'fecha' = '2026-11-11' and jsonb_array_length(r -> 'siguiente' -> 'tareas') > 0
     and motor.texto_cierre(r) ->> 'texto' like '%PASAN AL DÍA SIGUIENTE%Ordenar estantería%', r::text);
+
+  -- Rechazado por Resend: hasta 3 intentos, separados 5 minutos; después, fallido.
+  v_ref := v_cierre2::text;
+  r := public.servidor_correo_reclamar('cierre', v_ref);
+  perform public.servidor_correo_respuesta('cierre', v_ref, 'rechazado', 'Resend HTTP 500: error');
+  perform pg_temp.comprobar('Rechazado (1.º intento): se reintentará a los 5 minutos, no antes',
+    (r ->> 'enviar')::boolean
+    and (select estado = 'reintentar' and intentos = 1 and proximo_intento_en between now() + interval '299 seconds' and now() + interval '301 seconds'
+           from motor.correos where tipo = 'cierre' and ref = v_ref)
+    and not (public.servidor_correo_reclamar('cierre', v_ref) ->> 'enviar')::boolean
+    and motor.reintentar_correos(now() + interval '4 minutes') = 0);
+  n := motor.reintentar_correos(now() + interval '5 minutes');
+  perform pg_temp.comprobar('A los 5 minutos se vuelve a pedir el envío (una petición más a enviar_correo)',
+    n = 1 and (select count(*) from net.http_request_queue
+                where convert_from(body, 'UTF8')::jsonb = jsonb_build_object('tipo', 'cierre', 'ref', v_ref)) = 2);
+  r := public.servidor_correo_reclamar('cierre', v_ref);
+  perform public.servidor_correo_respuesta('cierre', v_ref, 'rechazado', 'Resend HTTP 500: error');
+  perform motor.reintentar_correos(now() + interval '5 minutes');
+  r2 := public.servidor_correo_reclamar('cierre', v_ref);
+  perform public.servidor_correo_respuesta('cierre', v_ref, 'rechazado', 'Resend HTTP 422: dirección no válida');
+  perform pg_temp.comprobar('Tercer rechazo: fallido, no hay cuarto intento y el fallo se ve en estado_actual',
+    (r ->> 'enviar')::boolean and (r2 ->> 'enviar')::boolean
+    and (select estado = 'fallido' and intentos = 3 from motor.correos where tipo = 'cierre' and ref = v_ref)
+    and motor.reintentar_correos(now() + interval '1 hour') = 0
+    and (select error_envio from public.cierres where id = v_ref::uuid) = 'Resend HTTP 422: dirección no válida'
+    and motor.estado_actual_de(now()) -> 'correos_no_enviados'
+        @> '[{"tipo": "cierre", "estado": "fallido", "intentos": 3, "error": "Resend HTTP 422: dirección no válida"}]');
+
 
   -- Miércoles y jueves: arrastres, también a la jornada preparada ---------------------------
   j_mie := motor.generar_jornada(op, '2026-11-11');

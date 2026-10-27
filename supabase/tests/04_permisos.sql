@@ -5,6 +5,8 @@
 -- hace Supabase con la sesión.
 
 begin;
+-- El teléfono de Administración real del entorno no cuenta en esta prueba (se deshace al final).
+update public.configuracion set clave = 'telefono_administracion_real' where clave = 'telefono_administracion' and centro_id is null;
 create temp table _r (n serial, prueba text, ok boolean, detalle text) on commit drop;
 grant all on _r to authenticated, anon;
 grant usage on sequence _r_n_seq to authenticated, anon;

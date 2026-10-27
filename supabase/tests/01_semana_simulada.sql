@@ -47,9 +47,11 @@ begin
   v_n := motor.generar_jornadas_programadas('2026-11-02 05:00:00+01');
   perform pg_temp.comprobar('Programada: a las 05:00 no genera nada', v_n = 0 and not exists (
     select 1 from public.jornadas where persona_id = op and fecha = '2026-11-02'), 'generadas: ' || v_n);
+  -- (En pruebas puede haber más operarios reales: se comprueba la jornada del de pruebas.)
   v_n := motor.generar_jornadas_programadas('2026-11-02 06:00:00+01');
-  perform pg_temp.comprobar('Programada: a las 06:00 (invierno) genera la jornada del lunes', v_n = 1, 'generadas: ' || v_n);
-  v_n := motor.generar_jornadas_programadas('2026-06-01 04:00:00+00') * 10
+  perform pg_temp.comprobar('Programada: a las 06:00 (invierno) genera la jornada del lunes',
+    v_n >= 1 and exists (select 1 from public.jornadas where persona_id = op and fecha = '2026-11-02'), 'generadas: ' || v_n);
+  v_n := least(motor.generar_jornadas_programadas('2026-06-01 04:00:00+00'), 1) * 10
          + motor.generar_jornadas_programadas('2026-06-01 05:00:00+00');
   perform pg_temp.comprobar('Programada: en verano actúa a las 04:00 UTC (06:00 en Madrid) y no a las 05:00 UTC',
     v_n = 10 and (select count(*) from public.jornadas where persona_id = op and fecha = '2026-06-01') = 1,

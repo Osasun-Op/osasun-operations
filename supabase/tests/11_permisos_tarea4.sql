@@ -5,6 +5,9 @@
 -- operario. Nadie escribe directamente ni usa las funciones del servidor.
 
 begin;
+-- El operario de pruebas es el operario por defecto dentro de la prueba (se deshace al final).
+insert into public.configuracion (clave, centro_id, valor) values ('operario_por_defecto', null, '"00000000-0000-4000-a000-000000000001"')
+on conflict (clave, centro_id) do update set valor = excluded.valor;
 create temp table _r (n serial, prueba text, ok boolean, detalle text) on commit drop;
 grant all on _r to authenticated, anon;
 grant usage on sequence _r_n_seq to authenticated, anon;

@@ -31,3 +31,9 @@ from generate_series(1, 5) d,
      (values ('manana', '08:30', '13:00'), ('tarde', '15:30', '18:30')) t(turno, inicio, fin)
 where not (d = 5 and t.turno = 'tarde')
 on conflict (persona_id, dia_semana, turno) do nothing;
+
+-- Desde el 03/11/2026 los cierres del operario ficticio se generan pero no se
+-- envían por correo (el propietario ya habrá visto el formato; Tarea 5).
+insert into public.configuracion (clave, centro_id, valor)
+values ('cierres_sin_correo', null, '[{"persona": "00000000-0000-4000-a000-000000000001", "desde": "2026-11-03"}]')
+on conflict (clave, centro_id) do update set valor = excluded.valor;
