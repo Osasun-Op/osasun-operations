@@ -62,7 +62,19 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 7 está fusionada (PR #7). No empieces nada hasta que aparezca aquí una tarea nueva.
+**Tarea 8** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` v1.20, §5 R1.
+
+---
+
+## 7. TAREA 8 (activa): «¿Quién sale?» al pegar el reparto, en pruebas
+
+1. **`pegar_reparto`:** si llega `sale` (el desplegable de la pantalla), **manda sobre la línea `SALE:`** del texto. No se da `SALE_CONTRADICTORIA` por esa diferencia; se anota en `registro_eventos`. Sin `sale` y sin `SALE:`, sigue `FALTA_SALE`.
+2. **Cambiar quién sale sin volver a pegar:** nueva función `cambiar_quien_sale(sale)`, para el operario y para Administración, sobre la jornada de hoy del operario por defecto. Usa `motor.fijar_sale` (retira o recupera «Salida del reparto» y «Efectivo y reporte» como ya hace). Idempotente. `ESTADO_NO_VALIDO` si la salida ya está hecha.
+3. **Nombres para el desplegable:** `mi_perfil` devuelve también `quien_sale_opciones: [{ valor: "administracion", nombre }, { valor: "operario", nombre }]`, con los nombres de las fichas (persona de Administración y operario por defecto).
+4. Comprueba que el orden ya es el decidido: si sale el operario, tras «Bolsas listas en la mesa de salida» (10:45) toca «Salida del reparto» y a la vuelta «Efectivo y reporte». Añade una prueba.
+5. `CONTRATOS.md` a la 0.8, con su nota de cambios. Todas las pruebas en verde y pruebas coincidiendo con el repositorio.
+
+**Entrega:** Pull Request **«Tarea 8 — Quién sale»**, con un resumen corto y la salida de las pruebas.
 
 ---
 
@@ -280,3 +292,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.6 | 27/10/2026 | Tarea 5 aprobada y fusionada. Tarea 6 activa: ajustes de la revisión. |
 | 1.7 | 27/10/2026 | Tarea 6 fusionada. Tarea 7 activa: ajustes de la primera prueba real (nunca sin tarea, «Pega el reparto», Incidencia y Cerrar tarea). |
 | 1.8 | 27/10/2026 | Tarea 7 fusionada. Sin tarea activa. |
+| 1.9 | 27/10/2026 | Tarea 8 activa: «¿Quién sale?» al pegar el reparto. |

@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.19 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.20 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -132,7 +132,7 @@ BILBAO
 ALGORTA
 ...
 ```
-**El reparto lo puede pegar Administración (desde su panel) o el operario.** La tarea «Pega el reparto» **se cierra sola al aceptarse un reparto**; si se pulsa «Terminada» sin pegarlo, la app pide el motivo (por ejemplo, «hoy no hay reparto»). La app:
+**El reparto lo puede pegar Administración (desde su panel) o el operario.** Al pegarlo se elige en un **desplegable quién sale** (con los nombres: Administración u operario). La elección del desplegable manda sobre la línea `SALE:`, que pasa a ser opcional. Se puede cambiar quién sale sin volver a pegar el reparto. Si sale el operario, después de «Bolsas listas en la mesa de salida» (10:45) le aparece «Salida del reparto» y, a la vuelta, «Efectivo y reporte» (decisión del propietario, 27/10/2026). La tarea «Pega el reparto» **se cierra sola al aceptarse un reparto**; si se pulsa «Terminada» sin pegarlo, la app pide el motivo (por ejemplo, «hoy no hay reparto»). La app:
 1. Comprueba cada nombre contra el catálogo (PRINCIPAL). Ignora espacios y mayúsculas.
 2. Si algún nombre no existe, avisa antes de calcular.
 3. Suma las cajas por producto y formato.
@@ -468,3 +468,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.17 | 27/10/2026 | Nuevo modelo de incidencias (quién la resuelve, importancia, correo a Administración, «Cerrar incidencias»); «Tengo un problema» pasa a ser «Estoy bloqueado»; dos botones abajo; el reparto lo puede pegar también Administración y hay «Modificar reparto». |
 | 1.18 | 27/10/2026 | El propietario contrata Lovable Pro (el plan gratuito se quedó sin créditos en la Tarea 2 de pantallas). |
 | 1.19 | 27/10/2026 | Marca de Osasun aplicada a las pantallas (logotipo, isotipo y tipografía); las formas de colores solo en la pantalla de entrada. Tarea 2 de Lovable terminada. |
+| 1.20 | 27/10/2026 | Desplegable «¿Quién sale?» al pegar el reparto (manda sobre `SALE:`). Se adelanta el panel de Administración para poder probar el sistema completo. |
