@@ -62,11 +62,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 9** (sección 7).
+**Ninguna.** La Tarea 9 está fusionada (PR #9). La siguiente saldrá de la prueba en el almacén del 28/10/2026.
 
 ---
 
-## 7. TAREA 9 (activa): el panel sabe si hay reparto, en pruebas
+## 7. TAREA 9 (fusionada en el PR #9): el panel sabe si hay reparto, en pruebas
 
 1. `estado_actual` devuelve también `reparto_de_hoy` (el mismo objeto que `tarea_activa`), para que el panel de Administración muestre «Pegar reparto» o «Modificar reparto».
 2. `CONTRATOS.md` a la 0.9, con su nota de cambios. Prueba en verde; pruebas coincidiendo con el repositorio.
@@ -303,3 +303,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.8 | 27/10/2026 | Tarea 7 fusionada. Sin tarea activa. |
 | 1.9 | 27/10/2026 | Tarea 8 activa: «¿Quién sale?» al pegar el reparto. |
 | 1.10 | 27/10/2026 | Tarea 8 fusionada. Tarea 9 activa: `reparto_de_hoy` en `estado_actual`. |
+| 1.11 | 27/10/2026 | Tarea 9 fusionada. Sin tarea activa. |
