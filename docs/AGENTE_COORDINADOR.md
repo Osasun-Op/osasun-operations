@@ -76,6 +76,13 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 
 **Tarea 3:** aprobada y fusionada (PR #3). Dudas resueltas en su comentario.
 
-**Tarea 4:** encargada. El propietario crea la cuenta gratuita de Resend **con el correo que recibirá los cierres** y escribe la clave en Supabase cuando el agente la pida.
+**Tarea 4:** aprobada y fusionada (PR #4). Motor de la V1 completo en pruebas.
 
-**Siguiente:** revisar el PR de la Tarea 4. Después, la Tarea 5 (pantallas en Lovable y acceso con Google): hay que redactar las instrucciones del agente de almacén (Lovable) y guiar al propietario para crear el cliente OAuth de Google.
+**Pantallas:** repositorio aparte de Lovable (`osasun-pantallas`), **sin integración de Supabase** (solo clave pública). Decidido por el propietario el 27/10/2026.
+
+**Tarea 5 (agente de BD):** encargada: acceso con Google, lista de autorizados, personas reales en pruebas y guía para pantallas en `CONTRATOS.md`. El propietario crea el cliente OAuth de Google (guía en el chat del 27/10/2026).
+
+**Siguiente:**
+1. Redactar `docs/AGENTE_ALMACEN.md` (instrucciones y Tarea 1 del agente de Lovable) y el texto de arranque que el propietario pegará en Lovable.
+2. Revisar el PR de la Tarea 5 del agente de BD.
+3. Arrancar Lovable cuando el acceso con Google funcione en pruebas.

@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.12 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tarea 4 en curso: problemas, tareas de Administración y cierre.
+**Versión:** 1.13 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Tarea 5 en curso: acceso con Google y pantallas.
 
 ---
 
@@ -334,14 +334,14 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | --- | --- |
 | **Supabase** | Base de datos central, usuarios, permisos (en el servidor), lógica crítica (cálculos y motor), tareas programadas (generar la jornada, enviar el cierre) y lectura de Sheets. |
 | **Lovable** | Pantallas: las del operario y el panel de Administración. |
-| **GitHub** | Un único repositorio privado, `Osasun-Op/osasun-operations`, con el código y la carpeta `docs`. Conectado a Lovable y a este proyecto (este proyecto solo lee). |
+| **GitHub** | Dos repositorios privados (decisión del propietario, 27/10/2026): `Osasun-Op/osasun-operations`, la **fuente de verdad** (base de datos, funciones del servidor y `docs`), y `Osasun-Op/osasun-pantallas`, creado por Lovable **solo para las pantallas** (Lovable no puede trabajar sobre un repositorio que ya existe). |
 | **Claude Code en la web** | Entorno en la nube del agente de base de datos. Clona el repositorio en una máquina aislada y entrega sus cambios como rama para revisión. Acceso solo a este repositorio. |
 
 **Condiciones obligatorias:**
 1. **Dos entornos, pruebas y producción.** Lovable trabaja siempre contra pruebas. A producción solo pasa lo probado.
 2. **La lógica crítica vive en Supabase.** Las pantallas solo muestran y solicitan. El navegador no decide permisos, cálculos ni estados críticos.
 3. **Google Sheets en solo lectura** mediante la cuenta técnica.
-4. **Lovable tiene prohibido crear o cambiar tablas.**
+4. **Lovable tiene prohibido crear o cambiar tablas.** No se activa la integración de Supabase en Lovable: Lovable solo recibe la URL del proyecto y la **clave pública**, y usa únicamente las funciones de `CONTRATOS.md` (decisión del propietario, 27/10/2026).
 5. **Claves de API (autorizado por el propietario, 26/10/2026):** los agentes del proyecto pueden recibir las claves que necesiten para su trabajo, con estas reglas:
    - Se guardan como **secretos o variables del entorno** donde se usan (entorno en la nube de Claude Code, Supabase, Lovable). Nunca en el repositorio, en documentos ni pegadas en conversaciones.
    - **Una clave por entorno y por uso**, con el mínimo permiso necesario. Las de producción solo se entregan cuando se apruebe la puesta en marcha.
@@ -436,3 +436,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.10 | 26/10/2026 | PR #2 aprobado y fusionado: estructura base y jornada automática en pruebas. Tarea 3 encargada. |
 | 1.11 | 26/10/2026 | Revisión de la Tarea 3 (PR #3). El envío descuenta el reparto del mismo día antes del recuento. |
 | 1.12 | 26/10/2026 | PR #3 aprobado y fusionado: reparto y stock con lectura de Sheets, en pruebas. Tarea 4 encargada. Servicio de correo: Resend (plan gratuito). |
+| 1.13 | 27/10/2026 | PR #4 aprobado y fusionado: motor completo en pruebas. Pantallas en un repositorio aparte de Lovable, sin integración de Supabase (solo clave pública). Tarea 5 encargada (acceso con Google). |

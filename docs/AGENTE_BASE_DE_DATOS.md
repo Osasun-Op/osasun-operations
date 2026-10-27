@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.4 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.5 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -62,11 +62,38 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 4** (sección 7). Empieza leyendo el comentario del coordinador en el PR #3 y `ESTADO_DEL_SISTEMA.md` v1.11.
+**Tarea 5** (sección 7). Empieza leyendo el comentario del coordinador en el PR #4 y `ESTADO_DEL_SISTEMA.md` v1.13.
 
 ---
 
-## 7. TAREA 4 (activa): problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo, en pruebas
+## 7. TAREA 5 (activa): acceso con Google y preparación para las pantallas, en pruebas
+
+**Objetivo:** que en pruebas solo puedan entrar, con su cuenta de Google, las personas dadas de alta, y que Lovable tenga todo lo necesario para hacer las pantallas sin tocar la base de datos.
+
+### Contexto
+- **Las pantallas van en otro repositorio** (`osasun-pantallas`, creado por Lovable), **sin integración de Supabase**: Lovable solo tendrá la URL del proyecto y la clave pública. Todo lo que necesiten las pantallas tiene que estar en `CONTRATOS.md`.
+- El **cliente de Google** (OAuth) lo crea el propietario con la guía del coordinador, y él mismo escribe el ID y el secreto en Supabase (Authentication → Providers → Google). Tú no los ves ni los pides.
+
+### Pasos
+1. **Correcciones del PR #4** (comentario del coordinador): se crea la tarea de Administración cuando no hay ninguna obligatoria en riesgo, y el correo se reintenta solo si Resend lo rechaza (3 intentos, separados 5 minutos), con el fallo final visible en `estado_actual`. Cada una con sus pruebas.
+2. **Acceso:**
+   - Solo con Google; el registro con correo y contraseña, desactivado.
+   - Una **lista de cuentas autorizadas** (en `configuracion` de pruebas, no en el repositorio), aplicada por la base de datos: una cuenta que no esté en la lista no crea usuario. Puede servir un *hook* de autenticación u otro mecanismo gratuito equivalente.
+   - Direcciones de vuelta permitidas para las previsualizaciones de Lovable (`*.lovable.app` y `*.lovableproject.com`).
+3. **Personas reales en pruebas:** pide al propietario, **en tu sesión**, los correos de Google de Administración y del operario. Dalos de alta en pruebas con su rol, su centro y el horario del operario. Los correos no van al repositorio ni al PR.
+4. **Correos de pruebas:** el 03/11/2026 apaga los cierres del operario ficticio (el propietario ya habrá visto el formato). Déjalo programado o documentado para hacerlo ese día.
+5. **`CONTRATOS.md` listo para Lovable:** añade una sección «Guía para las pantallas» que diga cómo iniciar sesión con Google, cómo llamar a cada función (`rpc` y `functions.invoke`), qué hay que actualizar en directo (Realtime) y los mensajes de error que se muestran tal cual. La URL del proyecto y la clave pública (que no es secreta) van ahí.
+6. **Pruebas automáticas:** la lista de autorizados (entra un correo autorizado y uno no autorizado no puede), las correcciones del paso 1 y todas las anteriores sin romper.
+7. **Avisos de seguridad** de Supabase: ninguno, salvo el de contraseñas, si sigue apareciendo con el acceso por contraseña desactivado; explica por qué.
+
+### Entrega
+- Pull Request titulado **«Tarea 5 — Acceso con Google y guía para pantallas (pruebas)»**.
+- Descripción: un resumen de **10 líneas como máximo** en lenguaje de negocio, la salida de las pruebas y las dudas.
+
+---
+
+## 7.0 TAREA 4 (fusionada en el PR #4): problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo, en pruebas
+
 
 **Objetivo:** completar en pruebas todo el motor de la V1 que no depende de las pantallas, de modo que la base de datos cumpla los criterios de §13 «Tareas de Administración», «Problemas» y «Cierre».
 
@@ -218,3 +245,4 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 | 1.2 | 26/10/2026 | Tarea 1 aprobada y fusionada. Tarea 2 activa: estructura base y jornada automática en pruebas. |
 | 1.3 | 26/10/2026 | Tarea 2 aprobada y fusionada. Tarea 3 activa: reparto y stock con lectura de Sheets, en pruebas. |
 | 1.4 | 26/10/2026 | Tarea 3 aprobada y fusionada. Tarea 4 activa: problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo. |
+| 1.5 | 27/10/2026 | Tarea 4 aprobada y fusionada. Tarea 5 activa: acceso con Google y guía para las pantallas. |
