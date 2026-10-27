@@ -1,6 +1,8 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 0.8 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 8).
+**Versión:** 0.9 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 9).
+
+> **Cambios en 0.9 (Tarea 9) — para Lovable:** `estado_actual` trae también `reparto_de_hoy` (el mismo objeto que `tarea_activa`: `{ reparto_id, aceptado_en, pegado_por, pegado_por_nombre }` o `null`), para que el panel de Administración muestre «Pegar reparto» o «Modificar reparto». Nada más cambia.
 
 > **Cambios en 0.8 (Tarea 8) — para Lovable:**
 > 1. **Desplegable «¿Quién sale?» al pegar el reparto:** se manda en `pegar_reparto` como `sale` (`"operario"` | `"administracion"`) y **manda sobre la línea `SALE:`** del texto, que pasa a ser opcional. Si no coinciden, no es un error (queda anotado). Sin desplegable ni `SALE:`, sigue `FALTA_SALE`.
@@ -262,7 +264,7 @@ Cambia quién sale hoy sin volver a pegar el reparto. Para el operario (su jorna
 Pasa la tarea a `cancelada` con su motivo (obligatorio) y retira la llamada pendiente si tenía un problema abierto. **Salida:** `{ tarea }`. Ya cancelada: `aviso: YA_CANCELADA`. **Errores:** `DATOS_NO_VALIDOS`, `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya hecha o arrastrada).
 
 ### 4.3 `estado_actual()` ✅
-Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, operario, jornada: { id, sale, hay_envio, estado }, en_curso: tarea con sus elementos, problemas_abiertos: [...], incidencia_en_curso, incidencias_abiertas: [objeto incidencia, §3.11], arrastradas: [...], hoy: [{ id, titulo, estado, origen, obligatoria, urgente, hora, motivo }], retrasos_salida: [{ a_las, minutos, nueva_hora, sale, aviso }], correos_no_enviados: [{ tipo, asunto, estado: "fallido"|"dudoso", intentos, error, creado_en }], lectura_sheets: { ultima_correcta, ultimo_error } }`. `correos_no_enviados` = cierres o avisos de los últimos 7 días que no se han podido enviar (mostrarlos como aviso).
+Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, operario, jornada: { id, sale, hay_envio, estado }, en_curso: tarea con sus elementos, reparto_de_hoy, problemas_abiertos: [...], incidencia_en_curso, incidencias_abiertas: [objeto incidencia, §3.11], arrastradas: [...], hoy: [{ id, titulo, estado, origen, obligatoria, urgente, hora, motivo }], retrasos_salida: [{ a_las, minutos, nueva_hora, sale, aviso }], correos_no_enviados: [{ tipo, asunto, estado: "fallido"|"dudoso", intentos, error, creado_en }], lectura_sheets: { ultima_correcta, ultimo_error } }`. `correos_no_enviados` = cierres o avisos de los últimos 7 días que no se han podido enviar (mostrarlos como aviso). `reparto_de_hoy` ✅ Tarea 9: el reparto aceptado hoy en la jornada del operario por defecto, el mismo objeto que en `tarea_activa` (`null` → «Pegar reparto»; si no, «Modificar reparto»).
 
 ### 4.4 `cierre(cierre_id)` · `cierres_recientes(limite)` ✅
 Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según el horario), generado solo y enviado **por correo**, una sola vez.
@@ -296,7 +298,7 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 | Administración registra un pedido de cliente | `registrar_evento` |
 | Incidencia → Estoy bloqueado (llamar, no contestan, solución) | `crear_incidencia` (`bloqueado`) o `abrir_problema`, `problema_llamada`, `resolver_problema` |
 | Pegar el reparto (operario o Administración), con el desplegable «¿Quién sale?» | `mi_perfil` (`quien_sale_opciones`), `pegar_reparto` (`sale`), `cambiar_quien_sale` |
-| Inicio de Administración (móvil) | `estado_actual` |
+| Inicio de Administración (móvil), con «Pegar reparto» / «Modificar reparto» | `estado_actual` (`reparto_de_hoy`), `pegar_reparto` |
 | Nueva tarea (qué, para quién, cuándo, duración, urgente, por qué) | `crear_tarea_admin` |
 | Cierre | `cierre` (y correo) |
 
