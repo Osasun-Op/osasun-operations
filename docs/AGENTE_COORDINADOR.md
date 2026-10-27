@@ -80,7 +80,7 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 
 **Pantallas:** repositorio aparte de Lovable (`osasun-pantallas`), **sin integración de Supabase** (solo clave pública). Decidido por el propietario el 27/10/2026.
 
-**Tarea 5 (agente de BD):** aprobada y fusionada (PR #5). Eder (operario) y el propietario (Administración) están dados de alta en pruebas. **Tarea 6** (teléfono y conflicto con obligatorias vencidas) encargada.
+**Tareas 5 y 6 (agente de BD):** fusionadas (PR #5 y #6). Eder (operario) y el propietario (Administración) están dados de alta en pruebas, con el teléfono guardado. **Tarea 7** (ajustes de la primera prueba real) encargada. Cuando se fusione, enviar a Lovable los cambios de botones («Incidencia» con 5 opciones y «Cerrar tarea» en lugar de «Ha pasado algo»), los ajustes de la revisión de su Tarea 1 y su Tarea 2 (Pixel).
 
 **Pantallas (Lovable):** el coordinador maneja Lovable directamente con el conector de Lovable de esta sesión.
 - Proyecto: «Osasun Display Hub», id `71cbb37f-27f3-4f33-bc11-616f565c9d82`, espacio «Osasun's Lovable» (plan gratuito). Editor: https://lovable.dev/projects/71cbb37f-27f3-4f33-bc11-616f565c9d82 · Previsualización: https://id-preview--71cbb37f-27f3-4f33-bc11-616f565c9d82.lovable.app

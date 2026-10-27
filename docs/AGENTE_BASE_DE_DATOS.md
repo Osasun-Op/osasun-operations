@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.6 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.7 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -62,23 +62,29 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 6** (sección 7). Empieza leyendo el comentario del coordinador en el PR #5.
+**Tarea 7** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` v1.16 (§4, §6.6 y §8).
 
 ---
 
-## 7. TAREA 6 (activa): ajustes de la revisión del PR #5, en pruebas
+## 7. TAREA 7 (activa): lo que ha salido de la primera prueba real, en pruebas
 
-1. **Teléfono de Administración:** el propietario te lo da en tu sesión. Guárdalo en `telefono_administracion` de pruebas, fuera del repositorio y del PR.
-2. **Conflicto:** las obligatorias pendientes que ya han vencido no cuentan como «en riesgo», pero su duración sí se resta del tiempo disponible. Añade su prueba en `10_admin_conflictos_cierres.sql`.
-3. **Petición de las pantallas** (revisión de la Tarea 1 de Lovable): `tarea_activa` debe devolver también `incidencia_abierta` (`{ incidencia_id, descripcion, iniciada_en }` o null) y `problemas_abiertos` (`[{ problema_id, tarea_id, tipo, descripcion, estado, proxima_llamada_en }]`). Así la pantalla no pierde una incidencia o un problema abierto al recargar o al cambiar de dispositivo (Chromebook o Pixel). Confirma en `CONTRATOS.md` qué campos devuelven `PROBLEMA_YA_ABIERTO` e `INCIDENCIA_YA_ABIERTA`.
-4. **De la primera prueba real** (`ESTADO_DEL_SISTEMA.md` v1.15):
-   - **«Pega el reparto»** se cierra sola cuando `pegar_reparto` acepta un reparto. `terminar_tarea` sobre ella sin reparto aceptado exige `motivo` (error `MOTIVO_OBLIGATORIO`, con un mensaje que lo pida).
-   - **Nunca sin tarea:** cuando no queda nada disponible antes de la siguiente tarea con hora, `tarea_activa` ofrece primero las fijas de la tarde de ese día (plantillas `dia_semana` del turno de tarde sin hora: minis, resinas, control de materiales) y después «Orden y limpieza». Esta **no se gasta**: al terminarla, vuelve a estar disponible (puede ser una tarea nueva cada vez, con su propio registro). Recuento, revisión del envío, Nacex y salida no se adelantan.
-   - Pruebas de los tres casos.
-5. Si `CONTRATOS.md` cambia, súbele la versión: el coordinador copia ese archivo al repositorio de las pantallas.
-6. Todas las pruebas pasan y pruebas coincide con el repositorio.
+El propietario y Eder han probado la pantalla del operario (Lovable) contra pruebas. Esto es lo que necesitan las pantallas:
 
-**Entrega:** Pull Request **«Tarea 6 — Ajustes de la revisión del PR #5»**, con un resumen corto y la salida de las pruebas.
+1. **«Pega el reparto»** se cierra sola cuando `pegar_reparto` acepta un reparto. `terminar_tarea` sobre ella sin reparto aceptado exige `motivo` (error `MOTIVO_OBLIGATORIO`, con un mensaje que lo pida).
+2. **Nunca sin tarea** (§4, «Nunca sin tarea»): cuando no queda nada disponible antes de la siguiente tarea con hora, `tarea_activa` ofrece primero las fijas de la tarde de ese día (plantillas `dia_semana` del turno de tarde sin hora: minis, resinas, control de materiales) y después «Orden y limpieza». Esta **no se gasta**: al terminarla vuelve a estar disponible (puede ser una tarea nueva cada vez, con su registro). Recuento, revisión del envío, Nacex y salida no se adelantan.
+3. **Botón «Incidencia»** (§6.6): en `registrar_evento`, dos tipos nuevos, `pedir_comprar` («Hay que pedir o comprar algo», con `detalle` obligatorio) y `recogida_nacex`. Los dos crean una tarea que **sigue abierta** (`no_terminada = sigue_abierta`) hasta que se cierra. `no_quedan_vapers` deja de usarse en las pantallas (no hace falta borrarlo). «Corregir, limpiar o solucionar» sigue siendo `iniciar_incidencia`.
+4. **Botón «Cerrar tarea»** (§6.6):
+   - `pendientes_de_cerrar()`: lo pedido sin recoger y las tareas no urgentes que se han quedado atrás (pendientes de hoy, ya disponibles y sin lista, más las arrastradas). Excluye la tarea activa, las listas y las bolsas, «Pega el reparto» y las que esperan a su hora.
+   - `cerrar_pendiente(tarea_id, resultado?)`: la marca como hecha con su hora real, sin tener que pasar por «Empezar». Idempotente. No vale para lo excluido (`ESTADO_NO_VALIDO`).
+5. **Que no se olviden al recargar:** `tarea_activa` devuelve también `incidencia_abierta` (`{ incidencia_id, descripcion, iniciada_en }` o null) y `problemas_abiertos` (`[{ problema_id, tarea_id, tipo, descripcion, estado, proxima_llamada_en }]`). Confirma en `CONTRATOS.md` qué campos devuelven `PROBLEMA_YA_ABIERTO` e `INCIDENCIA_YA_ABIERTA`.
+6. `CONTRATOS.md` a la 0.7, con una nota de cambios al principio (el coordinador la traslada a Lovable).
+7. Pruebas de todo lo anterior, todas en verde, y pruebas coincidiendo con el repositorio.
+
+**Entrega:** Pull Request **«Tarea 7 — Ajustes de la primera prueba real»**, con un resumen de 10 líneas como máximo y la salida de las pruebas.
+
+---
+
+## 7.0 TAREA 6 (fusionada en el PR #6): teléfono de Administración y conflicto con obligatorias vencidas
 
 ---
 
@@ -265,3 +271,4 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 | 1.4 | 26/10/2026 | Tarea 3 aprobada y fusionada. Tarea 4 activa: problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo. |
 | 1.5 | 27/10/2026 | Tarea 4 aprobada y fusionada. Tarea 5 activa: acceso con Google y guía para las pantallas. |
 | 1.6 | 27/10/2026 | Tarea 5 aprobada y fusionada. Tarea 6 activa: ajustes de la revisión. |
+| 1.7 | 27/10/2026 | Tarea 6 fusionada. Tarea 7 activa: ajustes de la primera prueba real (nunca sin tarea, «Pega el reparto», Incidencia y Cerrar tarea). |
