@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.17 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.18 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -373,7 +373,7 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
    - **La clave maestra de Supabase (service role) nunca va en las pantallas.** Lovable usa solo la clave pública, y los permisos los aplica la base de datos.
    - Todas son **revocables**. Si una clave se expone, se cambia en el momento.
 
-**Coste estimado:** en torno a 100 € al mes en total (estimación del propietario).
+**Coste estimado:** en torno a 100 € al mes en total (estimación del propietario). Contratado a 27/10/2026: **Lovable Pro** (unos 25 $ al mes). Supabase, Google Cloud y Resend siguen en sus planes gratuitos mientras estemos en pruebas.
 
 **Descartado:** AppSheet y Apps Script (no permiten llegar a la Etapa 3 sin rehacer, y la lógica sería frágil), otras herramientas low-code (dependencia alta) y un servidor propio (mantenimiento).
 
@@ -466,3 +466,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.15 | 27/10/2026 | Primera prueba real de la pantalla del operario. Nunca sin tarea: se adelantan las fijas de la tarde y «Orden y limpieza» no se gasta. «Pega el reparto» se cierra al aceptarse un reparto. |
 | 1.16 | 27/10/2026 | Botón «Incidencia» con las situaciones generales del manual; nuevo botón «Cerrar tarea» para lo pedido sin recoger y lo que se ha quedado atrás (§6.6 y §8). |
 | 1.17 | 27/10/2026 | Nuevo modelo de incidencias (quién la resuelve, importancia, correo a Administración, «Cerrar incidencias»); «Tengo un problema» pasa a ser «Estoy bloqueado»; dos botones abajo; el reparto lo puede pegar también Administración y hay «Modificar reparto». |
+| 1.18 | 27/10/2026 | El propietario contrata Lovable Pro (el plan gratuito se quedó sin créditos en la Tarea 2 de pantallas). |

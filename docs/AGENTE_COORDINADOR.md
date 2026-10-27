@@ -83,7 +83,7 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 **Tareas 5, 6 y 7 (agente de BD):** fusionadas (PR #5, #6 y #7). Motor completo con el nuevo modelo de incidencias (v1.17) y `CONTRATOS.md` 0.7. Sin tarea activa para el agente de BD: la próxima saldrá de la revisión de Lovable o del panel de Administración.
 
 **Pantallas (Lovable):** el coordinador maneja Lovable directamente con el conector de Lovable de esta sesión.
-- Proyecto: «Osasun Display Hub», id `71cbb37f-27f3-4f33-bc11-616f565c9d82`, espacio «Osasun's Lovable» (plan gratuito). Editor: https://lovable.dev/projects/71cbb37f-27f3-4f33-bc11-616f565c9d82 · Previsualización: https://id-preview--71cbb37f-27f3-4f33-bc11-616f565c9d82.lovable.app
+- Proyecto: «Osasun Display Hub», id `71cbb37f-27f3-4f33-bc11-616f565c9d82`, espacio «Osasun's Lovable» (plan **Pro** desde el 27/10/2026). Editor: https://lovable.dev/projects/71cbb37f-27f3-4f33-bc11-616f565c9d82 · Previsualización: https://id-preview--71cbb37f-27f3-4f33-bc11-616f565c9d82.lovable.app
 - **Sin base de datos de Lovable** (comprobado: `enabled: false`). Nunca usar `enable_database`.
 - El Knowledge del proyecto contiene las reglas permanentes (resumen de `AGENTE_ALMACEN.md`, 10.000 caracteres como máximo). Las tareas se envían con `send_message` e incluyen el extracto de `CONTRATOS.md` que necesitan (Lovable no puede leer este repositorio).
 - GitHub: conexión con Osasun-Op hecha. Comprobar si el proyecto está enlazado a un repositorio (`osasun-pantallas`); no es imprescindible, porque la revisión se puede hacer con `read_file` y `get_diff`.
