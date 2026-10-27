@@ -8,6 +8,7 @@ Este repositorio contiene el software de supervisión operativa de Osasun Wellne
 2. Identifica tu rol en el mensaje de arranque y lee tus instrucciones:
    - Coordinador → `docs/AGENTE_COORDINADOR.md`
    - Base de datos → `docs/AGENTE_BASE_DE_DATOS.md`
+   - Pantallas (Lovable) → `docs/AGENTE_ALMACEN.md` (trabaja en el repositorio `osasun-pantallas`, con una copia de ese archivo y de `CONTRATOS.md`)
 3. Contexto operativo: `docs/ACTUALIZACIONES_MANUAL_ALMACEN.md`.
 
 ## Reglas que nadie se salta

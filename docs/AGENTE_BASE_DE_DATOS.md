@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.5 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.6 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -62,11 +62,23 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 5** (sección 7). Empieza leyendo el comentario del coordinador en el PR #4 y `ESTADO_DEL_SISTEMA.md` v1.13.
+**Tarea 6** (sección 7). Empieza leyendo el comentario del coordinador en el PR #5.
 
 ---
 
-## 7. TAREA 5 (activa): acceso con Google y preparación para las pantallas, en pruebas
+## 7. TAREA 6 (activa): ajustes de la revisión del PR #5, en pruebas
+
+1. **Teléfono de Administración:** el propietario te lo da en tu sesión. Guárdalo en `telefono_administracion` de pruebas, fuera del repositorio y del PR.
+2. **Conflicto:** las obligatorias pendientes que ya han vencido no cuentan como «en riesgo», pero su duración sí se resta del tiempo disponible. Añade su prueba en `10_admin_conflictos_cierres.sql`.
+3. Si `CONTRATOS.md` cambia, súbele la versión: el coordinador copia ese archivo al repositorio de las pantallas.
+4. Todas las pruebas pasan y pruebas coincide con el repositorio.
+
+**Entrega:** Pull Request **«Tarea 6 — Ajustes de la revisión del PR #5»**, con un resumen corto y la salida de las pruebas.
+
+---
+
+## 7.1 TAREA 5 (fusionada en el PR #5): acceso con Google y preparación para las pantallas, en pruebas
+
 
 **Objetivo:** que en pruebas solo puedan entrar, con su cuenta de Google, las personas dadas de alta, y que Lovable tenga todo lo necesario para hacer las pantallas sin tocar la base de datos.
 
@@ -133,7 +145,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
-## 7.1 TAREA 3 (fusionada en el PR #3): reparto y stock, leyendo la hoja, en pruebas
+## 7.1b TAREA 3 (fusionada en el PR #3): reparto y stock, leyendo la hoja, en pruebas
 
 
 **Objetivo:** que en pruebas funcionen **pegar el reparto** (R1) y la **lista de stock +35 %** (R3), leyendo `STOCK OSASUN-CLAUDE` en solo lectura con la cuenta técnica, y que el operario pueda ir marcando referencias y cajas. Sin problemas, incidencias, tareas de Administración ni cierres: eso es la Tarea 4.
@@ -247,3 +259,4 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 | 1.3 | 26/10/2026 | Tarea 2 aprobada y fusionada. Tarea 3 activa: reparto y stock con lectura de Sheets, en pruebas. |
 | 1.4 | 26/10/2026 | Tarea 3 aprobada y fusionada. Tarea 4 activa: problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo. |
 | 1.5 | 27/10/2026 | Tarea 4 aprobada y fusionada. Tarea 5 activa: acceso con Google y guía para las pantallas. |
+| 1.6 | 27/10/2026 | Tarea 5 aprobada y fusionada. Tarea 6 activa: ajustes de la revisión. |

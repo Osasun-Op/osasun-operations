@@ -80,9 +80,11 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 
 **Pantallas:** repositorio aparte de Lovable (`osasun-pantallas`), **sin integración de Supabase** (solo clave pública). Decidido por el propietario el 27/10/2026.
 
-**Tarea 5 (agente de BD):** encargada: acceso con Google, lista de autorizados, personas reales en pruebas y guía para pantallas en `CONTRATOS.md`. El propietario crea el cliente OAuth de Google (guía en el chat del 27/10/2026).
+**Tarea 5 (agente de BD):** aprobada y fusionada (PR #5). Eder (operario) y el propietario (Administración) están dados de alta en pruebas. **Tarea 6** (teléfono y conflicto con obligatorias vencidas) encargada.
 
-**Siguiente:**
-1. Redactar `docs/AGENTE_ALMACEN.md` (instrucciones y Tarea 1 del agente de Lovable) y el texto de arranque que el propietario pegará en Lovable.
-2. Revisar el PR de la Tarea 5 del agente de BD.
-3. Arrancar Lovable cuando el acceso con Google funcione en pruebas.
+**Pantallas:** instrucciones en `docs/AGENTE_ALMACEN.md` (Tarea 1: acceso y Chromebook del operario). Pasos:
+1. El propietario crea el proyecto en Lovable **sin la integración de Supabase** y lo conecta a GitHub (Osasun-Op), lo que crea `osasun-pantallas`.
+2. El coordinador copia `docs/AGENTE_ALMACEN.md` y `docs/CONTRATOS.md` a `osasun-pantallas/docs/` (y los vuelve a copiar cuando cambien).
+3. El propietario escribe en Lovable: «Lee docs/AGENTE_ALMACEN.md y ejecuta tu tarea activa».
+4. Con la dirección de la previsualización, guiar al propietario para poner la Site URL en Supabase Auth.
+5. Revisar `osasun-pantallas` cuando Lovable termine.

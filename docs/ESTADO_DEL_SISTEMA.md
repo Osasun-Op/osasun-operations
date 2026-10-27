@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.13 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Tarea 5 en curso: acceso con Google y pantallas.
+**Versión:** 1.14 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -437,3 +437,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.11 | 26/10/2026 | Revisión de la Tarea 3 (PR #3). El envío descuenta el reparto del mismo día antes del recuento. |
 | 1.12 | 26/10/2026 | PR #3 aprobado y fusionado: reparto y stock con lectura de Sheets, en pruebas. Tarea 4 encargada. Servicio de correo: Resend (plan gratuito). |
 | 1.13 | 27/10/2026 | PR #4 aprobado y fusionado: motor completo en pruebas. Pantallas en un repositorio aparte de Lovable, sin integración de Supabase (solo clave pública). Tarea 5 encargada (acceso con Google). |
+| 1.14 | 27/10/2026 | PR #5 aprobado y fusionado: acceso solo con Google y lista de cuentas autorizadas en pruebas. Instrucciones del agente de pantallas (`AGENTE_ALMACEN.md`). |
