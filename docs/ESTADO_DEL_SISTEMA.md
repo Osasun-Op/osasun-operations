@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.14 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.15 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -103,6 +103,11 @@ Cada trabajador tiene una app supervisora que le dice qué hacer, le mantiene el
 
 La recepción de mercancía no está en la cola: se atiende en el momento en que llega.
 
+**Nunca sin tarea (decisión del propietario, 27/10/2026):** si el operario termina todo lo disponible antes de la siguiente tarea con hora:
+1. Primero se **adelantan las tareas fijas de la tarde de ese día** (minis el lunes, resinas el martes, control de materiales el jueves).
+2. Después, **«Orden y limpieza»**, que **no se gasta nunca**: vuelve a salir siempre que no haya otra cosa.
+3. Lo que va ligado a su hora (recuento, revisión del envío, Nacex, salida) sigue esperando a su hora.
+
 ### Quién decide
 - **Administración:** las cantidades del reparto, quién sale cada día, la aprobación del envío a Gipuzkoa/Durango, el pedido de packaging, la materia prima y las nuevas variedades.
 - **Operario:** la ejecución según las reglas, el orden dentro de las listas de producción, las compras online de consumibles y la recepción.
@@ -127,7 +132,7 @@ BILBAO
 ALGORTA
 ...
 ```
-El operario pega el texto en la app. La app:
+El operario pega el texto en la app. La tarea «Pega el reparto» **se cierra sola al aceptarse un reparto**; si se pulsa «Terminada» sin pegarlo, la app pide el motivo (por ejemplo, «hoy no hay reparto»). La app:
 1. Comprueba cada nombre contra el catálogo (PRINCIPAL). Ignora espacios y mayúsculas.
 2. Si algún nombre no existe, avisa antes de calcular.
 3. Suma las cajas por producto y formato.
@@ -438,3 +443,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.12 | 26/10/2026 | PR #3 aprobado y fusionado: reparto y stock con lectura de Sheets, en pruebas. Tarea 4 encargada. Servicio de correo: Resend (plan gratuito). |
 | 1.13 | 27/10/2026 | PR #4 aprobado y fusionado: motor completo en pruebas. Pantallas en un repositorio aparte de Lovable, sin integración de Supabase (solo clave pública). Tarea 5 encargada (acceso con Google). |
 | 1.14 | 27/10/2026 | PR #5 aprobado y fusionado: acceso solo con Google y lista de cuentas autorizadas en pruebas. Instrucciones del agente de pantallas (`AGENTE_ALMACEN.md`). |
+| 1.15 | 27/10/2026 | Primera prueba real de la pantalla del operario. Nunca sin tarea: se adelantan las fijas de la tarde y «Orden y limpieza» no se gasta. «Pega el reparto» se cierra al aceptarse un reparto. |
