@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 0.5 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5).
+**Versión:** 0.6 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -77,9 +77,9 @@ conflicto   = necesario > disponible
 ```
 Cómo está hecho (`motor.conflicto`, `motor.duracion_estimada`):
 - «Final del turno» = el del turno en que empieza la ventana. Los bloques fijos son las tareas pendientes de salida del reparto y Nacex con su hora y duración (solo lo que cae dentro de la ventana).
-- «Vencen en la ventana» = obligatorias y de Administración pendientes, en curso o bloqueadas cuya hora límite (o su hora) cae dentro de la ventana. Las que no tienen hora no cuentan.
+- Cuentan como tiempo necesario las obligatorias y de Administración pendientes, en curso o bloqueadas cuya hora límite (o su hora) es anterior al final de la ventana, **incluidas las ya vencidas**: ya llegan tarde, pero siguen ocupando tiempo (revisión del PR #5). Las que no tienen hora no cuentan.
 - Duración de cada una: producción y lista de stock = cajas que faltan de sus referencias × 1 min; bolsas = tiendas pendientes × 3 min; el resto, su duración (sin duración, 0).
-- Solo cuentan las que vencen **dentro** de la ventana (las ya vencidas no se ponen en riesgo).
+- «En riesgo» solo las obligatorias que vencen **dentro** de la ventana; las ya vencidas no se ponen en riesgo (se informan como `vencidas_min`).
 - **Solo hay conflicto si queda en riesgo alguna obligatoria** (§6.4, corrección del PR #4). Si no cabe pero no hay obligatorias en riesgo, se crea y se avisa en el encaje de los minutos que faltan; lo que no termine pasa al día siguiente.
 - Decisiones: `despues` (la que cede pierde su hora límite), `manana` (deja de salir hoy y se arrastra), `cancelar`, `no_crear`; todas en el registro (`conflicto_decidido`).
 **Duraciones** (§6.10, decidido): producción = cajas que faltan × 1 min; bolsas = 3 min por tienda; recuento 15 min; limpieza de resinas 30 min; ruta del reparto ~2 h; tareas de Administración: la **duración orientativa obligatoria** que pone Administración al crearla.
