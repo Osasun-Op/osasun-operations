@@ -70,8 +70,9 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 1. **Teléfono de Administración:** el propietario te lo da en tu sesión. Guárdalo en `telefono_administracion` de pruebas, fuera del repositorio y del PR.
 2. **Conflicto:** las obligatorias pendientes que ya han vencido no cuentan como «en riesgo», pero su duración sí se resta del tiempo disponible. Añade su prueba en `10_admin_conflictos_cierres.sql`.
-3. Si `CONTRATOS.md` cambia, súbele la versión: el coordinador copia ese archivo al repositorio de las pantallas.
-4. Todas las pruebas pasan y pruebas coincide con el repositorio.
+3. **Petición de las pantallas** (revisión de la Tarea 1 de Lovable): `tarea_activa` debe devolver también `incidencia_abierta` (`{ incidencia_id, descripcion, iniciada_en }` o null) y `problemas_abiertos` (`[{ problema_id, tarea_id, tipo, descripcion, estado, proxima_llamada_en }]`). Así la pantalla no pierde una incidencia o un problema abierto al recargar o al cambiar de dispositivo (Chromebook o Pixel). Confirma en `CONTRATOS.md` qué campos devuelven `PROBLEMA_YA_ABIERTO` e `INCIDENCIA_YA_ABIERTA`.
+4. Si `CONTRATOS.md` cambia, súbele la versión: el coordinador copia ese archivo al repositorio de las pantallas.
+5. Todas las pruebas pasan y pruebas coincide con el repositorio.
 
 **Entrega:** Pull Request **«Tarea 6 — Ajustes de la revisión del PR #5»**, con un resumen corto y la salida de las pruebas.
 
