@@ -167,9 +167,22 @@ begin
   -- No cabe, pero no hay obligatorias en riesgo: se crea y se avisa (corrección del PR #4).
   r := pg_temp.crear(gen_random_uuid(), 'Revisar facturas', '{"tipo": "antes_de", "fecha": "2026-11-10", "hora": "17:00"}', 120,
                      '2026-11-10 16:00+01');
-  perform pg_temp.comprobar('No cabe (120 > 60 min) pero sin obligatorias en riesgo: se crea y avisa de que no le da tiempo entera',
-    (r ->> 'tarea_id') is not null and r -> 'conflicto' = 'null'::jsonb and (r ->> 'minutos_que_faltan')::int = 60
-    and r ->> 'encaje' like '%No le da tiempo entera (faltan unos 60 min)%', r::text);
+  -- A las 16:00 siguen pendientes, ya vencidas, la producción (30 cajas), el recuento de la mañana (15) y tres
+  -- de Administración de las 10:45 (20 + 60 + 60) = 185 min: no están en riesgo, pero ocupan tiempo.
+  perform pg_temp.comprobar('No cabe (185 vencidas + 120 > 60 min) pero sin obligatorias en riesgo: se crea y avisa de lo que falta',
+    (r ->> 'tarea_id') is not null and r -> 'conflicto' = 'null'::jsonb and (r ->> 'minutos_que_faltan')::int = 245
+    and r ->> 'encaje' like '%No le da tiempo entera (faltan unos 245 min)%', r::text);
+  -- Revisión del PR #5: las vencidas no están «en riesgo», pero su duración se resta del tiempo disponible.
+  -- (Ahora también cuenta «Revisar facturas», 120 min, que vence a las 17:00.)
+  r := motor.conflicto(j, '2026-11-10 16:00+01', '2026-11-10 17:00+01', 30);
+  perform pg_temp.comprobar('Vencidas: ocupan tiempo (185 min) pero no están en riesgo; sin obligatorias que venzan en la ventana no hay conflicto',
+    (r ->> 'vencidas_min')::int = 185 and (r ->> 'necesario_min')::int = 335 and (r ->> 'disponible_min')::int = 60
+    and not (r ->> 'hay_conflicto')::boolean and r -> 'obligatorias_en_riesgo' = '[]'::jsonb, r::text);
+  r := motor.conflicto(j, '2026-11-10 16:00+01', '2026-11-10 18:30+01', 10);
+  perform pg_temp.comprobar('Vencidas: por el tiempo que ocupan, una tarea de 10 min pone en riesgo el recuento de las 18:30 (sin contarlas: 145 ≤ 150, cabía)',
+    (r ->> 'hay_conflicto')::boolean and (r ->> 'necesario_min')::int = 330 and (r ->> 'disponible_min')::int = 150
+    and jsonb_array_length(r -> 'obligatorias_en_riesgo') = 1
+    and r -> 'obligatorias_en_riesgo' -> 0 ->> 'vence' = '18:30', r::text);
 
   -- Cancelar tarea -------------------------------------------------------------------
   v_t2 := (select id from public.tareas where jornada_id = j and titulo = 'Contar palés');
