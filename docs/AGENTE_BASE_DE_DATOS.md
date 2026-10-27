@@ -62,11 +62,20 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 8** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` v1.20, §5 R1.
+**Tarea 9** (sección 7).
 
 ---
 
-## 7. TAREA 8 (activa): «¿Quién sale?» al pegar el reparto, en pruebas
+## 7. TAREA 9 (activa): el panel sabe si hay reparto, en pruebas
+
+1. `estado_actual` devuelve también `reparto_de_hoy` (el mismo objeto que `tarea_activa`), para que el panel de Administración muestre «Pegar reparto» o «Modificar reparto».
+2. `CONTRATOS.md` a la 0.9, con su nota de cambios. Prueba en verde; pruebas coincidiendo con el repositorio.
+
+**Entrega:** Pull Request **«Tarea 9 — Reparto de hoy en el panel»**, con un resumen corto y la salida de las pruebas.
+
+---
+
+## 7.0 TAREA 8 (fusionada en el PR #8): «¿Quién sale?» al pegar el reparto, en pruebas
 
 1. **`pegar_reparto`:** si llega `sale` (el desplegable de la pantalla), **manda sobre la línea `SALE:`** del texto. No se da `SALE_CONTRADICTORIA` por esa diferencia; se anota en `registro_eventos`. Sin `sale` y sin `SALE:`, sigue `FALTA_SALE`.
 2. **Cambiar quién sale sin volver a pegar:** nueva función `cambiar_quien_sale(sale)`, para el operario y para Administración, sobre la jornada de hoy del operario por defecto. Usa `motor.fijar_sale` (retira o recupera «Salida del reparto» y «Efectivo y reporte» como ya hace). Idempotente. `ESTADO_NO_VALIDO` si la salida ya está hecha.
@@ -293,3 +302,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.7 | 27/10/2026 | Tarea 6 fusionada. Tarea 7 activa: ajustes de la primera prueba real (nunca sin tarea, «Pega el reparto», Incidencia y Cerrar tarea). |
 | 1.8 | 27/10/2026 | Tarea 7 fusionada. Sin tarea activa. |
 | 1.9 | 27/10/2026 | Tarea 8 activa: «¿Quién sale?» al pegar el reparto. |
+| 1.10 | 27/10/2026 | Tarea 8 fusionada. Tarea 9 activa: `reparto_de_hoy` en `estado_actual`. |
