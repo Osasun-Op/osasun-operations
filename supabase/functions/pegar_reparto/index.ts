@@ -1,6 +1,7 @@
-// pegar_reparto (CONTRATOS.md §3.8): el operario pega el texto del reparto o del
-// envío. Lee la hoja, aplica R1 y, si no hay errores, crea o actualiza las
-// tareas de producción y bolsas. Con errores no se calcula nada.
+// pegar_reparto (CONTRATOS.md §3.8): el operario o Administración pegan el texto
+// del reparto o del envío. Lee la hoja, aplica R1 y, si no hay errores, crea o
+// actualiza las tareas de producción y bolsas. Con errores no se calcula nada.
+// Si lo pega Administración, va a la jornada del operario por defecto.
 
 import { leerStock, type Pestanas } from "../_compartido/google.ts";
 import { analizarReparto, catalogo, type Destino } from "../_compartido/r1.ts";
@@ -10,7 +11,7 @@ interface Contexto {
   error?: { codigo: string; mensaje: string };
   persona_id: string;
   rol: string;
-  jornada_id: string;
+  jornada_id: string | null;
   dia: number;
   mes: number;
   fecha: string;
@@ -37,7 +38,7 @@ Deno.serve(async (req) => {
 
     const ctx = await rpc<Contexto>("servidor_preparar", { p_persona: persona });
     if (ctx.error) return responder(ctx);
-    if (ctx.rol !== "operario") return responder(error("NO_AUTORIZADO", "Pegar el reparto es del operario."));
+    if (!ctx.jornada_id) return responder(error("SIN_JORNADA", "Hoy no hay jornada en el almacén."));
 
     const laHuella = await huella(tipo, texto);
     const actual = ctx.repartos[tipo];
