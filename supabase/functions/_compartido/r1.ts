@@ -34,7 +34,8 @@ export interface ElementoProduccion {
   producto: string;
   formato: string;
   pedido: number;
-  en_almacen: number;
+  en_almacen: number;          // disponible para este cálculo (ya descontado lo apartado)
+  apartado_reparto: number;    // solo envío antes del recuento: cajas del reparto de hoy
   faltan: number;
   aviso: string | null;
   orden: number;
@@ -96,6 +97,11 @@ export interface OpcionesR1 {
   hoy: { dia: number; mes: number };
   sale?: "operario" | "administracion" | null;   // respuesta del operario si faltaba SALE:
   confirmarFecha?: boolean;
+  /**
+   * Solo envío pegado antes del recuento de la mañana (ESTADO_DEL_SISTEMA.md v1.11):
+   * cajas pedidas en el reparto aceptado hoy, que se apartan antes de calcular.
+   */
+  apartadoReparto?: { producto: string; formato: string; pedido: number }[];
 }
 
 export function analizarReparto(
@@ -179,6 +185,14 @@ export function analizarReparto(
   const sale = op.tipo === "envio" ? null : sales.size === 1 ? [...sales][0] : (op.sale ?? null);
   const f = fecha as { dia: number; mes: number } | null;
 
+  const apartados = new Map<string, number>();
+  if (op.tipo === "envio") {
+    for (const a of op.apartadoReparto ?? []) {
+      const k = norm(a.producto + a.formato);
+      apartados.set(k, (apartados.get(k) ?? 0) + a.pedido);
+    }
+  }
+
   const produccion: ElementoProduccion[] = [...pedidos.values()]
     .sort((a, b) => a.e.orden - b.e.orden)
     .map(({ e, cantidad }) => {
@@ -188,9 +202,11 @@ export function analizarReparto(
       if (c === null) aviso = "Dato de almacén vacío en PRINCIPAL: se cuenta como 0.";
       else if (c < 0) aviso = "Dato de almacén negativo en PRINCIPAL: se cuenta como 0.";
       else enAlmacen = Math.floor(c / 100);
+      const apartado = apartados.get(norm(e.producto + e.formato)) ?? 0;
+      const disponible = Math.max(0, enAlmacen - apartado);
       return {
-        producto: e.producto, formato: e.formato, pedido: cantidad, en_almacen: enAlmacen,
-        faltan: Math.max(0, cantidad - enAlmacen), aviso, orden: e.orden,
+        producto: e.producto, formato: e.formato, pedido: cantidad, en_almacen: disponible,
+        apartado_reparto: apartado, faltan: Math.max(0, cantidad - disponible), aviso, orden: e.orden,
       };
     });
 

@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1 y R3 (especificación V1)
 
-**Versión:** 0.3 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`).
+**Versión:** 0.4 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24).
 
 > Especificación exacta de las dos reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto) y **R3** (stock del almacén +35 %).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -72,6 +72,7 @@ en_almacen(p, f) = PRINCIPAL!R de la fila de formato
 faltan(p, f)     = max(0, pedido − en_almacen)
 ```
 - `en_almacen` vacío o negativo → **cuenta como 0, con aviso** en la línea (decidido, D-R1b).
+- **Envío pegado antes del recuento de la mañana del mismo día** (decidido en el PR #3, `ESTADO_DEL_SISTEMA.md` v1.11): la hoja aún no refleja las cajas del reparto aceptado ese día, así que primero se apartan: `disponible = max(0, en_almacen − pedido en el reparto de hoy)` y `faltan = max(0, pedido − disponible)`. Se devuelve `apartado_reparto` por referencia. Después del recuento (tarea «Recuento» de la mañana hecha) no se descuenta nada: la hoja ya lo refleja. El reparto nunca descuenta.
 - Lista de producción = referencias con `faltan > 0`; orden sugerido, el del catálogo. El operario elige el orden.
 - Bolsas = una por tienda (o destino) con sus referencias y cantidades del texto.
 - Duración prevista de la producción = cajas que faltan × 1 min; de las bolsas = tiendas × 3 min (§6.10).
@@ -136,6 +137,9 @@ Destinos: BILBAO, ALGORTA, DURANGO (alias `DURANGO`, `LAUDIO`), GIPUZKOA. Hoy = 
 | R1-19 | `SALE: ALMACÉN` · `BILBAO` · `1x LORANAT` con almacén vacío en PRINCIPAL | Aceptado; LORANAT faltan 1, con aviso «dato de almacén vacío en PRINCIPAL». |
 | R1-20 | Envío: `GIPUZKOA` · `4x V2 4g` | Aceptado como envío; una bolsa «Gipuzkoa (envío a Rentería)»; `SALE:` no se pide. |
 | R1-21 | Reparto R1-01 aceptado, las 5 V2 4g hechas y bolsa de Algorta completa; se pega una versión con Bilbao 22x V2 4g | Sustituye al anterior. V2 4g: faltan 7, hechas 5 (se conservan; quedan 2). Bolsa de Algorta se conserva completa; la de Bilbao vuelve a 0 para comprobarla. |
+| R1-22 | Envío antes del recuento: `GIPUZKOA` · `8x V2 4g` · `1x BZ1 4g`; hoy el reparto pidió V2 4g 20 y BZ1 4g 9; en la hoja V2 4g 25, BZ1 4g 7 | V2 4g: apartadas 20, disponible 5, faltan 3. BZ1 4g: disponible 0, falta 1. |
+| R1-23 | Envío después del recuento: `GIPUZKOA` · `8x V2 4g` (hoja V2 4g 25) | No se descuenta: disponible 25, faltan 0. |
+| R1-24 | Reparto `SALE: YO` · `BILBAO` · `8x V2 4g` aunque se le pase un apartado de 20 | El reparto nunca descuenta: apartado 0, faltan 0. |
 
 ## 3. R3 — Stock del almacén (+35 %)
 

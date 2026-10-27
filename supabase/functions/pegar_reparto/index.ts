@@ -17,6 +17,8 @@ interface Contexto {
   destinos: Destino[];
   config: { sheets_documento_id: string; sheets_pestanas: Pestanas };
   repartos: Record<string, { id: string; huella: string; resultado: Record<string, unknown> } | null>;
+  reparto_hoy: { producto: string; formato: string; pedido: number }[];
+  recuento_manana_hecho: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -64,6 +66,8 @@ Deno.serve(async (req) => {
 
     const r = analizarReparto(texto, entradas, ctx.destinos, {
       tipo, hoy: { dia: ctx.dia, mes: ctx.mes }, sale: saleRespuesta, confirmarFecha: cuerpo.confirmar_fecha === true,
+      // Envío antes del recuento de la mañana: se apartan las cajas del reparto de hoy (v1.11).
+      apartadoReparto: tipo === "envio" && !ctx.recuento_manana_hecho ? ctx.reparto_hoy : [],
     });
     const fechaTexto = r.fecha
       ? `${ctx.fecha.slice(0, 4)}-${String(r.fecha.mes).padStart(2, "0")}-${String(r.fecha.dia).padStart(2, "0")}`
