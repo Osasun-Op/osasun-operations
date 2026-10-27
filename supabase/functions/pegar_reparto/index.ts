@@ -1,7 +1,8 @@
 // pegar_reparto (CONTRATOS.md §3.8): el operario o Administración pegan el texto
 // del reparto o del envío. Lee la hoja, aplica R1 y, si no hay errores, crea o
 // actualiza las tareas de producción y bolsas. Con errores no se calcula nada.
-// Si lo pega Administración, va a la jornada del operario por defecto.
+// Si lo pega Administración, va a la jornada del operario por defecto. Quién sale
+// lo dice el desplegable de la pantalla (`sale`), que manda sobre la línea SALE:.
 
 import { leerStock, type Pestanas } from "../_compartido/google.ts";
 import { analizarReparto, catalogo, type Destino } from "../_compartido/r1.ts";
@@ -96,6 +97,12 @@ Deno.serve(async (req) => {
     }
     if (guardado.ya_pegado) {
       return responder({ ...guardado, aviso: { codigo: "REPARTO_YA_PEGADO", mensaje: "Este reparto ya estaba pegado." } });
+    }
+    // El desplegable manda sobre SALE: (v1.20); si el texto decía otra cosa, queda anotado.
+    if (tipo === "reparto" && r.saleTexto && r.saleTexto !== r.sale) {
+      await rpc("servidor_anotar_sale", {
+        p_persona: persona, p_reparto: guardado.reparto_id, p_sale_texto: r.saleTexto, p_sale_elegido: r.sale,
+      });
     }
     return responder(guardado);
   } catch (e) {

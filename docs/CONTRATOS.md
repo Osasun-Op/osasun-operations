@@ -1,6 +1,11 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 0.7 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 7).
+**Versión:** 0.8 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 8).
+
+> **Cambios en 0.8 (Tarea 8) — para Lovable:**
+> 1. **Desplegable «¿Quién sale?» al pegar el reparto:** se manda en `pegar_reparto` como `sale` (`"operario"` | `"administracion"`) y **manda sobre la línea `SALE:`** del texto, que pasa a ser opcional. Si no coinciden, no es un error (queda anotado). Sin desplegable ni `SALE:`, sigue `FALTA_SALE`.
+> 2. **Nueva función `cambiar_quien_sale(sale)`** (operario y Administración): cambia quién sale hoy sin volver a pegar el reparto. Si el mismo texto ya estaba pegado (`REPARTO_YA_PEGADO`) y solo cambia el desplegable, la pantalla llama a esta función.
+> 3. **`mi_perfil`** trae `quien_sale_opciones: [{ valor: "administracion", nombre }, { valor: "operario", nombre }]` para rellenar el desplegable con los nombres.
 
 > **Cambios en 0.7 (Tarea 7) — para Lovable:**
 > 1. **Incidencias nuevas** (§3.11): `crear_incidencia(id_cliente, opcion, descripcion, quien?, importancia?, tarea_id?, tipo_problema?)`, `incidencias_abiertas()` y `cerrar_incidencia(incidencia_id, nota?)`. Botón **Incidencia** con seis opciones; «Estoy bloqueado» (`opcion: "bloqueado"`) es el flujo de problemas de siempre y sustituye al botón «Tengo un problema». Botón **Cerrar incidencias** con el número de abiertas.
@@ -49,6 +54,7 @@
 | `iniciar_elemento` · `terminar_elemento` · `marcar_cajas` | BD | ✔ | — | ✅ Tarea 3 |
 | `pegar_reparto` · `lista_stock` | Servidor | ✔ | ✔ (`pegar_reparto` desde la Tarea 7; `lista_stock`, consulta) | ✅ Tarea 3 y 7 |
 | `retrasar_salida` | BD | ✔ | — | ✅ Tarea 4 |
+| `cambiar_quien_sale` | BD | ✔ | ✔ | ✅ Tarea 8 |
 | `registrar_evento` | BD | ✔ | ✔ (solo `pedido_cliente`) | ✅ Tarea 4 |
 | `abrir_problema` · `problema_llamada` · `resolver_problema` | BD | ✔ | ✔ (`resolver_problema`) | ✅ Tarea 4 |
 | `crear_incidencia` · `incidencias_abiertas` · `cerrar_incidencia` | BD | ✔ | — | ✅ Tarea 7 |
@@ -60,7 +66,8 @@
 ## 3. Operario
 
 ### 3.1 `mi_perfil()` ✅
-- **Salida:** `{ id, nombre, rol, centro: {id, nombre} | null, telefono_administracion }`
+- **Salida:** `{ id, nombre, rol, centro: {id, nombre} | null, telefono_administracion, quien_sale_opciones }`
+- `quien_sale_opciones` ✅ Tarea 8: `[{ "valor": "administracion", "nombre": "…" }, { "valor": "operario", "nombre": "…" }]`, con los nombres de las fichas (Administración y el operario por defecto), para el desplegable «¿Quién sale?».
 - `telefono_administracion` alimenta el botón de llamada del Pixel (sale de la configuración del entorno; si no está, del teléfono de la ficha de Administración).
 - Sin ficha de persona (cuenta que entró sin estar autorizada): `NO_AUTORIZADO`.
 
@@ -136,6 +143,8 @@ Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas 
 
 ### 3.8 `pegar_reparto` (función del servidor) ✅
 - **Entrada:** `{ texto, tipo: "reparto"|"envio", sale?: "operario"|"administracion", confirmar_fecha?: true }`
+- **`sale` = desplegable «¿Quién sale?»** ✅ Tarea 8: si llega, **manda sobre la línea `SALE:`** del texto (que pasa a ser opcional). Si el texto dice otra cosa, o trae dos `SALE:` distintas, no es un error: se acepta con lo del desplegable y queda anotado en el registro (`sale_distinto_del_texto`). Sin `sale` y sin `SALE:` → `FALTA_SALE`. Sin desplegable, dos `SALE:` distintas siguen siendo `REPARTO_CON_ERRORES` (`SALE_CONTRADICTORIA`).
+- Si el mismo texto ya estaba pegado, responde `REPARTO_YA_PEGADO` y **no cambia quién sale**: para eso, `cambiar_quien_sale` (§3.12).
 - **Proceso:** lee Sheets, interpreta el texto según `REGLAS_CALCULO.md` §2 y, si no hay errores, crea o actualiza las tareas «Producción del reparto» y «Bolsas» con sus elementos. Si ya había un reparto aceptado hoy, lo sustituye conservando lo hecho (§5 R1).
 - **Quién:** el operario o **Administración** (Tarea 7). Si lo pega Administración, va a la jornada del operario por defecto, con el mismo cálculo y la misma sustitución; la respuesta no trae `tarea_activa`. Sin jornada del operario ese día: `SIN_JORNADA`.
 - Al aceptarse un reparto, la tarea «Pega el reparto» queda hecha («Reparto pegado» o «Reparto pegado por Administración»).
@@ -214,6 +223,13 @@ Botón **Incidencia**: el operario elige qué pasa, escribe una línea y puede c
 
 Solo el operario: Administración recibe `NO_AUTORIZADO`. Cada incidencia queda registrada con su hora, su tiempo y su cierre, y sale en el cierre del turno (§4.4).
 
+### 3.12 `cambiar_quien_sale(sale)` ✅ (Tarea 8)
+Cambia quién sale hoy sin volver a pegar el reparto. Para el operario (su jornada) y para Administración (la jornada de hoy del operario por defecto).
+- **Entrada:** `sale`: `"operario"` | `"administracion"`.
+- **Efecto:** si sale el operario, aparecen «Salida del reparto» (10:45, después de «Bolsas listas en la mesa de salida») y, a la vuelta, «Efectivo y reporte»; si sale Administración, esas dos se retiran (con su motivo). Queda anotado quién lo cambió (`quien_sale_cambiado`). Repetirlo con el mismo valor no cambia nada (`cambiado: false`).
+- **Salida:** `{ sale, antes, cambiado, tareas: [{ clave, titulo, estado }] (salida y efectivo), tarea_activa (solo al operario) }`.
+- **Errores:** `DATOS_NO_VALIDOS` (valor no válido), `SIN_JORNADA`, `ESTADO_NO_VALIDO` (la salida ya ha empezado o está hecha).
+
 ## 4. Administración ✅ (Tarea 4)
 
 ### 4.1 `crear_tarea_admin` ✅
@@ -279,7 +295,7 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 | Incidencia: llega mercancía, pedido de cliente, pedir o comprar, recogida en Nacex, corregir | `crear_incidencia` |
 | Administración registra un pedido de cliente | `registrar_evento` |
 | Incidencia → Estoy bloqueado (llamar, no contestan, solución) | `crear_incidencia` (`bloqueado`) o `abrir_problema`, `problema_llamada`, `resolver_problema` |
-| Pegar el reparto (operario o Administración) | `pegar_reparto` |
+| Pegar el reparto (operario o Administración), con el desplegable «¿Quién sale?» | `mi_perfil` (`quien_sale_opciones`), `pegar_reparto` (`sale`), `cambiar_quien_sale` |
 | Inicio de Administración (móvil) | `estado_actual` |
 | Nueva tarea (qué, para quién, cuándo, duración, urgente, por qué) | `crear_tarea_admin` |
 | Cierre | `cierre` (y correo) |
@@ -341,7 +357,7 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 | --- | --- |
 | `NO_AUTENTICADO` | Volver a «Entrar con Google». |
 | `NO_AUTORIZADO` | Mostrar el mensaje; si viene de `mi_perfil`, botón «Salir». |
-| `FALTA_SALE` | Preguntar «¿Quién sale hoy?» (`opciones`) y repetir `pegar_reparto` con `sale`. |
+| `FALTA_SALE` | Preguntar «¿Quién sale hoy?» (`opciones`) y repetir `pegar_reparto` con `sale`. Con el desplegable siempre relleno no aparece. |
 | `FECHA_NO_ES_HOY` | Pedir confirmación y repetir con `confirmar_fecha: true`. |
 | `REPARTO_CON_ERRORES` | Mostrar `lineas` (número de línea y mensaje) para corregir el texto. |
 | `CONFLICTO` | Mostrar `conflicto.obligatorias_en_riesgo` y los minutos que faltan; Administración elige qué cede (o no crear) y se repite `crear_tarea_admin` con `decision_conflicto` y `confirmar: true`. |

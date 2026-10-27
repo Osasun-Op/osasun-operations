@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 0.7 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7).
+**Versión:** 0.8 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7); «¿Quién sale?» (Tarea 8).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -231,6 +231,7 @@ Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 | Tareas de Administración | Encaje (§2.3), conflicto (§2.4) | ✅ 05, 10 |
 | Problemas | §2.5 | ✅ 05, 09, 13 |
 | Incidencias (§6.6 v1.17) · Nunca sin tarea · Reparto desde Administración | §2.3, `CONTRATOS.md` §3.11 | ✅ 05, 13 |
+| Quién sale (§5 R1 v1.20): desplegable, cambiar sin volver a pegar, orden bolsas → salida → efectivo | `CONTRATOS.md` §3.8 y §3.12 | ✅ 14; unitarias R1-25 a R1-27 |
 | Cierre | §2.5 bis, `cierres` + correo | ✅ 10; envío real en el PR de la Tarea 4 |
 | Permisos | §5 | ✅ 04, 08, 11, 12 (acceso) |
 | Dispositivos · Uso real | Mismas funciones para Chromebook y Pixel; pantallas de Lovable | Con las pantallas |

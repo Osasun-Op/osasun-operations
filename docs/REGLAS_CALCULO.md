@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1 y R3 (especificación V1)
 
-**Versión:** 0.4 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24).
+**Versión:** 0.5 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27).
 
 > Especificación exacta de las dos reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto) y **R3** (stock del almacén +35 %).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -55,6 +55,8 @@ Números: enteros, negativos y decimales con coma (`2,5`). Celda vacía o texto 
 | `YO` | Sale Administración. |
 | Falta la línea u otro valor | `FALTA_SALE`: la app pregunta «¿Quién sale hoy?». |
 | Dos líneas `SALE:` distintas | `SALE_CONTRADICTORIA`. |
+
+**Desplegable «¿Quién sale?» (v1.20):** si la pantalla manda `sale`, **manda sobre la línea `SALE:`**, que pasa a ser opcional. Si no coinciden (o hay dos `SALE:` distintas), no es un error: se acepta con lo del desplegable y queda anotado en el registro (`sale_distinto_del_texto`). Sin desplegable, todo sigue como en la tabla.
 
 En el envío (`tipo = envio`) la línea `SALE:` no se usa.
 
@@ -140,6 +142,9 @@ Destinos: BILBAO, ALGORTA, DURANGO (alias `DURANGO`, `LAUDIO`), GIPUZKOA. Hoy = 
 | R1-22 | Envío antes del recuento: `GIPUZKOA` · `8x V2 4g` · `1x BZ1 4g`; hoy el reparto pidió V2 4g 20 y BZ1 4g 9; en la hoja V2 4g 25, BZ1 4g 7 | V2 4g: apartadas 20, disponible 5, faltan 3. BZ1 4g: disponible 0, falta 1. |
 | R1-23 | Envío después del recuento: `GIPUZKOA` · `8x V2 4g` (hoja V2 4g 25) | No se descuenta: disponible 25, faltan 0. |
 | R1-24 | Reparto `SALE: YO` · `BILBAO` · `8x V2 4g` aunque se le pase un apartado de 20 | El reparto nunca descuenta: apartado 0, faltan 0. |
+| R1-25 | `SALE: ALMACÉN` · `BILBAO` · `1x V2 4g` con desplegable `administracion` | Aceptado. Sale Administración (manda el desplegable); el texto decía el operario y queda anotado. |
+| R1-26 | `SALE: ALMACÉN` · `SALE: YO` · `BILBAO` · `1x V2 4g` con desplegable `operario` | Aceptado, sin `SALE_CONTRADICTORIA`. Sale el operario. |
+| R1-27 | `BILBAO` · `1x V2 4g` sin desplegable; y `SALE: YO` · … sin desplegable | `FALTA_SALE`; y aceptado con Administración (manda el texto). |
 
 ## 3. R3 — Stock del almacén (+35 %)
 
