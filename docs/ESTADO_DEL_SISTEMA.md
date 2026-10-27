@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.15 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.16 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -215,7 +215,23 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
 5. Si no le cogen el teléfono: envía un WhatsApp con el problema, la tarea queda pendiente y pasa a otra.
 6. A los 30 minutos sin solución, le vuelve a aparecer la tarea de llamar. Si Administración le llama antes, apunta la solución y lo marca como resuelto.
 
-**Botón «Incidencia»:** para atender algo no previsto por necesidad o urgencia (corregir, limpiar, solucionar) que dure más de 3 minutos. Escribe en una línea qué es y por qué. No necesita aprobación, pero queda registrado.
+**Botón «Incidencia»** (decisión del propietario, 27/10/2026). Reúne las situaciones generales del manual que pueden pasar en cualquier momento:
+
+| Opción | Qué hace la app |
+| --- | --- |
+| Llega mercancía | Crea «Abre y comprueba la mercancía», que se hace en el momento (urgente). |
+| Pedido de cliente | Crea «Prepara el pedido y envíalo por Nacex». |
+| Hay que pedir o comprar algo | Se escribe qué falta. Queda **abierto hasta que esté en el almacén**. |
+| Recogida en Nacex | Se da de alta y queda **abierta hasta que se recoge**. |
+| Corregir, limpiar o solucionar algo | La incidencia clásica: algo no previsto, por necesidad o urgencia, de más de 3 minutos. Se escribe en una línea qué es y por qué. No necesita aprobación, pero queda registrado con su tiempo. |
+
+«No quedan vapers» no es una opción: es un caso puntual y entra por «Hay que pedir…» o por la última opción.
+
+**Botón «Cerrar tarea»** (arriba, junto a «Pegar reparto»). Muestra lo que el operario tiene abierto y no es la tarea del centro, para cerrarlo con una línea opcional:
+1. Lo pedido o comprado que aún no se ha recogido (se cierra al estar en el almacén).
+2. Las tareas no urgentes que se han quedado atrás, de hoy o arrastradas.
+
+No aparecen las listas de producción ni las bolsas (se cierran caja a caja), «Pega el reparto» (se cierra al pegarlo) ni las tareas que esperan a su hora.
 
 **«Hacer» fuera del plan no existe:** producir algo que se queda (cajas, stock) solo se hace si está en el plan.
 
@@ -270,7 +286,8 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 ### Operario
 - **Chromebook:**
   - Una sola tarea en el centro, con su porqué en una frase.
-  - Tres botones fijos: **Terminada**, **Tengo un problema** e **Incidencia**.
+  - Tres botones fijos: **Terminada**, **Tengo un problema** e **Incidencia** (con sus opciones, §6.6).
+  - Arriba: **Pegar reparto** y **Cerrar tarea** (§6.6).
   - Una línea abajo con lo que viene después.
 - **Listas de producción:**
   - Aparecen todas las referencias. Él elige una, la termina y la marca, y elige la siguiente.
@@ -444,3 +461,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.13 | 27/10/2026 | PR #4 aprobado y fusionado: motor completo en pruebas. Pantallas en un repositorio aparte de Lovable, sin integración de Supabase (solo clave pública). Tarea 5 encargada (acceso con Google). |
 | 1.14 | 27/10/2026 | PR #5 aprobado y fusionado: acceso solo con Google y lista de cuentas autorizadas en pruebas. Instrucciones del agente de pantallas (`AGENTE_ALMACEN.md`). |
 | 1.15 | 27/10/2026 | Primera prueba real de la pantalla del operario. Nunca sin tarea: se adelantan las fijas de la tarde y «Orden y limpieza» no se gasta. «Pega el reparto» se cierra al aceptarse un reparto. |
+| 1.16 | 27/10/2026 | Botón «Incidencia» con las situaciones generales del manual; nuevo botón «Cerrar tarea» para lo pedido sin recoger y lo que se ha quedado atrás (§6.6 y §8). |
