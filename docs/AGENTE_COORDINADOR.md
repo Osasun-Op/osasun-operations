@@ -93,6 +93,6 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - **Tarea 3 de Lovable** (panel de Administración, más el desplegable «¿Quién sale?» también en el operario) enviada el 27/10/2026 (`umsg_01m5yv01gwfhmbtcp2adqy4c5a`). Usa `quien_sale_opciones` y `cambiar_quien_sale` cuando la Tarea 8 de BD los publique; mientras tanto, nombres de `mi_perfil` y `estado_actual`.
 - **Tarea 8 de BD** fusionada (PR #8). **Tarea 9** (`reparto_de_hoy` en `estado_actual`) encargada.
 - Tarea 3 de Lovable terminada (26 pruebas). El propietario vio «This page didn't load» al abrir la previsualización; era transitorio (el panel se cargaba antes de existir su archivo, a las 14:09). Al propietario ya le funciona. Se envió un diagnóstico preventivo a Lovable (`umsg_01m5yw5nhsfnsvtw4vn8f53kbg`): revisar su respuesta.
-- **Siguiente:** prueba completa del propietario y Eder (reparto con «¿Quién sale?», nueva tarea, Chromebook, Pixel e incidencias), y revisar la Tarea 9 de BD.
+- **Siguiente (28/10/2026, en el almacén):** prueba completa del propietario y Eder (reparto con «¿Quién sale?», nueva tarea, Chromebook, Pixel e incidencias), y revisar la Tarea 9 de BD.
 - Prueba real con cuentas (hecha el 27/10 con la Tarea 1): Site URL en Supabase (propietario); el propietario entra (debe ver «Panel de Administración: próximamente») y Eder entra (pantalla del operario).
 - Después: poner la Site URL de Supabase Auth en la previsualización (lo hace el propietario) y probar el acceso con Google.
