@@ -15,6 +15,7 @@ Se ejecutan contra el proyecto de **pruebas** (`osasun-pruebas`), con el conecto
 | `09_problemas_eventos_retraso.sql` | Problema completo (abrir, llamar, sin respuesta, «Llama a Administración» a los 30 min, solución obligatoria), incidencias, los tres eventos, retraso de la salida (15/30, correo si sale Administración) y el envío pegado antes del recuento. | Transacción deshecha |
 | `10_admin_conflictos_cierres.sql` | Tareas de Administración (duración obligatoria, urgente al terminar la referencia, conflicto y qué cede), cancelar, estado actual, tarea para otro día, cierre de cada turno una sola vez (mañana, tarde, viernes con calidad, verano) y el correo reclamado una sola vez. | Transacción deshecha |
 | `11_permisos_tarea4.sql` | Permisos de la Tarea 4: el operario no ve cierres ni usa funciones de Administración; nadie escribe directamente ni usa las funciones del correo. | Transacción deshecha |
+| `12_acceso_google.sql` | Acceso: el hook deja entrar a una cuenta de la lista (sin importar mayúsculas) y rechaza el resto; alta automática de la persona con rol, centro y horario; vincular usuarios que ya existían; quien no tiene ficha no puede usar nada; permisos del hook; tiempo real activado. | Transacción deshecha |
 | `06_concurrencia_1..4` | Dos llamadas a la vez a la generación: 1 preparar → 2 (A) y 3 (B) **a la vez** → 4 limpieza. | La limpieza lo borra y lo comprueba |
 
 Cada prueba devuelve una fila por comprobación con `OK` o `FALLO` (y el detalle si falla).
@@ -27,4 +28,4 @@ Para depurar antes de tocar pruebas se puede crear una base local con PostgreSQL
 
 `supabase/functions/_compartido/*_test.ts`: todos los casos R1 y R3 de `docs/REGLAS_CALCULO.md`, el envío de correo con un Resend simulado (`correo_test.ts`), la lectura de las pestañas con un extracto real de la hoja y la lectura con una Google simulada (hoja no disponible, pestaña renombrada, alcance de solo lectura). Se ejecutan con `deno test supabase/functions/_compartido/`.
 
-Las pruebas de base de datos empiezan marcando como hechas (dentro de la transacción) las tareas pendientes de las jornadas reales del operario de pruebas, para no depender de lo que haya generado la tarea programada.
+Las pruebas que dependen de la configuración del entorno (operario por defecto, teléfono y correo de Administración, lista de cuentas) la sustituyen dentro de su transacción. Las pruebas de base de datos empiezan marcando como hechas (dentro de la transacción) las tareas pendientes de las jornadas reales del operario de pruebas, para no depender de lo que haya generado la tarea programada.

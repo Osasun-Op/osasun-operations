@@ -1,8 +1,9 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 0.4 · **Fecha:** 26/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2, 3 y 4).
+**Versión:** 0.5 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 5).
 
 > Esto es lo único que las pantallas (Lovable) pueden usar. Cualquier dato o función nueva se pide al coordinador (§11 de `ESTADO_DEL_SISTEMA.md`).
+> **Para empezar las pantallas: §7 «Guía para las pantallas»** (conexión, inicio de sesión con Google, cómo llamar a cada función, tiempo real y errores).
 
 ---
 
@@ -16,7 +17,7 @@
 - **Hora:** la decide el servidor. Las pantallas nunca envían «ahora».
 - **Respuesta:** JSON. Si hay error: `{ "error": { "codigo": "...", "mensaje": "frase para mostrar" } }`. El mensaje está en castellano y se puede enseñar tal cual.
 - **Reintentos:** las funciones que crean algo aceptan `id_cliente` (uuid generado por la pantalla). Repetir la misma llamada devuelve el mismo resultado sin duplicar.
-- **Cambios en directo:** las pantallas pueden suscribirse (Supabase Realtime) a `tareas`; la base de datos solo les deja ver lo que su rol puede leer. Así una tarea nueva le aparece al Pixel durante el reparto (§6.7). Se activa en la tarea en que se haga la primera pantalla que lo necesite.
+- **Cambios en directo:** las pantallas se suscriben (Supabase Realtime) a `tareas` y `tarea_elementos` ✅; la base de datos solo les deja ver lo que su rol puede leer. Así una tarea nueva le aparece al Pixel durante el reparto (§6.7). Detalle en §7.4.
 
 ### Errores comunes a todas las funciones
 
@@ -49,7 +50,8 @@
 
 ### 3.1 `mi_perfil()` ✅
 - **Salida:** `{ id, nombre, rol, centro: {id, nombre} | null, telefono_administracion }`
-- `telefono_administracion` alimenta el botón de llamada del Pixel.
+- `telefono_administracion` alimenta el botón de llamada del Pixel (sale de la configuración del entorno; si no está, del teléfono de la ficha de Administración).
+- Sin ficha de persona (cuenta que entró sin estar autorizada): `NO_AUTORIZADO`.
 
 ### 3.2 `tarea_activa()` ✅
 Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la genera (idempotente).
@@ -171,7 +173,8 @@ Lista de producción para el stock del almacén (R3, cola A). Se calcula una vez
 | `decision_conflicto` | si hay conflicto | `{ "cede": "<tarea_id>", "accion": "despues|manana|cancelar" }` o `{ "accion": "no_crear" }` |
 
 - **Ventana** (`PLAN_TECNICO.md` §2.4): desde ahora (o el inicio del día elegido) hasta la hora de `antes_de` o, si no hay hora, hasta el final del turno en que empieza.
-- Si **no cabe**, no la crea y devuelve `CONFLICTO` con `conflicto: { disponible_min, necesario_min, minutos_que_faltan, obligatorias_en_riesgo: [{ tarea_id, titulo, vence, duracion_min }] }`. Administración repite la llamada con `decision_conflicto`:
+- Solo hay conflicto si **no cabe y alguna obligatoria que vence en la ventana queda en riesgo** (§6.4). Si no cabe pero no hay ninguna obligatoria en riesgo, **se crea** y el `encaje` lo avisa («No le da tiempo entera (faltan unos N min): lo que no termine pasa al día siguiente»), con `minutos_que_faltan`.
+- Con conflicto, no la crea y devuelve `CONFLICTO` con `conflicto: { disponible_min, necesario_min, minutos_que_faltan, obligatorias_en_riesgo: [{ tarea_id, titulo, vence, duracion_min }] }`. Administración repite la llamada con `decision_conflicto`:
   - `despues`: la que cede pierde su hora límite (se hace después de la nueva).
   - `manana`: la que cede deja de salir hoy y pasa al día siguiente como arrastrada.
   - `cancelar`: la que cede queda cancelada con su motivo.
@@ -179,14 +182,14 @@ Lista de producción para el stock del almacén (R3, cola A). Se calcula una vez
   La decisión queda en el registro (`conflicto_decidido`).
 - `confirmar: false` solo comprueba: `{ tarea_id: null, comprobado: true, encaje, conflicto }` (o el error `CONFLICTO`).
 - Una tarea para otro día prepara la jornada de ese día; lo pendiente se arrastra igualmente al llegar el día.
-- **Salida:** `{ tarea_id, tarea, encaje: "...", conflicto: null|{...}, decision }`. Repetir con el mismo `id_cliente` devuelve la misma tarea (`ya_creada: true`).
+- **Salida:** `{ tarea_id, tarea, encaje: "...", conflicto: null|{...}, minutos_que_faltan, decision }`. Repetir con el mismo `id_cliente` devuelve la misma tarea (`ya_creada: true`).
 - **Errores:** `CONFLICTO`, `FECHA_PASADA` (día u hora pasados, o su jornada de hoy ya terminó), `SIN_JORNADA` (ese día no trabaja), `DATOS_NO_VALIDOS` (sin duración, sin qué, «cuando» o decisión no válidos), `NO_ENCONTRADO` (`para_quien`).
 
 ### 4.2 `cancelar_tarea(tarea_id, motivo)` ✅
 Pasa la tarea a `cancelada` con su motivo (obligatorio) y retira la llamada pendiente si tenía un problema abierto. **Salida:** `{ tarea }`. Ya cancelada: `aviso: YA_CANCELADA`. **Errores:** `DATOS_NO_VALIDOS`, `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya hecha o arrastrada).
 
 ### 4.3 `estado_actual()` ✅
-Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, operario, jornada: { id, sale, hay_envio, estado }, en_curso: tarea con sus elementos, problemas_abiertos: [...], incidencia_en_curso, arrastradas: [...], hoy: [{ id, titulo, estado, origen, obligatoria, urgente, hora, motivo }], retrasos_salida: [{ a_las, minutos, nueva_hora, sale, aviso }], lectura_sheets: { ultima_correcta, ultimo_error } }`.
+Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, operario, jornada: { id, sale, hay_envio, estado }, en_curso: tarea con sus elementos, problemas_abiertos: [...], incidencia_en_curso, arrastradas: [...], hoy: [{ id, titulo, estado, origen, obligatoria, urgente, hora, motivo }], retrasos_salida: [{ a_las, minutos, nueva_hora, sale, aviso }], correos_no_enviados: [{ tipo, asunto, estado: "fallido"|"dudoso", intentos, error, creado_en }], lectura_sheets: { ultima_correcta, ultimo_error } }`. `correos_no_enviados` = cierres o avisos de los últimos 7 días que no se han podido enviar (mostrarlos como aviso).
 
 ### 4.4 `cierre(cierre_id)` · `cierres_recientes(limite)` ✅
 Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según el horario), generado solo y enviado **por correo**, una sola vez.
@@ -200,10 +203,13 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 | --- | --- | --- |
 | `motor.generar_jornada(persona, fecha)` ✅ | Tarea programada de las 06:00 y `tarea_activa` | Crea la jornada, arrastra lo pendiente y crea las tareas del día. Idempotente. |
 | `motor.generar_cierre(jornada, turno, ahora)` ✅ | Tarea programada `generar_cierres_turno` (a y media y en punto de 11, 12, 16 y 17 UTC, lunes a viernes: cubre las 13:00 y las 18:30 de Madrid en verano e invierno) | Congela el cierre, cierra la jornada tras el último turno y pide el correo. Idempotente. |
-| `enviar_correo` (función del servidor) ✅ | Solo la base de datos, con solicitud interna de un solo uso (`x-solicitud`); las pantallas no pueden | Reclama el envío (`servidor_correo_reclamar`), lo manda con Resend (secreto `RESEND_API_KEY`) y anota el resultado (`servidor_correo_resultado`). Nunca envía dos veces el mismo cierre o aviso. |
+| `enviar_correo` (función del servidor) ✅ | Solo la base de datos, con solicitud interna de un solo uso (`x-solicitud`); las pantallas no pueden | Reclama el envío (`servidor_correo_reclamar`), lo manda con Resend (secreto `RESEND_API_KEY`) y anota la respuesta (`servidor_correo_respuesta`): enviado; **rechazado** (Resend respondió con un error) → se reintenta a los 5 min, hasta 3 intentos; **dudoso** (sin respuesta a tiempo) → no se reintenta. El fallo final sale en `estado_actual`. |
+| `motor.reintentar_correos(ahora)` ✅ | Tarea programada `reintentar_correos`, cada minuto | Vuelve a pedir los correos rechazados cuya espera de 5 min ha pasado. |
+| `hook_antes_de_crear_usuario(event)` ✅ | Supabase Auth, antes de crear un usuario (hook «Before User Created») | Solo deja crear el usuario si su correo está en `cuentas_autorizadas` (configuración del entorno). Si no: error 403 «Esta cuenta no tiene acceso a Osasun Operations. Pide acceso a Administración.» |
+| `motor.tras_crear_usuario` (disparador en `auth.users`) ✅ | Al crearse el usuario | Da de alta su persona con el rol, el centro y el horario de la lista. Nunca impide el alta. |
 | `prueba.fijar_condicion(jornada, condicion, valor)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Simula `SALE:`, envío y eventos hasta que tengan su función real. Nadie tiene permiso para usarla. |
 | `prueba.invocar(funcion, persona, cuerpo)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Llama a una función del servidor desde la base de datos con una solicitud interna. |
-| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_resultado` ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
+| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_respuesta` (y `servidor_correo_resultado`, de la Tarea 4) ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
 
 ## 6. Trazabilidad con las pantallas de §8
 
@@ -219,6 +225,72 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 | Nueva tarea (qué, para quién, cuándo, duración, urgente, por qué) | `crear_tarea_admin` |
 | Cierre | `cierre` (y correo) |
 
-## 7. Dudas
+## 7. Guía para las pantallas (Lovable) ✅
+
+Las pantallas están en otro repositorio (`osasun-pantallas`) y **no usan la integración de Supabase de Lovable**: solo la URL del proyecto y la clave pública, y **solo las funciones de este documento**. No crean ni cambian tablas, no escriben en ellas (la base de datos lo rechaza), no calculan nada y no envían la hora.
+
+### 7.1 Conexión (proyecto de **pruebas**)
+| Dato | Valor |
+| --- | --- |
+| URL del proyecto | `https://rvypswuoafnjwqdwxjvo.supabase.co` |
+| Clave pública (*publishable*) | `sb_publishable_IKa8qY4SO04BeRe0WWhy-Q_nE2OIwQg` |
+
+La clave pública no es secreta: no da permisos por sí sola; los da la sesión de cada persona. Producción tendrá otra URL y otra clave.
+```js
+import { createClient } from '@supabase/supabase-js'
+export const supabase = createClient('https://rvypswuoafnjwqdwxjvo.supabase.co', 'sb_publishable_IKa8qY4SO04BeRe0WWhy-Q_nE2OIwQg')
+```
+
+### 7.2 Iniciar sesión (solo Google)
+- Un único botón «Entrar con Google». No hay registro ni contraseña.
+```js
+await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
+```
+- Al volver, la sesión se recoge sola (`supabase.auth.onAuthStateChange`). Después, siempre `supabase.rpc('mi_perfil')` y, según `rol`, la pantalla del operario o la de Administración.
+- **Cuenta no autorizada:** Google vuelve a la app con `error_description` en la dirección («Esta cuenta no tiene acceso a Osasun Operations. Pide acceso a Administración.»). Se muestra tal cual, con el botón de entrar.
+- Si `mi_perfil` devuelve `NO_AUTORIZADO` (usuario sin ficha): mostrar el mensaje y un botón «Salir» (`supabase.auth.signOut()`).
+- Direcciones de vuelta permitidas en pruebas: las previsualizaciones de Lovable (`*.lovable.app`, `*.lovableproject.com`). Otra dirección se pide al coordinador.
+
+### 7.3 Llamar a las funciones
+- **Base de datos:** `const { data, error } = await supabase.rpc('nombre', { parametros })`, con los nombres de parámetro de este documento. Ej.: `supabase.rpc('terminar_tarea', { tarea_id, resultado: 'Hecho' })`.
+- **Servidor** (`pegar_reparto`, `lista_stock`): `const { data, error } = await supabase.functions.invoke('pegar_reparto', { body: { texto, tipo: 'reparto' } })`. La sesión va sola.
+- **Cómo leer la respuesta:**
+  1. `error` (de Supabase): sin conexión o fallo del servidor → «No hay conexión. Vuelve a intentarlo.» y permitir reintentar. Si la sesión ha caducado (`error.code` `42501` o HTTP 401), volver a «Entrar con Google».
+  2. `data.error`: respuesta de negocio → mostrar **`data.error.mensaje` tal cual** (§7.5).
+  3. `data.aviso`: no es un error (ej. «Este reparto ya estaba pegado») → mostrarlo como información.
+  4. Si no, `data` es el resultado (casi siempre trae la nueva `tarea_activa`: pintarla directamente).
+- **`id_cliente`:** las que crean algo lo piden. Generarlo con `crypto.randomUUID()` al pulsar el botón y **reutilizar el mismo** si se reintenta esa misma acción; así nunca se duplica.
+- **Horas:** los campos con fecha y hora (`*_en`, `hora_programada`, `hora_limite`…) llegan en ISO (UTC); se muestran en hora de Madrid: `new Date(v).toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' })`. Los que ya son texto «HH:MM» (`hora`, `a_las`, `nueva_hora`, `nueva_hora_salida`, `vence`, `siguiente`) se muestran tal cual.
+- **Nada de cálculos ni avisos de tiempo en la pantalla** (§6.7): lo que hay que hacer lo dice `tarea_activa`.
+
+### 7.4 En directo (Realtime)
+Publicadas: `tareas` y `tarea_elementos`. Cada persona solo recibe los cambios que puede leer. Ante cualquier cambio, **volver a pedir la función** (`tarea_activa` o `estado_actual`); la pantalla no recalcula nada.
+```js
+supabase.channel('jornada')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'tareas', filter: `jornada_id=eq.${jornadaId}` }, refrescar)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'tarea_elementos' }, refrescar)
+  .subscribe()
+```
+- **Operario (Chromebook y Pixel):** `jornadaId` = `tarea_activa().jornada.id`. Así lo que marca el Pixel (cajas) se ve en el Chromebook y una tarea nueva aparece sola.
+- **Administración:** suscribirse a `tareas` sin filtro y refrescar `estado_actual()`.
+- **Además, refrescar cada minuto y al volver a la pestaña:** las tareas con hora (y «Llama a Administración» a los 30 min) aparecen al llegar su hora, sin que cambie nada en la base de datos.
+
+### 7.5 Mensajes de error
+Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la pantalla:
+
+| Código | Qué hace la pantalla |
+| --- | --- |
+| `NO_AUTENTICADO` | Volver a «Entrar con Google». |
+| `NO_AUTORIZADO` | Mostrar el mensaje; si viene de `mi_perfil`, botón «Salir». |
+| `FALTA_SALE` | Preguntar «¿Quién sale hoy?» (`opciones`) y repetir `pegar_reparto` con `sale`. |
+| `FECHA_NO_ES_HOY` | Pedir confirmación y repetir con `confirmar_fecha: true`. |
+| `REPARTO_CON_ERRORES` | Mostrar `lineas` (número de línea y mensaje) para corregir el texto. |
+| `CONFLICTO` | Mostrar `conflicto.obligatorias_en_riesgo` y los minutos que faltan; Administración elige qué cede (o no crear) y se repite `crear_tarea_admin` con `decision_conflicto` y `confirmar: true`. |
+| `PROBLEMA_YA_ABIERTO` · `INCIDENCIA_YA_ABIERTA` | Mostrar el abierto (`problema` / `incidencia_id`) en vez de crear otro. |
+| `SOLUCION_OBLIGATORIA` · `DATOS_NO_VALIDOS` · `CANTIDAD_FUERA_DE_RANGO` | Mostrar junto al campo y dejar corregir. |
+| `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` | Mostrar el mensaje; el resto de la app sigue funcionando. |
+| Cualquier otro | Mostrar el mensaje. |
+
+## 8. Dudas
 
 1. **Ver la lista de stock desde Administración:** la incluyo como consulta. Si no se quiere, se quita.
