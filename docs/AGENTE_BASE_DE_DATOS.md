@@ -66,21 +66,28 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
-## 7. TAREA 7 (activa): lo que ha salido de la primera prueba real, en pruebas
+## 7. TAREA 7 (activa): incidencias, reparto y «nunca sin tarea», en pruebas
 
-El propietario y Eder han probado la pantalla del operario (Lovable) contra pruebas. Esto es lo que necesitan las pantallas:
+Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_SISTEMA.md` **v1.17**: §4 («Nunca sin tarea»), §5 R1 y §6.6 («Incidencias»). Si algo no encaja con lo ya construido, propón la forma más simple antes de rehacer nada.
 
-1. **«Pega el reparto»** se cierra sola cuando `pegar_reparto` acepta un reparto. `terminar_tarea` sobre ella sin reparto aceptado exige `motivo` (error `MOTIVO_OBLIGATORIO`, con un mensaje que lo pida).
-2. **Nunca sin tarea** (§4, «Nunca sin tarea»): cuando no queda nada disponible antes de la siguiente tarea con hora, `tarea_activa` ofrece primero las fijas de la tarde de ese día (plantillas `dia_semana` del turno de tarde sin hora: minis, resinas, control de materiales) y después «Orden y limpieza». Esta **no se gasta**: al terminarla vuelve a estar disponible (puede ser una tarea nueva cada vez, con su registro). Recuento, revisión del envío, Nacex y salida no se adelantan.
-3. **Botón «Incidencia»** (§6.6): en `registrar_evento`, dos tipos nuevos, `pedir_comprar` («Hay que pedir o comprar algo», con `detalle` obligatorio) y `recogida_nacex`. Los dos crean una tarea que **sigue abierta** (`no_terminada = sigue_abierta`) hasta que se cierra. `no_quedan_vapers` deja de usarse en las pantallas (no hace falta borrarlo). «Corregir, limpiar o solucionar» sigue siendo `iniciar_incidencia`.
-4. **Botón «Cerrar tarea»** (§6.6):
-   - `pendientes_de_cerrar()`: lo pedido sin recoger y las tareas no urgentes que se han quedado atrás (pendientes de hoy, ya disponibles y sin lista, más las arrastradas). Excluye la tarea activa, las listas y las bolsas, «Pega el reparto» y las que esperan a su hora.
-   - `cerrar_pendiente(tarea_id, resultado?)`: la marca como hecha con su hora real, sin tener que pasar por «Empezar». Idempotente. No vale para lo excluido (`ESTADO_NO_VALIDO`).
-5. **Que no se olviden al recargar:** `tarea_activa` devuelve también `incidencia_abierta` (`{ incidencia_id, descripcion, iniciada_en }` o null) y `problemas_abiertos` (`[{ problema_id, tarea_id, tipo, descripcion, estado, proxima_llamada_en }]`). Confirma en `CONTRATOS.md` qué campos devuelven `PROBLEMA_YA_ABIERTO` e `INCIDENCIA_YA_ABIERTA`.
-6. `CONTRATOS.md` a la 0.7, con una nota de cambios al principio (el coordinador la traslada a Lovable).
-7. Pruebas de todo lo anterior, todas en verde, y pruebas coincidiendo con el repositorio.
+1. **Reparto:**
+   - `pegar_reparto` lo puede usar también **Administración**, y entonces va a la jornada del operario por defecto. Mismo cálculo, misma sustitución conservando lo hecho.
+   - «Pega el reparto» se cierra sola al aceptarse un reparto. `terminar_tarea` sobre ella sin reparto aceptado exige `motivo` (`MOTIVO_OBLIGATORIO`).
+   - `tarea_activa` dice si hoy ya hay un reparto aceptado (`reparto_de_hoy: { reparto_id, aceptado_en, pegado_por } | null`), para que la pantalla muestre «Pegar reparto» o «Modificar reparto».
+2. **Nunca sin tarea:** si no queda nada disponible antes de la siguiente tarea con hora, primero las fijas de la tarde de ese día (plantillas `dia_semana` del turno de tarde sin hora) y después «Orden y limpieza», que **no se gasta** (vuelve a estar disponible al terminarla). Recuento, revisión del envío, Nacex y salida no se adelantan.
+3. **Incidencias (nuevo modelo, §6.6):**
+   - Una incidencia lleva `opcion` (`llega_mercancia` · `pedido_cliente` · `pedir_comprar` · `recogida_nacex` · `corregir` · `bloqueado`), `descripcion` (una línea), `quien` (`operario` | `administracion`) e `importancia` (`ahora` | `hoy` | `cuando_pueda`), con los valores por defecto de la tabla de §6.6.
+   - **Del operario:** crea su tarea. `ahora` va como las urgentes (al terminar la referencia o la bolsa en curso); `hoy` es obligatoria del día; `cuando_pueda` va a la cola libre. Al hacer la tarea, la incidencia se cierra sola, **salvo `pedir_comprar`**, que pasa a «pedido, esperando a que llegue» y se cierra a mano.
+   - **De Administración:** no crea tarea. Envía al momento un correo a Administración («Incidencia: …»), con el mismo sistema de correo y reintentos. Queda «esperando a Administración» hasta que el operario la cierra.
+   - `bloqueado` es el flujo de problemas actual (`abrir_problema` y los siguientes); se puede seguir llamando igual.
+   - `corregir` sigue midiendo su tiempo (de inicio a fin), como la incidencia actual.
+   - Funciones: crear incidencia (una sola función con `id_cliente`), `incidencias_abiertas()` (para «Cerrar incidencias», con su estado en una frase) y `cerrar_incidencia(incidencia_id, nota?)`. Reutiliza lo que ya existe (`registrar_evento`, `incidencias`, `problemas`) si encaja, sin duplicar tablas.
+   - Las incidencias entran en el cierre del turno.
+4. **Que no se olviden al recargar:** `tarea_activa` devuelve también `incidencias_abiertas` (número), la incidencia en curso con tiempo si la hay y los `problemas_abiertos`. Confirma en `CONTRATOS.md` los campos de `PROBLEMA_YA_ABIERTO` e `INCIDENCIA_YA_ABIERTA`.
+5. `CONTRATOS.md` a la 0.7, con una nota de cambios al principio (el coordinador la traslada a Lovable).
+6. Pruebas de todo lo anterior, todas en verde, y pruebas coincidiendo con el repositorio.
 
-**Entrega:** Pull Request **«Tarea 7 — Ajustes de la primera prueba real»**, con un resumen de 10 líneas como máximo y la salida de las pruebas.
+**Entrega:** Pull Request **«Tarea 7 — Incidencias, reparto y nunca sin tarea»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.
 
 ---
 

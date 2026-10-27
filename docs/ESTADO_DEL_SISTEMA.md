@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.16 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.17 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -132,7 +132,7 @@ BILBAO
 ALGORTA
 ...
 ```
-El operario pega el texto en la app. La tarea «Pega el reparto» **se cierra sola al aceptarse un reparto**; si se pulsa «Terminada» sin pegarlo, la app pide el motivo (por ejemplo, «hoy no hay reparto»). La app:
+**El reparto lo puede pegar Administración (desde su panel) o el operario.** La tarea «Pega el reparto» **se cierra sola al aceptarse un reparto**; si se pulsa «Terminada» sin pegarlo, la app pide el motivo (por ejemplo, «hoy no hay reparto»). La app:
 1. Comprueba cada nombre contra el catálogo (PRINCIPAL). Ignora espacios y mayúsculas.
 2. Si algún nombre no existe, avisa antes de calcular.
 3. Suma las cajas por producto y formato.
@@ -215,23 +215,25 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
 5. Si no le cogen el teléfono: envía un WhatsApp con el problema, la tarea queda pendiente y pasa a otra.
 6. A los 30 minutos sin solución, le vuelve a aparecer la tarea de llamar. Si Administración le llama antes, apunta la solución y lo marca como resuelto.
 
-**Botón «Incidencia»** (decisión del propietario, 27/10/2026). Reúne las situaciones generales del manual que pueden pasar en cualquier momento:
+**Incidencias** (decisión del propietario, 27/10/2026; sustituye al modelo anterior). Cuando el operario se da cuenta de algo, pulsa **Incidencia**, elige qué pasa y escribe una línea:
 
-| Opción | Qué hace la app |
-| --- | --- |
-| Llega mercancía | Crea «Abre y comprueba la mercancía», que se hace en el momento (urgente). |
-| Pedido de cliente | Crea «Prepara el pedido y envíalo por Nacex». |
-| Hay que pedir o comprar algo | Se escribe qué falta. Queda **abierto hasta que esté en el almacén**. |
-| Recogida en Nacex | Se da de alta y queda **abierta hasta que se recoge**. |
-| Corregir, limpiar o solucionar algo | La incidencia clásica: algo no previsto, por necesidad o urgencia, de más de 3 minutos. Se escribe en una línea qué es y por qué. No necesita aprobación, pero queda registrado con su tiempo. |
+| Opción | Quién la resuelve por defecto | Importancia por defecto |
+| --- | --- | --- |
+| Llega mercancía | Él | Ahora |
+| Pedido de cliente | Él | Hoy |
+| Hay que pedir o comprar algo | Él (consumibles) · Administración (materia prima y packaging, §7) | Hoy |
+| Recogida en Nacex | Él | Hoy |
+| Corregir, limpiar o solucionar algo | Él | Ahora |
+| Estoy bloqueado | — | Es el flujo de problemas de arriba (la tarea se bloquea, llamar en 1 minuto, WhatsApp, volver a llamar a los 30 minutos) |
 
-«No quedan vapers» no es una opción: es un caso puntual y entra por «Hay que pedir…» o por la última opción.
+Él puede cambiar el «quién» y la importancia.
+- **La resuelve él:** se convierte en una tarea según su importancia. **Ahora** entra al terminar la referencia o la bolsa en curso; **Hoy** va al primer hueco del día; **Cuando pueda** va a su cola de tiempo libre. Cuando hace la tarea, la incidencia se cierra sola. **Excepción:** si es una compra, al hacer la tarea queda «pedido, esperando a que llegue» y se cierra cuando el material está en el almacén.
+- **La resuelve Administración:** a Administración **le llega un correo en el momento**. Queda «esperando a Administración» hasta que él la cierra, cuando Administración confirma que está resuelta o cuando el producto ya está en el almacén.
+- **Cerrar incidencias** (botón de arriba, con el número de las abiertas): lista sus incidencias abiertas con su estado. Para cerrarlas escribe una línea opcional (por ejemplo, «Ya está en el almacén»).
+- Cada incidencia queda registrada con su hora, su tiempo y su cierre, y aparece en el cierre del turno.
+- «No quedan vapers» no es una opción: es un caso puntual y entra por «Hay que pedir o comprar algo» o por «Corregir, limpiar o solucionar algo».
 
-**Botón «Cerrar tarea»** (arriba, junto a «Pegar reparto»). Muestra lo que el operario tiene abierto y no es la tarea del centro, para cerrarlo con una línea opcional:
-1. Lo pedido o comprado que aún no se ha recogido (se cierra al estar en el almacén).
-2. Las tareas no urgentes que se han quedado atrás, de hoy o arrastradas.
-
-No aparecen las listas de producción ni las bolsas (se cierran caja a caja), «Pega el reparto» (se cierra al pegarlo) ni las tareas que esperan a su hora.
+**Botón «Tengo un problema»:** desaparece como botón. Es la opción «Estoy bloqueado» de Incidencia.
 
 **«Hacer» fuera del plan no existe:** producir algo que se queda (cajas, stock) solo se hace si está en el plan.
 
@@ -286,8 +288,9 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 ### Operario
 - **Chromebook:**
   - Una sola tarea en el centro, con su porqué en una frase.
-  - Tres botones fijos: **Terminada**, **Tengo un problema** e **Incidencia** (con sus opciones, §6.6).
-  - Arriba: **Pegar reparto** y **Cerrar tarea** (§6.6).
+  - **Abajo, dos botones:** el de la tarea (**Empezar** o **Terminada**) e **Incidencia** (§6.6).
+  - **Arriba:** **Pegar reparto**, que pasa a **Modificar reparto** cuando ya hay uno, y **Cerrar incidencias** (§6.6).
+  - Cambiar de dispositivo (Chromebook o Pixel) no altera nada: todo vive en el servidor.
   - Una línea abajo con lo que viene después.
 - **Listas de producción:**
   - Aparecen todas las referencias. Él elige una, la termina y la marca, y elige la siguiente.
@@ -462,3 +465,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.14 | 27/10/2026 | PR #5 aprobado y fusionado: acceso solo con Google y lista de cuentas autorizadas en pruebas. Instrucciones del agente de pantallas (`AGENTE_ALMACEN.md`). |
 | 1.15 | 27/10/2026 | Primera prueba real de la pantalla del operario. Nunca sin tarea: se adelantan las fijas de la tarde y «Orden y limpieza» no se gasta. «Pega el reparto» se cierra al aceptarse un reparto. |
 | 1.16 | 27/10/2026 | Botón «Incidencia» con las situaciones generales del manual; nuevo botón «Cerrar tarea» para lo pedido sin recoger y lo que se ha quedado atrás (§6.6 y §8). |
+| 1.17 | 27/10/2026 | Nuevo modelo de incidencias (quién la resuelve, importancia, correo a Administración, «Cerrar incidencias»); «Tengo un problema» pasa a ser «Estoy bloqueado»; dos botones abajo; el reparto lo puede pegar también Administración y hay «Modificar reparto». |
