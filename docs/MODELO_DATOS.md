@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.5 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 5).
+**Versión:** 0.6 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 7).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -179,7 +179,8 @@ Botón «Tengo un problema» (§6.6): jornada_id · tarea_id · persona_id · ti
 Previsto, no implementado (V1.1): la «solución directa» para `falta_material` saldrá del catálogo de materiales.
 
 ### 3.11 `incidencias` ✅ (Tarea 4)
-Botón «Incidencia»: jornada_id · persona_id · tarea_id (la que estaba en curso) · descripcion · iniciada_en · terminada_en · id_cliente. **Una sola abierta por persona.**
+Botón «Incidencia»: jornada_id · persona_id · tarea_id (la que estaba en curso) · descripcion · iniciada_en · terminada_en (cuándo se cerró) · id_cliente.
+**Tarea 7 (§6.6 v1.17):** opcion (`llega_mercancia` · `pedido_cliente` · `pedir_comprar` · `recogida_nacex` · `corregir`; vacía en las de antes) · quien (`operario` | `administracion`) · importancia (`ahora` | `hoy` | `cuando_pueda`) · estado (`abierta` · `esperando_llegada` · `esperando_administracion` · `cerrada`) · tarea_resolucion_id (la tarea creada para resolverla) · nota_cierre · cerrada_por. Puede haber varias abiertas por persona (las de antes, solo una). Un disparador en `tareas` la cierra al hacerse su tarea (las compras pasan a `esperando_llegada`), y lo que se arrastra sigue apuntando a la tarea nueva. «Estoy bloqueado» no crea fila aquí: es un `problema`.
 
 ### 3.12 `cierres` ✅ (Tarea 4)
 **Uno por turno** (D2): jornada_id · turno · contenido (jsonb congelado) · generado_en · envio_reclamado_en (el envío se reclama una sola vez: nunca dos correos) · enviado_en · canal (**correo**, D3) · error_envio. Único (jornada, turno).

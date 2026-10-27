@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 0.6 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5).
+**Versión:** 0.7 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -62,7 +62,9 @@ Solo tareas disponibles (su hora o su turno ya ha llegado), no bloqueadas y con 
 5. **Obligatorias y de Administración con hora límite**, por la hora límite más próxima (empate: la obligatoria). Las obligatorias sin hora límite van detrás.
 6. **De Administración «hoy»** sin hora.
 7. **Flexibles** de plantilla (ej. tirada de vapers).
-8. **Cola de tiempo libre:** A (stock +35 %), C (compras), D (orden y limpieza).
+8. **Cola de tiempo libre:** A (stock +35 %), C (compras e incidencias «cuando pueda»), D (orden y limpieza).
+
+**Nunca sin tarea (Tarea 7, §4 v1.17):** si no hay nada de lo anterior (sin contar «Orden y limpieza») y es la hora de un turno de la persona, se adelantan las fijas de la tarde de ese día (plantillas `dia_semana` del turno de tarde sin hora: minis, resinas, control de materiales) y después «Orden y limpieza», que no se gasta (al hacerse, un disparador crea otra igual). Lo ligado a su hora no se adelanta. Entre turnos no se ofrece nada.
 
 Desempates: `orden` de la plantilla y hora de creación. **«Lo que viene después»**: lo que tocaría sin la tarea actual; pero si antes llega una tarea con hora (o el siguiente turno), se anuncia esa con su hora.
 
@@ -227,7 +229,8 @@ Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 | Reparto | R1 (`REGLAS_CALCULO.md` §2), casos R1-01…24 | ✅ unitarias R1 y 07; reparto real con la hoja; envío antes del recuento ✅ 09 |
 | Stock (+35 %) | R3 (§3), casos R3-01…20 | ✅ unitarias R3 y 07; lista real del 26/10 en el PR #3 |
 | Tareas de Administración | Encaje (§2.3), conflicto (§2.4) | ✅ 05, 10 |
-| Problemas | §2.5 | ✅ 05, 09 |
+| Problemas | §2.5 | ✅ 05, 09, 13 |
+| Incidencias (§6.6 v1.17) · Nunca sin tarea · Reparto desde Administración | §2.3, `CONTRATOS.md` §3.11 | ✅ 05, 13 |
 | Cierre | §2.5 bis, `cierres` + correo | ✅ 10; envío real en el PR de la Tarea 4 |
 | Permisos | §5 | ✅ 04, 08, 11, 12 (acceso) |
 | Dispositivos · Uso real | Mismas funciones para Chromebook y Pixel; pantallas de Lovable | Con las pantallas |

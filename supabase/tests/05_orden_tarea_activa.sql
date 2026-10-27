@@ -106,6 +106,9 @@ begin
   perform pg_temp.hecha(j, array['cola_stock']);
   perform pg_temp.toca('Escalón 8: después cola C (compras)', '12:40', 'cola_compras');
   perform pg_temp.hecha(j, array['cola_compras']);
+  -- Nunca sin tarea (v1.17): sin nada disponible, primero se adelanta la fija de la tarde.
+  perform pg_temp.toca('Nunca sin tarea: sin nada disponible, se adelanta la fija de la tarde (resinas del martes)', '12:40', 'resinas');
+  update public.tareas set estado = 'bloqueada' where jornada_id = j and clave = 'resinas';
   perform pg_temp.toca('Escalón 8: después cola D (orden y limpieza)', '12:40', 'cola_orden');
 
   update public.tareas set estado = 'bloqueada' where jornada_id = j and clave = 'cola_orden';
@@ -114,7 +117,8 @@ begin
     r ->> 'siguiente' like 'Recuento de stock%12:45', r ->> 'siguiente');
   perform pg_temp.toca('A las 12:45 toca el recuento', '12:45', 'recuento_manana');
   perform pg_temp.hecha(j, array['recuento_manana']);
-  perform pg_temp.toca('Las tareas de la tarde no aparecen antes de las 15:30', '13:00', null);
+  update public.tareas set estado = 'pendiente' where jornada_id = j and clave in ('resinas', 'cola_orden');
+  perform pg_temp.toca('Entre turnos no se adelanta nada: las tareas de la tarde no aparecen antes de las 15:30', '13:00', null);
   perform pg_temp.toca('A las 15:30, la revisión del envío (con hora) va primero', '15:31', 'revisar_envio');
   perform pg_temp.hecha(j, array['revisar_envio']);
   perform pg_temp.toca('Después, la obligatoria de la tarde (resinas del martes)', '15:40', 'resinas');
