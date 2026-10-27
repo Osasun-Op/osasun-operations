@@ -23,6 +23,7 @@ export interface Linea {
   texto: string;
   clase: Clase;
   destino_id?: string;
+  sale?: "operario" | "administracion";   // línea SALE: reconocida
   cantidad?: number;
   producto?: string;
   formato?: string;
@@ -54,6 +55,8 @@ export interface ResultadoR1 {
   lineas: Linea[];
   errores: Linea[];
   sale: "operario" | "administracion" | null;
+  /** Lo que dice la línea SALE: del texto, aunque mande el desplegable (para anotar si no coinciden). */
+  saleTexto: "operario" | "administracion" | "contradictoria" | null;
   fecha: { dia: number; mes: number } | null;
   produccion: ElementoProduccion[];
   bolsas: Bolsa[];
@@ -95,7 +98,7 @@ function conError(l: Linea, codigo: string): Linea {
 export interface OpcionesR1 {
   tipo: "reparto" | "envio";
   hoy: { dia: number; mes: number };
-  sale?: "operario" | "administracion" | null;   // respuesta del operario si faltaba SALE:
+  sale?: "operario" | "administracion" | null;   // desplegable «¿Quién sale?»: manda sobre la línea SALE: (v1.20)
   confirmarFecha?: boolean;
   /**
    * Solo envío pegado antes del recuento de la mañana (ESTADO_DEL_SISTEMA.md v1.11):
@@ -141,8 +144,9 @@ export function analizarReparto(
     } else if ((m = /^SALE\s*:(.*)$/i.exec(t))) {
       l.clase = "sale";
       const v = norm(m[1]);
-      if (v === "ALMACÉN" || v === "ALMACEN") sales.add("operario");
-      else if (v === "YO") sales.add("administracion");
+      if (v === "ALMACÉN" || v === "ALMACEN") l.sale = "operario";
+      else if (v === "YO") l.sale = "administracion";
+      if (l.sale) sales.add(l.sale);
     } else if ((m = /^(\d+)\s*[xX]\s*(.+)$/.exec(t))) {
       l.clase = "producto";
       productos++;
@@ -177,12 +181,13 @@ export function analizarReparto(
     }
   });
 
-  if (op.tipo === "reparto" && sales.size > 1) {
+  if (op.tipo === "reparto" && sales.size > 1 && !op.sale) {
     errores.push(conError({ num: 0, texto: "", clase: "sale" }, "SALE_CONTRADICTORIA"));
   }
   if (productos === 0) errores.push(conError({ num: 0, texto: "", clase: "vacia" }, "REPARTO_VACIO"));
 
-  const sale = op.tipo === "envio" ? null : sales.size === 1 ? [...sales][0] : (op.sale ?? null);
+  const saleTexto = op.tipo === "envio" ? null : sales.size === 1 ? [...sales][0] : sales.size > 1 ? "contradictoria" : null;
+  const sale = op.tipo === "envio" ? null : (op.sale ?? (sales.size === 1 ? [...sales][0] : null));
   const f = fecha as { dia: number; mes: number } | null;
 
   const apartados = new Map<string, number>();
@@ -215,5 +220,5 @@ export function analizarReparto(
   else if (op.tipo === "reparto" && sale === null) estado = "falta_sale";
   else if (f && (f.dia !== op.hoy.dia || f.mes !== op.hoy.mes) && !op.confirmarFecha) estado = "fecha_no_es_hoy";
 
-  return { estado, lineas, errores, sale, fecha: f, produccion, bolsas: [...bolsas.values()] };
+  return { estado, lineas, errores, sale, saleTexto, fecha: f, produccion, bolsas: [...bolsas.values()] };
 }

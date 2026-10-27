@@ -157,3 +157,20 @@ Deno.test("R1-24 en un reparto nunca se aparta nada", () => {
   const r = r1(["SALE: YO", "BILBAO", "8x V2 4g"], { apartadoReparto: [{ producto: "V2", formato: "4g", pedido: 20 }] });
   assertEquals([r.produccion[0].apartado_reparto, r.produccion[0].faltan], [0, 0]);
 });
+
+Deno.test("R1-25 el desplegable manda sobre SALE: (v1.20)", () => {
+  const r = r1(["SALE: ALMACÉN", "BILBAO", "1x V2 4g"], { sale: "administracion" });
+  assertEquals([r.estado, r.sale, r.saleTexto], ["aceptado", "administracion", "operario"]);
+  assertEquals(r.lineas[0].sale, "operario");
+});
+
+Deno.test("R1-26 con desplegable, dos SALE: distintas no son error", () => {
+  const r = r1(["SALE: ALMACÉN", "SALE: YO", "BILBAO", "1x V2 4g"], { sale: "operario" });
+  assertEquals([r.estado, r.sale, r.saleTexto, errores(r)], ["aceptado", "operario", "contradictoria", []]);
+});
+
+Deno.test("R1-27 sin desplegable ni SALE: sigue FALTA_SALE; con SALE: y sin desplegable, manda el texto", () => {
+  assertEquals(r1(["BILBAO", "1x V2 4g"]).estado, "falta_sale");
+  const r = r1(["SALE: YO", "BILBAO", "1x V2 4g"]);
+  assertEquals([r.estado, r.sale, r.saleTexto], ["aceptado", "administracion", "administracion"]);
+});
