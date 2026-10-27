@@ -65,7 +65,7 @@ Toda la lógica ya existe en la base de datos (Supabase). **Tú solo muestras y 
 
 ## 6. Cómo recibes el trabajo
 
-- Tu tarea activa es la de la sección «Tarea activa» de este archivo. Cuando el propietario te escriba **«Lee docs/AGENTE_ALMACEN.md y ejecuta tu tarea activa»**, la haces.
+- El coordinador te envía cada tarea directamente en el chat de Lovable, con el extracto de `CONTRATOS.md` que necesitas. Las reglas permanentes están en el Knowledge del proyecto.
 - Al terminar, escribe en el chat un resumen de **10 líneas como máximo**, en lenguaje sencillo: qué pantallas hay, cómo probarlas y qué dudas o funciones te faltan.
 - El coordinador revisa tu trabajo leyendo el repositorio `osasun-pantallas`.
 
