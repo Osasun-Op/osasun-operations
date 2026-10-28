@@ -62,7 +62,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 12** (sección 7). Incluye lo que era la Tarea 11. Lee antes `ESTADO_DEL_SISTEMA.md` **v1.23**, §5 R1b.
+**Tarea 12** (sección 7). Incluye lo que era la Tarea 11. Lee antes `ESTADO_DEL_SISTEMA.md` **v1.24**, §5 R1b y R1c.
 
 ---
 
@@ -76,7 +76,9 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 3. **Envío por Nacex:** crea **«Prepara el pedido de cliente»**, con la lista y los `datos_envio` en su porqué o detalle, bien legibles, y **activa Nacex ese día** igual que `hay_envio`: lunes a jueves, recuento a las 17:55 y «Salida a Nacex» a las 18:10; el viernes, antes de las 10:45, y lo lleva quien sale de reparto. Si ya hay envío, es el mismo viaje (sin duplicar tareas). Si las cajas no están, suman a la producción de ese día.
 4. **`pedidos_cliente_abiertos()`** para el panel (y, si te sirve, para el operario): cliente, entrega, tienda o Nacex, estado y fecha. Los datos de envío solo para el personal (RLS).
 5. La incidencia «Pedido de cliente» (`crear_incidencia`, opción `pedido_cliente`) y `registrar_evento('pedido_cliente')` quedan **obsoletas para las pantallas**: el pedido se registra con esta función. No borres nada.
-6. Pruebas: los dos tipos de entrega; el pedido de tienda entra en el reparto de hoy o en el siguiente; bolsa aparte; la tarea aparece tras la producción; Nacex se activa una sola vez aunque haya envío; idempotencia; permisos; referencias inexistentes.
+5b. **Orden y «coge / haz»** (v1.24, R1b): la tarea del pedido para tienda aparece al terminar «Producción del reparto». La de Nacex va después de la revisión y la preparación del envío de la tarde. En sus elementos, cada referencia dice «Coge N del almacén» o «Haz N», según lo que quede en el almacén tras apartar el reparto o el envío del día, con la corrección de R1c.
+5c. **Cajas en camino (R1c):** lo que sale en el reparto (salida hecha) o en un envío se resta del almacén y se suma a la tienda de destino como «en camino» hasta la mañana siguiente, **solo en los cálculos** (nunca se escribe en la hoja). Úsalo para lo que queda en el almacén (pedidos y envío del mismo día) y en `lista_stock` (R3: el contador sube por las cajas en camino que el recuento ya ha quitado del almacén y la tienda aún no ha apuntado). Deja la regla escrita en `REGLAS_CALCULO.md`, con sus casos de prueba, y documenta el desfase aceptado.
+6. Pruebas: los dos tipos de entrega; «coge / haz»; cajas en camino (mismo día y día siguiente); el pedido de tienda entra en el reparto de hoy o en el siguiente; bolsa aparte; la tarea aparece tras la producción; Nacex se activa una sola vez aunque haya envío; idempotencia; permisos; referencias inexistentes.
 7. `CONTRATOS.md` a la 1.1, con su nota de cambios. Todo en verde y pruebas coincidiendo con el repositorio.
 
 **Entrega:** Pull Request **«Tarea 12 — Pedidos de cliente con la lista»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.

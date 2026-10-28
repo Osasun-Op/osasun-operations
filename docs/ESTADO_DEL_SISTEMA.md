@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.23 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.24 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -143,6 +143,17 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
   - Para que no se olvide, el operario tiene **una tarea propia, «Hay un pedido de cliente para dejar en [tienda]»**, que aparece **en cuanto termina la producción del reparto oficial** y se hace entonces, no al preparar las bolsas antes de salir.
 - **Envío por Nacex** (se pegan los datos de envío tal cual: nombre, dirección, teléfono…): al operario le entra **«Prepara el pedido de cliente»**, con la lista y los datos de envío bien escritos, y se activa **«Llevar a Nacex»** ese día. De lunes a jueves, recuento a las 17:55 y salida a las 18:10; el viernes, antes de las 10:45, y lo deja quien sale de reparto. Si ese día ya hay envío a Gipuzkoa o a Durango, va en el mismo viaje.
 - Los datos del cliente solo se guardan en la base de datos de la app (los ve el personal con cuenta). Nunca en el repositorio.
+- **Orden del día** (decisión del propietario, 28/10/2026): primero lo oficial y después el pedido.
+  - **Recoger en tienda:** primero «Producción del reparto», solo con las cajas del reparto oficial. Al terminarla, «Pedido de cliente para [tienda] · [cliente]».
+  - **Nacex:** por la tarde, primero la revisión y la preparación del envío a Gipuzkoa (si se decide). Después, «Prepara el pedido de cliente (Nacex)».
+  - En las dos, la tarea del pedido dice para cada referencia **«Coge N del almacén»** (si quedan cajas hechas después de apartar las del reparto o el envío) o **«Haz N»**.
+
+**R1c. Cajas en camino** (decisión del propietario, 28/10/2026). La hoja no refleja en el momento lo que sale del almacén. El almacén baja con el recuento de cada turno, y cada tienda solo lo refleja cuando rellena su «FIN DE DÍA» (normalmente a las 20:30; alguna, a mediodía). Para no contar cajas que ya no están ni perder cajas que van de camino, **la app lo corrige en sus cálculos, sin escribir en la hoja**:
+- lo que sale en el reparto (salida hecha) o en un envío **se resta del almacén y se suma a la tienda de destino como «en camino»** hasta la mañana siguiente;
+- con esa corrección se calcula lo que queda en el almacén para los pedidos y el envío del mismo día, y la lista del +35 %;
+- se acepta que, si una tienda rellena su «FIN DE DÍA» a mediodía, por la tarde esas cajas cuenten dos veces (la lista del +35 % podría pedir un poco menos de lo justo). Se corrige solo al día siguiente;
+- **Etapa 2:** con el panel de tienda, la tienda confirmará «bolsa recibida» y las cajas dejarán de estar en camino en ese momento (ver E2-2).
+
 
 **Principio (propietario, 28/10/2026): la lista de productos con − y + es la pieza central para el personal.** Se construye una sola vez y se reutiliza: reparto, envío, pedidos de cliente y, en las siguientes etapas, reposiciones y ventas en las tiendas.
 
@@ -471,3 +482,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.21 | 28/10/2026 | Prueba real en el almacén: el texto del WhatsApp no coincide con los nombres de PRINCIPAL (36 de 52 líneas). **R1 rediseñada:** el reparto se prepara en la app con una lista de productos de PRINCIPAL y contadores − y +; se quita pegar texto; «Copiar para WhatsApp». |
 | 1.22 | 28/10/2026 | Destinos del reparto y del envío fijados (Tarea 10). |
 | 1.23 | 28/10/2026 | Pedidos de cliente con la lista (recoger en tienda en bolsa aparte con su tarea, o envío por Nacex). La lista con − y + es la pieza central reutilizable. |
+| 1.24 | 28/10/2026 | Orden de los pedidos (primero lo oficial; «coge / haz»). R1c: cajas en camino del almacén a las tiendas hasta la mañana siguiente, solo en los cálculos de la app. |
