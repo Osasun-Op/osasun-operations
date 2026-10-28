@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.7 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 10).
+**Versión:** 0.8 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 12).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -173,7 +173,12 @@ Tarea 10 (reparto con lista): `texto_original` es el texto de WhatsApp generado 
 `reparto_lineas`: reparto_id · num_linea · texto · clase (`cabecera` · `sale` · `tienda` · `producto` · `vacia` · `no_reconocida`) · destino_id · cantidad · producto · formato · error.
 
 ### 3.9 `eventos_jornada` ✅ (Tarea 4, con `registrar_evento`)
-Lo que pasa «en cualquier momento» (§4): `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers`. jornada_id · tipo · detalle · tarea_id (la tarea que creó) · registrado_por · registrado_en · id_cliente único. El **pedido de cliente** lo registra quien lo recibe: el operario con su botón o Administración como tarea nueva (§4).
+Lo que pasa «en cualquier momento» (§4): `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers`. jornada_id · tipo · detalle · tarea_id (la tarea que creó) · registrado_por · registrado_en · id_cliente único. El **pedido de cliente** lo registra quien lo recibe: el operario con su botón o Administración como tarea nueva (§4). Desde la Tarea 12, el pedido de cliente va en `pedidos_cliente` (§3.9 bis); este tipo de evento queda solo por compatibilidad.
+
+### 3.9 bis `pedidos_cliente` ✅ (Tarea 12, R1b)
+id_cliente único · cliente (nombre corto) · entrega (`tienda` · `nacex`) · destino_id (la tienda, si es recoger en tienda) · datos_envio (texto pegado, si es Nacex) · lineas (jsonb: `[{ producto, formato, cantidad }]`) · fecha_objetivo (tienda: primer día cuyo reparto lo lleva; Nacex: día de la salida) · jornada_id · reparto_id (el reparto que lo lleva) · tarea_id (su tarea; sigue a la tarea si pasa al día siguiente) · lectura_id · registrado_por · registrado_en. El estado no se guarda: sale de la tarea (`esperando_reparto` sin tarea; `por_preparar`; `preparado` con la tarea hecha; `cancelado`). Los datos del cliente solo los lee el personal (RLS) y nunca van al repositorio.
+
+La tarea del pedido tiene su lista en `tarea_elementos` (lote `pedido`); el «coge / haz» se escribe en `motivo` y `calculo` (`coge`, `haz`, `en_almacen`, `lectura_id`, `datos_leidos_en`, `calculado_en`) **al salir la tarea** (`motor.calcular_pedido`). Un pedido de Nacex que pasa al día siguiente (`aplazar_pedido_nacex` o sin terminar) tiene una tarea nueva en ese día con la misma lista; la anterior queda «arrastrada» con el motivo. La bolsa aparte de un pedido de tienda son elementos `caja_bolsa` de la tarea «Bolsas» con lote `pedido:<id>`; la del reparto, lote `reparto`.
 
 ### 3.10 `problemas` ✅ (Tarea 4)
 Botón «Tengo un problema» (§6.6): jornada_id · tarea_id · persona_id · tipo (`falta_material` · `no_encuentro` · `no_se_hacerlo` · `no_funciona` · `otro`) · descripcion · estado (`abierto` · `sin_respuesta` · `resuelto`) · abierto_en · llamada_en · llamadas · whatsapp_en · proxima_llamada_en (**WhatsApp + 30 min**, decidido; configurable en `problema_minutos_reaparicion`) · solucion · resuelto_en · resuelto_por · id_cliente. **Un solo problema abierto por tarea** (índice único parcial). La tarea «Llama a Administración» es una tarea de la jornada con origen `problema` y clave `problema:<id>:<n.º de llamada>`.
@@ -254,6 +259,7 @@ pendiente ──iniciar──▶ en_curso ──terminar──▶ hecha
 | Tocar una caja dos veces | `cantidad_hecha` se fija con un valor absoluto | ✅ 07 |
 | Pegar el mismo reparto dos veces | Huella del texto; un solo aceptado por jornada y tipo | ✅ 07 |
 | Pedir la lista de stock dos veces en el turno | Un lote por turno; candado por jornada | ✅ 07 |
+| Repetir un pedido de cliente; volver a guardar el reparto que lo lleva | `id_cliente` único; tarea `pedido_tienda:<id>` / `pedido_nacex:<id>` y bolsa con lote `pedido:<id>`, una sola vez | ✅ 17 |
 | Dos tareas activas a la vez | Índice único parcial | ✅ 02 |
 | Arrastrar dos veces | Clave `arrastre:<id de la original>` | ✅ 03 |
 

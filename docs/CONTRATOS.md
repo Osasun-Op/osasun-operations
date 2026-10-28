@@ -1,6 +1,16 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.0 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 10).
+**Versión:** 1.1 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 12).
+
+> **Cambios en 1.1 (Tarea 12) — para Lovable: pedidos de cliente con la lista** (`ESTADO_DEL_SISTEMA.md` v1.24, §5 R1b y R1c).
+> 1. **`guardar_pedido_cliente(id_cliente, lineas, entrega, destino_id?, cliente, datos_envio?)`** (función del servidor, §3.16; operario y Administración): botón **«Pedido de cliente»**, con **la misma lista** que el reparto (`catalogo`, sin tienda en cada línea) y cómo se entrega: **recoger en tienda** (una de `catalogo().tiendas.reparto`) o **envío por Nacex** (se pegan los datos de envío tal cual).
+> 2. **`pedidos_cliente_abiertos()`** (base de datos, §3.17; operario y Administración): los pedidos que siguen abiertos, con cliente, entrega, estado y fecha.
+> 3. Recoger en tienda: va en el **siguiente reparto** y `guardar_reparto` lo asigna solo (§3.14, campo `pedidos_cliente`). En las bolsas, la tienda tiene **«Bolsa de reposición»** y aparte **«Pedido de cliente · [cliente]»**: cada elemento de bolsas trae el campo nuevo **`bolsa`** (§3.2). El operario tiene la tarea «Hay un pedido de cliente para dejar en [tienda] · [cliente]» **al terminar la producción del reparto**.
+> 4. Nacex: el operario tiene «Prepara el pedido de cliente (Nacex) · [cliente]», con los **datos de envío en `porque`** (varias líneas: mostrarlas tal cual) y la lista. Entran hasta las **18:00** (el viernes, hasta las 10:45); después, al siguiente día de trabajo.
+> 5. **«Coge / haz» al salir la tarea:** cuando al operario le sale la tarea del pedido (de tienda o de Nacex), cada referencia dice en `motivo` **«Coge N del almacén»** o **«Haz N»** (o las dos), calculado en ese momento con la última lectura de la hoja.
+> 6. **`aplazar_pedido_nacex(pedido_id, motivo?)`** (base de datos, §3.18; operario y Administración): si por la producción un pedido de Nacex no llega a salir ese día, se pasa al día siguiente (botón en la tarea). Si queda sin hacer, pasa solo.
+> 7. La opción `pedido_cliente` de `crear_incidencia` y `registrar_evento('pedido_cliente')` quedan **obsoletas para las pantallas** (siguen funcionando).
+> 8. «Prepara el reparto» dice quién lo preparó por su nombre: «Reparto preparado por Asier».
 
 > **Cambios en 1.0 (Tarea 10) — para Lovable: el reparto se prepara con una lista, ya no se pega texto** (`ESTADO_DEL_SISTEMA.md` v1.21, §5 R1).
 > 1. **`catalogo()`** (función del servidor, §3.13): tiendas del reparto (Bilbao, Algorta, Barakaldo, Basauri, Portu) y del envío (Gipuzkoa, Durango), en ese orden, y las referencias de PRINCIPAL (producto + formato) en el orden de la hoja, con su categoría. Para montar la lista.
@@ -35,7 +45,7 @@
 
 - **Dos tipos de llamada:**
   - **Funciones de base de datos** (`supabase.rpc('nombre', {...})`): todo lo que no necesita Google Sheets.
-  - **Funciones del servidor** (`supabase.functions.invoke('nombre', {...})`): las que leen Sheets (`catalogo`, `guardar_reparto` y `lista_stock`; `pegar_reparto`, obsoleta).
+  - **Funciones del servidor** (`supabase.functions.invoke('nombre', {...})`): las que leen Sheets (`catalogo`, `guardar_reparto`, `guardar_pedido_cliente` y `lista_stock`; `pegar_reparto`, obsoleta).
 - Los **nombres de los parámetros** son los de este documento (ej. `supabase.rpc('iniciar_tarea', { tarea_id })`).
 - Las pantallas usan **solo la clave pública** y la sesión del usuario. El rol se comprueba dentro de cada función; esconder un botón no da ni quita permisos.
 - **Hora:** la decide el servidor. Las pantallas nunca envían «ahora».
@@ -67,9 +77,11 @@
 | `pegar_reparto` (**obsoleta**, la sustituye `guardar_reparto`) | Servidor | ✔ | ✔ | ✅ Tarea 3 y 7 |
 | `retrasar_salida` | BD | ✔ | — | ✅ Tarea 4 |
 | `cambiar_quien_sale` | BD | ✔ | ✔ | ✅ Tarea 8 |
-| `registrar_evento` | BD | ✔ | ✔ (solo `pedido_cliente`) | ✅ Tarea 4 |
+| `registrar_evento` | BD | ✔ | ✔ (solo `pedido_cliente`, obsoleto desde la Tarea 12) | ✅ Tarea 4 |
 | `abrir_problema` · `problema_llamada` · `resolver_problema` | BD | ✔ | ✔ (`resolver_problema`) | ✅ Tarea 4 |
 | `crear_incidencia` · `incidencias_abiertas` · `cerrar_incidencia` | BD | ✔ | — | ✅ Tarea 7 |
+| `guardar_pedido_cliente` | Servidor | ✔ | ✔ | ✅ Tarea 12 |
+| `pedidos_cliente_abiertos` · `aplazar_pedido_nacex` | BD | ✔ | ✔ | ✅ Tarea 12 |
 | `iniciar_incidencia` · `terminar_incidencia` (las de antes) | BD | ✔ | — | ✅ Tarea 4 |
 | `crear_tarea_admin` · `cancelar_tarea` · `estado_actual` | BD | — | ✔ | ✅ Tarea 4 |
 | `cierre` · `cierres_recientes` | BD | — | ✔ | ✅ Tarea 4 |
@@ -112,7 +124,7 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 - **Al recargar** la pantalla recupera de aquí todo lo abierto: `incidencias_abiertas` (número para «Cerrar incidencias»), `incidencia_en_curso` (la que tiene su tarea en curso, con `minutos`; `null` si no hay) y `problemas_abiertos` (con la tarea bloqueada; el siguiente paso es `problema_llamada` o `resolver_problema`).
 - `siguiente`: una línea con lo que viene después. Si antes llega una tarea con hora, se anuncia esa con su hora.
 - `pregunta`: reservado; hoy siempre `null`. La pregunta «¿Quién sale hoy?» la devuelve `pegar_reparto` (`FALTA_SALE`).
-- `elementos` ✅: `[ { id, tipo, producto, formato, categoria, destino, destino_id, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla).
+- `elementos` ✅: `[ { id, tipo, producto, formato, categoria, destino, destino_id, bolsa, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla) y, dentro de la tienda, por `bolsa`: «Bolsa de reposición» y, si hay pedidos de cliente, «Pedido de cliente · [cliente]» (Tarea 12). En las listas de producción, `bolsa` es `null`; en los pedidos de cliente, `motivo` dice «Coge N del almacén» o «Haz N».
 - La elección sigue `PLAN_TECNICO.md` §2.3. **Nunca devuelve avisos de tiempo ni de presión** (§6.7): solo tareas.
 - Solo para el operario: Administración recibe `NO_AUTORIZADO`.
 
@@ -143,14 +155,15 @@ Para que una tarea que no se va a hacer conste en el cierre con su motivo. No ca
 ### 3.6 `retrasar_salida(id_cliente, minutos)` ✅
 Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas listas en la mesa de salida a las 10:45, §4).
 - **Entrada:** `minutos` (15 o 30) e `id_cliente`.
-- **Efecto:** suma los minutos a la hora límite de las bolsas, de la producción del reparto y del envío del viernes, y a la hora de la salida (y de Nacex el viernes). Se puede retrasar varias veces (cada vez desde la última hora). Queda registrado. Si sale Administración, se le envía en el momento un correo «Salida retrasada a las HH:MM» y se ve en `estado_actual`. El cierre de la mañana lo cruza con las cajas del reparto y las incidencias de la mañana.
+- **Efecto:** suma los minutos a la hora límite de las bolsas, de la producción del reparto, del envío del viernes y de los pedidos de cliente que salen con el reparto (Tarea 12), y a la hora de la salida (y de Nacex el viernes). Se puede retrasar varias veces (cada vez desde la última hora). Queda registrado. Si sale Administración, se le envía en el momento un correo «Salida retrasada a las HH:MM» y se ve en `estado_actual`. El cierre de la mañana lo cruza con las cajas del reparto y las incidencias de la mañana.
 - **Salida:** `{ "nueva_hora_salida": "11:00", "minutos": 15, "aviso": "correo"|"sin_aviso", "tarea_activa": {...} }`. Repetir con el mismo `id_cliente` devuelve lo mismo sin mover nada.
-- **Errores:** `DATOS_NO_VALIDOS` (no es 15 ni 30), `SIN_TAREA` (aún no hay bolsas: falta pegar el reparto), `ESTADO_NO_VALIDO` (las bolsas ya están listas), `SIN_JORNADA`.
+- **Errores:** `DATOS_NO_VALIDOS` (no es 15 ni 30), `SIN_TAREA` (aún no hay bolsas: falta preparar el reparto), `ESTADO_NO_VALIDO` (las bolsas ya están listas), `SIN_JORNADA`.
 
 ### 3.7 `registrar_evento(id_cliente, tipo, detalle?)` ✅
 `llega_mercancia` (recepción, urgente), `pedido_cliente` (botón «Pedido de cliente»), `no_quedan_vapers` (tirada de vapers). Crea la tarea correspondiente en la jornada de hoy; el `detalle` pasa a ser su «por qué». Administración solo puede registrar `pedido_cliente`, que va a la jornada del operario del almacén.
 - **Salida:** `{ "evento_id", "tarea": {...}, "tarea_activa": {...} }` (`tarea_activa` solo al operario). Repetir con el mismo `id_cliente` no duplica.
 - **Errores:** `DATOS_NO_VALIDOS`, `NO_AUTORIZADO` (Administración con otro tipo), `SIN_JORNADA`.
+- **`pedido_cliente`, obsoleto para las pantallas desde la Tarea 12:** el pedido de cliente se registra con `guardar_pedido_cliente` (§3.16). Sigue funcionando.
 - Desde la Tarea 7 la pantalla del operario usa `crear_incidencia` (llega mercancía y pedido de cliente crean esta misma tarea por dentro). `registrar_evento` sigue funcionando igual (lo usa Administración para un pedido de cliente).
 
 ### 3.8 `pegar_reparto` (función del servidor) ✅ — **obsoleta desde la Tarea 10**
@@ -161,7 +174,7 @@ Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas 
 - Si el mismo texto ya estaba pegado, responde `REPARTO_YA_PEGADO` y **no cambia quién sale**: para eso, `cambiar_quien_sale` (§3.12).
 - **Proceso:** lee Sheets, interpreta el texto según `REGLAS_CALCULO.md` §2 y, si no hay errores, crea o actualiza las tareas «Producción del reparto» y «Bolsas» con sus elementos. Si ya había un reparto aceptado hoy, lo sustituye conservando lo hecho (§5 R1).
 - **Quién:** el operario o **Administración** (Tarea 7). Si lo pega Administración, va a la jornada del operario por defecto, con el mismo cálculo y la misma sustitución; la respuesta no trae `tarea_activa`. Sin jornada del operario ese día: `SIN_JORNADA`.
-- Al aceptarse un reparto, la tarea «Prepara el reparto» queda hecha («Reparto preparado» o «Reparto preparado por Administración»; antes de la Tarea 10, «Reparto pegado»).
+- Al aceptarse un reparto, la tarea «Prepara el reparto» queda hecha («Reparto preparado» si lo prepara el operario, o «Reparto preparado por [nombre]», p. ej. «Reparto preparado por Asier», desde la Tarea 12; antes de la Tarea 10, «Reparto pegado»).
 - **Salida correcta:**
 ```json
 {
@@ -188,6 +201,7 @@ Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas 
 Lista de producción para el stock del almacén (R3, cola A). Se calcula una vez por turno.
 - **Salida (operario):** `{ tarea, ya_calculado, lote, faltas, avisos, excluidos, datos_leidos_en }`. `faltas` = productos sin granel (se crea la tarea «Avisa a Administración: falta X»); `avisos` = datos que no se han podido calcular; `excluidos` = minis y vapers.
 - **Salida (Administración, consulta):** `{ lista, faltas, avisos, excluidos, datos_leidos_en }`, sin guardar nada.
+- **Cajas en camino** (R1c, Tarea 12): lo que ha salido hoy hacia las tiendas (reparto, pedidos de tienda y, el viernes, envío y pedidos de Nacex) se suma al contador hasta la mañana siguiente, desde que el recuento de la mañana ya no lo cuenta en el almacén: la salida es cuando el almacén termina las bolsas (el viernes, también el envío preparado) y el recuento se hace después. El elemento lo dice en `en_camino` y en el `motivo` («Tienes +25 (con 5 en camino a las tiendas)…»).
 - **Errores:** `SHEETS_NO_DISPONIBLE`, `ESTRUCTURA_SHEETS_CAMBIADA`, `SIN_TAREA`, `SIN_JORNADA`.
 
 **Quién llama a las funciones del servidor:** la sesión del usuario (cabecera `Authorization`, como hace `supabase.functions.invoke`) o una solicitud interna de un solo uso creada por la base de datos (cabecera `x-solicitud`). Las funciones comprueban la sesión ellas mismas.
@@ -214,7 +228,7 @@ Botón **Incidencia**: el operario elige qué pasa, escribe una línea y puede c
 | `opcion` | Texto | `quien` por defecto | `importancia` por defecto |
 | --- | --- | --- | --- |
 | `llega_mercancia` | Llega mercancía | `operario` | `ahora` |
-| `pedido_cliente` | Pedido de cliente | `operario` | `hoy` |
+| `pedido_cliente` | Pedido de cliente (**obsoleta desde la Tarea 12**: usar `guardar_pedido_cliente`, §3.16) | `operario` | `hoy` |
 | `pedir_comprar` | Hay que pedir o comprar algo | `operario` (la pantalla ofrece cambiarlo a `administracion` para materia prima y packaging, §7) | `hoy` |
 | `recogida_nacex` | Recogida en Nacex | `operario` | `hoy` |
 | `corregir` | Corregir, limpiar o solucionar algo | `operario` | `ahora` |
@@ -289,9 +303,12 @@ Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_rep
   "bolsas": [ { "destino": "Bilbao", "cajas": 14, "cambia": false } ],
   "datos_leidos_en": "...",
   "tarea_activa": { "...": "solo si lo guarda el operario" },
-  "texto_whatsapp": "REPARTO 03/11\nSALE: ALMACÉN\n\nBILBAO\n12x V2 4g\n\nPORTU\n2x V2 4g"
+  "texto_whatsapp": "REPARTO 03/11\nSALE: ALMACÉN\n\nBILBAO\n12x V2 4g\n\nPORTU\n2x V2 4g",
+  "pedidos_cliente": [ { "...": "objeto pedido (§3.17) de los pedidos para recoger en tienda que van en este reparto" } ]
 }
 ```
+- **Pedidos de cliente para recoger en tienda** (Tarea 12): los que esperan al reparto de hoy entran solos al guardarlo (también al modificarlo, sin duplicarse). No cambian la producción del reparto: cada uno tiene su tarea, después de la producción, con «coge / haz» calculado al salir la tarea (después de lo oficial), y su bolsa aparte en la tienda. Vienen en `pedidos_cliente` (lista vacía si no hay).
+- **Envío** (Tarea 12): mientras la hoja aún cuenta en el almacén lo que sale con el reparto (hasta el recuento de la mañana hecho después de terminar las bolsas), aparta también las cajas de los pedidos de tienda de hoy, no solo las del reparto (R1c).
 - **`texto_whatsapp`:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN` / `SALE: YO` (solo reparto), y por cada tienda una línea en blanco, su código en mayúsculas y `Nx PRODUCTO FORMATO`, con los nombres exactos de la hoja. Tiendas en el orden de `catalogo` y productos en el de la hoja. La pantalla lo copia **tal cual** con un botón para pegarlo en WhatsApp: no se abrevia nada.
 - **Reintentos:** repetir con el mismo `id_cliente` devuelve lo ya guardado (con su `texto_whatsapp`), sin volver a leer la hoja ni calcular, con `ya_guardado: true` y `aviso: { codigo: "REPARTO_YA_GUARDADO" }`. Cada vez que se pulsa «Guardar» en una lista nueva o modificada, `id_cliente` nuevo.
 - **Avisos (no son errores):** `REPARTO_YA_GUARDADO` (reintento) y `REPARTO_SIN_CAMBIOS` («El reparto de hoy ya era este: no cambia nada»; devuelve lo de antes con `ya_pegado: true`). Para cambiar solo quién sale, `cambiar_quien_sale` (§3.12).
@@ -324,6 +341,44 @@ Las líneas del reparto (o del envío) de hoy, para abrir «Modificar reparto» 
 ```
 - `sale` es quién sale **ahora** (si se cambió con `cambiar_quien_sale`, el texto también lo dice). En el envío, `sale` es `null`.
 - **Errores:** `DATOS_NO_VALIDOS` (tipo no válido), `SIN_JORNADA`, `NO_AUTORIZADO`.
+
+### 3.16 `guardar_pedido_cliente` (función del servidor) ✅ (Tarea 12)
+Botón **«Pedido de cliente»**: las cajas con la misma lista que el reparto y cómo se entrega (`ESTADO_DEL_SISTEMA.md` §5 R1b).
+- **Quién:** el operario o Administración (va a la jornada del operario por defecto).
+- **Entrada:**
+```json
+{
+  "id_cliente": "<uuid>",
+  "cliente": "Ane",
+  "entrega": "tienda",
+  "destino_id": "<id de catalogo().tiendas.reparto>",
+  "datos_envio": null,
+  "lineas": [ { "producto": "V2", "formato": "4g", "cantidad": 2 } ]
+}
+```
+- `cliente`: nombre corto, obligatorio (60 letras como máximo). `entrega`: `"tienda"` (recoger en tienda; `destino_id` obligatorio, una tienda del reparto) o `"nacex"` (envío por Nacex; `datos_envio` obligatorio: el texto pegado tal cual, con sus saltos de línea). `lineas`: como en `guardar_reparto` pero **sin tienda**; 0 se ignora, repetidas se suman.
+- **Proceso:** lee la hoja y comprueba cada referencia (como `guardar_reparto`).
+  - **Recoger en tienda:** el pedido espera al **siguiente reparto calculado**: el de hoy si aún no está calculado; si ya lo está (o ya ha salido), el del siguiente día de trabajo. Al guardar ese reparto entra solo (§3.14): tarea «Hay un pedido de cliente para dejar en [tienda] · [cliente]» (aparece **al terminar la producción del reparto**, antes de las bolsas, con la misma hora límite) y bolsa aparte «Pedido de cliente · [cliente]».
+  - **Nacex:** tarea «Prepara el pedido de cliente (Nacex) · [cliente]» con la lista y los datos de envío en `porque`. De lunes a jueves, por la tarde (después de la revisión y la preparación del envío), antes de las 18:10; el viernes, por la mañana, antes de las 10:45, y lo lleva quien sale de reparto. **Activa Nacex ese día** (recuento a las 17:55 y «Salida a Nacex» a las 18:10; el viernes, «Lleva en el reparto lo que va a Nacex…»). Si ya hay envío, es el mismo viaje. Los pedidos de Nacex **entran hasta las 18:00** de lunes a jueves (el viernes, hasta las 10:45) y mientras la salida a Nacex no esté hecha; si no, van al siguiente día de trabajo. Si por la producción no llega a salir ese día, el operario lo pasa al día siguiente (§3.18); si queda sin hacer, pasa solo, como tarea de Nacex de ese día y con Nacex activado.
+  - En las dos, **al salir la tarea** (cuando le toca al operario), cada referencia dice en `motivo` **«Coge N del almacén»** o **«Haz N»** (o las dos cosas: «Coge 2 del almacén y haz 1»). Se calcula en ese momento con la última lectura de la hoja: lo que había en el almacén menos lo comprometido ese día que la hoja aún contaba (reparto, envío y pedidos anteriores, R1c). Al guardar el pedido, `motivo` aún es `null`.
+- **Salida:** `{ pedido: (objeto pedido, §3.17), tarea: (la de Nacex; null en tienda), tarea_activa: (solo al operario) }`.
+- **Reintentos:** repetir con el mismo `id_cliente` devuelve el mismo pedido, sin leer la hoja, con `ya_guardado: true` y `aviso: { codigo: "PEDIDO_YA_GUARDADO" }`.
+- **Errores:** `DATOS_NO_VALIDOS` (sin cliente, sin tienda o tienda que no es del reparto, sin datos de envío en Nacex, entrega no válida, cantidades no válidas o lista vacía), `REFERENCIA_NO_EXISTE` (con cuáles), `SIN_JORNADA`, `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` · `CATALOGO_AMBIGUO`, `NO_AUTORIZADO`.
+
+### 3.17 `pedidos_cliente_abiertos()` ✅ (Tarea 12)
+Para el panel de Administración y, si se quiere, para el operario.
+- **Salida:** `{ total, pedidos: [objeto pedido, ...] }`, por fecha y orden de llegada. Abiertos = esperando al reparto, por preparar, o preparados que salen hoy o más adelante.
+- **Objeto pedido:** `{ id, cliente, entrega: "tienda"|"nacex", entrega_texto ("Recoger en Bilbao" | "Envío por Nacex"), destino_id, destino, datos_envio, lineas: [{ producto, formato, cantidad }], fecha, estado: "esperando_reparto"|"por_preparar"|"preparado"|"cancelado", estado_texto, tarea_id, registrado_en, registrado_por, registrado_por_nombre }`.
+- `fecha`: el día del reparto que lo lleva o de la salida a Nacex. `estado_texto`, para mostrar: «Va en el próximo reparto a Bilbao (desde el 25/11)», «En el reparto del 24/11: por preparar», «Por preparar: sale a Nacex el 24/11», «Preparado: va en el reparto del 24/11», «Preparado: sale a Nacex el 24/11», «Cancelado».
+- Los datos de envío solo los ve el personal (cualquier persona con ficha). Sin ficha: `NO_AUTORIZADO`.
+
+### 3.18 `aplazar_pedido_nacex(pedido_id, motivo?)` ✅ (Tarea 12)
+Botón en la tarea «Prepara el pedido de cliente (Nacex)»: si por la producción el pedido no llega a salir ese día, pasa al siguiente día de trabajo (decidido por el propietario, 28/10).
+- **Quién:** el operario (sus pedidos) o Administración.
+- `motivo`: opcional (decidido por el propietario, 28/10).
+- **Efecto:** la tarea de ese día queda «arrastrada» con el motivo «Pasa al 25/11: [motivo]»; el siguiente día de trabajo tiene su tarea de Nacex (por la tarde; el viernes, por la mañana) con la misma lista, y **Nacex activado** ese día. El «coge / haz» se vuelve a calcular al salir la tarea.
+- **Salida:** `{ pedido: (objeto pedido, §3.17, con la nueva fecha), tarea_activa: (solo al operario) }`.
+- **Errores:** `NO_ENCONTRADO` (no existe o no es suyo), `DATOS_NO_VALIDOS` (no es de Nacex), `ESTADO_NO_VALIDO` (ya preparado o cancelado), `SIN_JORNADA`, `NO_AUTORIZADO`.
 
 ## 4. Administración ✅ (Tarea 4)
 
@@ -377,7 +432,7 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 | `motor.tras_crear_usuario` (disparador en `auth.users`) ✅ | Al crearse el usuario | Da de alta su persona con el rol, el centro y el horario de la lista. Nunca impide el alta. |
 | `prueba.fijar_condicion(jornada, condicion, valor)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Simula `SALE:`, envío y eventos hasta que tengan su función real. Nadie tiene permiso para usarla. |
 | `prueba.invocar(funcion, persona, cuerpo)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Llama a una función del servidor desde la base de datos con una solicitud interna. |
-| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_reparto_por_id_cliente` · `servidor_reparto_anotar_id_cliente` (Tarea 10) · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_respuesta` (y `servidor_correo_resultado`, de la Tarea 4) ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
+| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_reparto_por_id_cliente` · `servidor_reparto_anotar_id_cliente` (Tarea 10) · `servidor_preparar_pedido` · `servidor_guardar_pedido_cliente` · `servidor_asignar_pedidos` (Tarea 12) · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_respuesta` (y `servidor_correo_resultado`, de la Tarea 4) ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
 
 ## 6. Trazabilidad con las pantallas de §8
 
@@ -386,9 +441,10 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 | Chromebook: una tarea, su porqué, abajo Empezar/Terminada e Incidencia, «lo que viene después» | `tarea_activa`, `iniciar_tarea`, `terminar_tarea`, `crear_incidencia` |
 | Chromebook, arriba: «Preparar reparto» / «Modificar reparto» y «Cerrar incidencias» (con el número) | `tarea_activa` (`reparto_de_hoy`, `incidencias_abiertas`), `incidencias_abiertas`, `cerrar_incidencia` |
 | Listas de producción (él elige el orden) | `tarea_activa` (elementos), `iniciar_elemento`, `terminar_elemento`, `lista_stock` |
-| Bolsas en el Pixel (una tienda por pantalla, toca cada caja; retrasar 15/30 min) | `tarea_activa`, `marcar_cajas`, `retrasar_salida` |
-| Incidencia: llega mercancía, pedido de cliente, pedir o comprar, recogida en Nacex, corregir | `crear_incidencia` |
-| Administración registra un pedido de cliente | `registrar_evento` |
+| Bolsas en el Pixel (una tienda por pantalla, con su bolsa de reposición y las de pedidos de cliente; toca cada caja; retrasar 15/30 min) | `tarea_activa` (elementos con `bolsa`), `marcar_cajas`, `retrasar_salida` |
+| Incidencia: llega mercancía, pedir o comprar, recogida en Nacex, corregir | `crear_incidencia` |
+| «Pedido de cliente» (operario o Administración): la lista, recoger en tienda o Nacex, y los pedidos abiertos | `catalogo`, `guardar_pedido_cliente`, `pedidos_cliente_abiertos` |
+| Tarea «Prepara el pedido de cliente (Nacex)»: «Pasar a mañana» | `aplazar_pedido_nacex` |
 | Incidencia → Estoy bloqueado (llamar, no contestan, solución) | `crear_incidencia` (`bloqueado`) o `abrir_problema`, `problema_llamada`, `resolver_problema` |
 | Preparar o modificar el reparto o el envío con la lista (operario o Administración), con el desplegable «¿Quién sale?» y el texto para WhatsApp | `catalogo`, `reparto_de_hoy_detalle`, `guardar_reparto`, `mi_perfil` (`quien_sale_opciones`), `cambiar_quien_sale` |
 | Inicio de Administración (móvil), con «Preparar reparto» / «Modificar reparto» | `estado_actual` (`reparto_de_hoy`), `catalogo`, `reparto_de_hoy_detalle`, `guardar_reparto` |
@@ -452,6 +508,7 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 | --- | --- |
 | `NO_AUTENTICADO` | Volver a «Entrar con Google». |
 | `NO_AUTORIZADO` | Mostrar el mensaje; si viene de `mi_perfil`, botón «Salir». |
+| `PEDIDO_YA_GUARDADO` (aviso) | No es un error: el pedido ya estaba guardado; mostrarlo. |
 | `FALTA_SALE` | Preguntar «¿Quién sale hoy?» (`opciones`) y repetir `guardar_reparto` con `sale`. Con el desplegable siempre relleno no aparece. |
 | `REFERENCIA_NO_EXISTE` | Volver a pedir `catalogo`, marcar las referencias de `error.referencias` y dejar quitarlas antes de guardar. |
 | `REPARTO_NO_CALCULADO` | Mostrar el mensaje (avisar a Administración). |
@@ -474,3 +531,5 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 6. **Tarea 10 · Solo cambia quién sale:** si la lista no cambia y solo cambia el desplegable, la pantalla llama a `cambiar_quien_sale` (si llama a `guardar_reparto`, se recalcula y se sustituye el reparto con lo mismo, conservando lo hecho).
 7. **Tarea 10 · Tiendas y orden** (decidido por el propietario, 28/10): reparto BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU; envío GIPUZKOA, DURANGO; en el orden de las hojas de STOCK OSASUN. Donosti y Rentería, solo de consulta.
 8. **Tarea 10 · `pegar_reparto`:** se deja publicada (obsoleta) hasta que el coordinador diga quitarla.
+9. **Tarea 12 · Un pedido de tienda que no se hace el día de su reparto:** su tarea pasa al día siguiente con su lista, pero no vuelve a entrar sola en el reparto siguiente (la bolsa era del reparto de ese día).
+10. **Tarea 12 · Nacex:** los títulos de las tareas de Nacex dicen ahora «envío o pedido de cliente», porque Nacex también se activa solo por un pedido.

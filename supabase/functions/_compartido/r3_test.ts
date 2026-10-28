@@ -123,3 +123,25 @@ Deno.test("Granel vacío o producto que no está en PRINCIPAL: aviso, nunca se i
     "No puedo calcular B 4g: no está en PRINCIPAL.",
   ]);
 });
+
+Deno.test("R3-21 cajas en camino (R1c): el contador sube por lo que ya salió hacia las tiendas", () => {
+  // V2 4g: consumo 74, contador de la hoja +20 (el recuento ya quitó 5 cajas del reparto) → con las 5 en camino, +25 → 1 caja.
+  const d = datos([c("V2 ", "4g", "20", "74")], [p("V2 ", "730")]);
+  assertEquals(unico(d).lista[0].cajas, 6);
+  const r = calcularStock(d, CFG, [{ producto: "V2", formato: "4g", cantidad: 5 }]);
+  assertEquals([r.lista[0].cajas, r.lista[0].en_camino], [1, 5]);
+  assertEquals(r.lista[0].motivo, "Se venden 74 cajas a la semana. Tienes +25 (con 5 en camino a las tiendas) y el objetivo es +26. Haz 1.");
+});
+
+Deno.test("R3-22 cajas en camino de una variedad de Indoor: suman al total de su categoría y formato", () => {
+  const d = datos([c("INDOOR TOTAL", "4g", "-27", "51", "INDOOR"), c("INDOOR TOTAL", "10g", "-5", "10", "INDOOR")],
+    [p("INDOOR PR RELAX", "260")], { INVERNADERO: [], INDOOR: ["INDOOR PR RELAX"] });
+  const r = calcularStock(d, CFG, [{ producto: "INDOOR PR RELAX", formato: "4g", cantidad: 10 }, { producto: "NADA", formato: "4g", cantidad: 3 }]);
+  // 4g: −27 + 10 = −17 → 18 + 17 = 35 cajas (antes 45). 10g sin cambios: 4 + 5 = 9.
+  assertEquals(r.lista.map((e) => [e.formato, e.cajas, e.en_camino ?? 0]), [["4g", 35, 10], ["10g", 9, 0]]);
+});
+
+Deno.test("R3-23 sin cajas en camino (antes del recuento o al día siguiente) la lista es la de siempre", () => {
+  const d = datos([c("V2 ", "4g", "25", "74")], [p("V2 ", "730")]);
+  assertEquals(calcularStock(d, CFG, []).lista, unico(d).lista);
+});

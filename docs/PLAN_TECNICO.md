@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 1.0 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7); «¿Quién sale?» (Tarea 8); reparto de hoy en el panel (Tarea 9); reparto con lista (Tarea 10).
+**Versión:** 1.1 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7); «¿Quién sale?» (Tarea 8); reparto de hoy en el panel (Tarea 9); reparto con lista (Tarea 10); pedidos de cliente y cajas en camino (Tarea 12).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -144,7 +144,7 @@ La tarea de bolsas (a las 10:45 en la mesa de salida) tiene los botones «Retras
 `PRINCIPAL` (catálogo, cajas y granel en la columna R), `CONTEO DE CAJAS TOTAL` (contador y consumo; «INVERNADERO TOTAL» e «INDOOR TOTAL»), `ALMACEN` (categorías; grupo «INDOOR POPS») y `GIPUZKOA` (envío). `STOCK ALMACEN DIARIO` (sin tilde, sin fecha) no se lee en la V1. Los nombres se guardan en `configuracion`.
 
 ### 3.3 Cuándo se lee
-Al pedir el catálogo y al guardar el reparto o el envío (R1; antes, al pegarlo) y al pedir la lista de stock, una vez por turno (R3). Nada más.
+Al pedir el catálogo, al guardar el reparto o el envío (R1; antes, al pegarlo) o un pedido de cliente (R1b) y al pedir la lista de stock, una vez por turno (R3). Nada más.
 
 ### 3.4 Si falla
 Máximo 10 s y un reintento. Si sigue fallando, el cálculo **no se hace** y la pantalla dice por qué; el resto de la app sigue funcionando (principio 8). Si la hoja cambió de forma: `ESTRUCTURA_SHEETS_CAMBIADA`. La lectura busca encabezados y nombres, no celdas fijas. Cada lectura queda en `lecturas_sheets`.
@@ -231,6 +231,7 @@ Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 | Tareas de Administración | Encaje (§2.3), conflicto (§2.4) | ✅ 05, 10 |
 | Problemas | §2.5 | ✅ 05, 09, 13 |
 | Incidencias (§6.6 v1.17) · Nunca sin tarea · Reparto desde Administración | §2.3, `CONTRATOS.md` §3.11 | ✅ 05, 13 |
+| Pedidos de cliente con la lista (§5 R1b v1.24): recoger en tienda en el siguiente reparto (bolsa aparte, tarea tras la producción) o Nacex (hasta las 18:00; tarea por la tarde o el viernes por la mañana, Nacex activado una vez; pasar a mañana); «coge / haz» al salir la tarea; cajas en camino (R1c, salida = bolsas listas) | `CONTRATOS.md` §3.14, §3.16, §3.17 y §3.18, `REGLAS_CALCULO.md` §2.10 y §3.9 | ✅ 17 (P-01 a P-08, C-01 a C-05), 13, 16; unitarias R3-21 a R3-23, `pedidos_test.ts`, `pedido_cliente_test.ts` y `reparto_lista_test.ts` |
 | Reparto con lista (§5 R1 v1.21): catálogo, guardar con el mismo cálculo, texto para WhatsApp, «Prepara el reparto» | `CONTRATOS.md` §3.13 a §3.15, `REGLAS_CALCULO.md` §2.9 | ✅ 16, 05; unitarias L-01 a L-09 y `reparto_lista_test.ts`; catálogo real de la hoja en el PR |
 | Quién sale (§5 R1 v1.20): desplegable, cambiar sin volver a pegar, orden bolsas → salida → efectivo | `CONTRATOS.md` §3.8 y §3.12 | ✅ 14; unitarias R1-25 a R1-27 |
 | Cierre | §2.5 bis, `cierres` + correo | ✅ 10; envío real en el PR de la Tarea 4 |

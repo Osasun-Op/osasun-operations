@@ -111,8 +111,8 @@ begin
   r := pg_temp.guardar(j, adm, 5, 3, '2026-11-19 08:50+01');
   v_rep := (r ->> 'reparto_id')::uuid;
   perform public.servidor_reparto_anotar_id_cliente(v_rep, c1);
-  perform pg_temp.comprobar('Guardado: «Prepara el reparto» se cierra sola («Reparto preparado por Administración») y la producción y las bolsas quedan creadas',
-    (select estado = 'hecha' and resultado = 'Reparto preparado por Administración' from public.tareas where jornada_id = j and clave = 'pegar_reparto')
+  perform pg_temp.comprobar('Guardado: «Prepara el reparto» se cierra sola con el nombre de quien lo prepara («Reparto preparado por Administración de pruebas») y la producción y las bolsas quedan creadas',
+    (select estado = 'hecha' and resultado = 'Reparto preparado por Administración de pruebas' from public.tareas where jornada_id = j and clave = 'pegar_reparto')
     and (select count(*) from public.tarea_elementos e join public.tareas t on t.id = e.tarea_id
           where t.jornada_id = j and t.clave = 'produccion_reparto') = 1
     and (select count(*) from public.tarea_elementos e join public.tareas t on t.id = e.tarea_id

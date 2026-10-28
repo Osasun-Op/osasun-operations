@@ -6,6 +6,7 @@
 import type { Pestanas, ResultadoLectura } from "./google.ts";
 import type { Destino } from "./r1.ts";
 import { prepararReparto, referencias, validarLineas } from "./lista.ts";
+import { type Cajas, type Comprometido, listaPedido, SIN_COMPROMISOS } from "./pedidos.ts";
 
 export interface Dependencias {
   rpc: <T = unknown>(nombre: string, args: Record<string, unknown>) => Promise<T>;
@@ -31,8 +32,10 @@ interface Contexto {
     sheets_pestanas: Pestanas;
     destinos_reparto?: { reparto: string[]; envio: string[] };
   };
-  reparto_hoy: { producto: string; formato: string; pedido: number }[];
-  recuento_manana_hecho: boolean;
+  /** R1c: lo comprometido hoy que la hoja aún cuenta en el almacén (motor.comprometido). */
+  comprometido?: Comprometido;
+  /** Pedidos de cliente para recoger en tienda que van en el reparto de hoy. */
+  pedidos_tienda?: { id: string; cliente: string; destino_id: string; lineas: Cajas[] }[];
 }
 
 type Respuesta = Record<string, unknown>;
@@ -115,10 +118,15 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   const v = validarLineas(cuerpo.lineas, entradas, destinos);
   if (!v.ok) return error(v.codigo, v.mensaje, v.detalle);
 
+  const c = ctx.comprometido ?? SIN_COMPROMISOS;
   const { texto, r } = prepararReparto({
     tipo, hoy: { dia: ctx.dia, mes: ctx.mes }, sale, lineas: v.lineas, destinos, entradas,
-    // Envío antes del recuento de la mañana: se apartan las cajas del reparto de hoy (v1.11).
-    apartadoReparto: tipo === "envio" && !ctx.recuento_manana_hecho ? ctx.reparto_hoy : [],
+    // Envío: primero se apartan las cajas que salen hoy con el reparto (reparto y
+    // pedidos de tienda) mientras la hoja aún las cuenta, es decir, antes del
+    // recuento de la mañana (v1.11 y R1c). Lo decide motor.comprometido.
+    apartadoReparto: tipo === "envio"
+      ? [...c.reparto, ...c.pedidos_tienda].map((x) => ({ producto: x.producto, formato: x.formato, pedido: x.cantidad }))
+      : [],
   });
   if (r.estado !== "aceptado") {
     return error("REPARTO_NO_CALCULADO", "No se ha podido calcular el reparto. Avisa a Administración.",
@@ -131,10 +139,26 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
     p_produccion: r.produccion, p_bolsas: r.bolsas, p_aceptado: true,
   });
   if (guardado.error) return guardado;
+
+  // Pedidos de cliente para recoger en tienda (R1b): van en este reparto, con su
+  // tarea y su bolsa aparte («coge / haz» al salir la tarea). También si el
+  // reparto no cambia, para no perder un pedido si la llamada anterior se cortó.
+  let pedidosCliente: unknown[] = [];
+  if (tipo === "reparto") {
+    const enLista = new Set(destinos.map((x) => x.id));
+    const pedidos = (ctx.pedidos_tienda ?? []).filter((p) => enLista.has(p.destino_id));
+    if (pedidos.length > 0) {
+      const asignados = await d.rpc<{ pedidos: unknown[] }>("servidor_asignar_pedidos", {
+        p_persona: persona, p_reparto: guardado.reparto_id,
+        p_pedidos: pedidos.map((p) => ({ pedido_id: p.id, elementos: listaPedido(p.lineas, entradas, lectura.datos.categorias) })),
+      });
+      pedidosCliente = asignados.pedidos ?? [];
+    }
+  }
   await d.rpc("servidor_reparto_anotar_id_cliente", { p_reparto: guardado.reparto_id, p_id_cliente: idCliente });
   if (guardado.ya_pegado) {
-    return { ...guardado, texto_whatsapp: texto,
+    return { ...guardado, texto_whatsapp: texto, pedidos_cliente: pedidosCliente,
              aviso: { codigo: "REPARTO_SIN_CAMBIOS", mensaje: "El reparto de hoy ya era este: no cambia nada." } };
   }
-  return { ...guardado, texto_whatsapp: texto };
+  return { ...guardado, texto_whatsapp: texto, pedidos_cliente: pedidosCliente };
 }
