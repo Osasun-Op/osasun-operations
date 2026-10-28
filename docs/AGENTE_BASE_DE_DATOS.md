@@ -81,7 +81,14 @@ Sustituye a la versión anterior de R1c, la de «en camino hasta la mañana sigu
    - 12:45: almacén 5 y tienda 3 en la hoja, más 3 de reparto en camino → **11**;
    - 17:55: almacén 8 y Gipuzkoa 4 en la hoja, más 4 en la caja de Nacex → **16**;
    - y el del hueco: a las 09:30 se producen 6 de BZ1 4g con 4 en la hoja; a las 11:00 se modifica el reparto pidiendo 5 más → **no hay que hacer ninguna**.
-9. Todas las pruebas en verde; `CONTRATOS.md` a la 1.3, con su nota de cambios.
+9. **Sustituye, no añadas al lado** (revisión del coordinador, 28/10/2026). La versión anterior de R1c está en `motor.hoja_sin_reparto`, `motor.comprometido_en` y `motor.comprometido` (migración `20261028114125_pedidos_revision`), en `cajasEnCamino` y `calcularStock` (`_compartido/r3.ts`), en `lista_stock` y en `_compartido/reparto_lista.ts`. Tiene que quedar **una sola fuente** de «almacén ahora» y «en camino», usada por todos. Diferencias concretas que hay que corregir:
+   - hoy solo se mira la jornada de hoy → el envío por Nacex sigue en camino **hasta las 11:59 del día siguiente**, así que hay que mirar también el envío de ayer;
+   - de lunes a jueves el envío no cuenta como en camino (solo el viernes) → cuenta **siempre** desde que está preparado;
+   - el viernes, los pedidos de Nacex se suman en camino → **salen del stock** y no se suman a ninguna tienda;
+   - solo se tiene en cuenta `recuento_manana` → **cada recuento** (mañana y tarde) pone el almacén al día;
+   - no se suma lo producido entre recuentos → **se suma**.
+10. **No rompas lo que funciona:** el reparto de primera hora, los pedidos (tienda y Nacex, «coge / haz», pasar a mañana), las peticiones especiales, el histórico y las salidas que usan las pantallas (`tarea_activa`, `estado_actual`, `catalogo`, `guardar_reparto`, `guardar_pedido_cliente`, `lista_stock`) **no cambian de forma**. Solo se añade `almacen_ahora`. Si alguna prueba existente (sobre todo la 17 y R3-21 a R3-23) comprobaba el comportamiento anterior, cámbiala **a propósito** y explica en el PR qué prueba cambia y por qué. Si para hacerlo bien hiciera falta cambiar algo que usan las pantallas, **para y pregunta** antes.
+11. Todas las pruebas en verde; `CONTRATOS.md` a la 1.3, con su nota de cambios.
 
 **Entrega:** Pull Request **«Tarea 14 — Cuenta del almacén y cajas en camino»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.
 

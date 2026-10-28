@@ -48,6 +48,9 @@ Tu trabajo no es hacer el software más sofisticado, sino **el sistema más senc
    - **Descartamos esta vía y hacemos esta otra.**
 5. La respuesta de un agente no es verdad por defecto: la verificas contra el sistema real cuando importa.
 
+### Evitar que una tarea nueva rompa o duplique lo anterior (petición del propietario, 28/10/2026)
+Antes de encargar una tarea que cambia una regla ya construida: busca en el código dónde está la versión anterior (`grep` en `supabase/`), escribe en la tarea **qué funciones o archivos sustituye**, las diferencias concretas y lo que no debe cambiar (sobre todo las salidas que usan las pantallas), y pide que cualquier prueba antigua que cambie se explique en el PR. Al revisar el PR, comprueba que no quedan dos versiones de la misma regla.
+
 ### Avisar sin que lo pida el propietario (petición del propietario, 28/10/2026)
 - Después de encargar algo a Lovable (`send_message`), programa con `send_later` un aviso a esta sesión **a los 3 minutos** (petición del propietario), para comprobar con `get_project` (`agentFinished`) y `get_message`. Si ha terminado, revisa y escribe al propietario el resultado. Si no, vuelve a programar otro aviso.
 - Con el agente de base de datos: cuando el propietario lo arranque, programa un aviso a los 15–20 minutos para comprobar si hay un PR nuevo y revisarlo.
