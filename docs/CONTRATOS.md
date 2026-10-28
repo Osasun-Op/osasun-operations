@@ -560,6 +560,7 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 8. **Tarea 10 · `pegar_reparto`:** se deja publicada (obsoleta) hasta que el coordinador diga quitarla.
 9. **Tarea 12 · Un pedido de tienda que no se hace el día de su reparto:** su tarea pasa al día siguiente con su lista, pero no vuelve a entrar sola en el reparto siguiente (la bolsa era del reparto de ese día).
 10. **Tarea 12 · Nacex:** los títulos de las tareas de Nacex dicen ahora «envío o pedido de cliente», porque Nacex también se activa solo por un pedido.
-11. **Tarea 13 · Varias peticiones de una tienda en el texto para WhatsApp:** van en una sola línea «Además: …», separadas por «; » (no por comas, porque una petición puede llevar comas: «Cajas vacías, 3»).
-12. **Tarea 13 · Peticiones repetidas:** la misma petición dos veces en la misma tienda (sin contar mayúsculas) cuenta una vez; para pedir más, se escribe en el texto («Rollos de TPV x2»).
-13. **Tarea 13 · Pedidos de cliente del histórico:** los del día del reparto que los lleva o de la salida a Nacex (no los del día en que se apuntaron).
+11. **Tarea 13 · Varias peticiones de una tienda en el texto para WhatsApp** (aceptado por el propietario, 28/10): van en una sola línea «Además: …», separadas por «; » (no por comas, porque una petición puede llevar comas: «Cajas vacías, 3»).
+12. **Tarea 13 · Peticiones repetidas** (aceptado por el propietario, 28/10): la misma petición dos veces en la misma tienda (sin contar mayúsculas) cuenta una vez; para pedir más, se escribe en el texto («Rollos de TPV x2»).
+13. **Tarea 13 · Pedidos de cliente del histórico** (aceptado por el propietario, 28/10): los del día del reparto que los lleva o de la salida a Nacex (no los del día en que se apuntaron).
+14. **Tarea 13 · Solo peticiones, sin productos** (decidido por el propietario, 28/10): no se guarda un reparto (ni un envío) solo con peticiones especiales: la lista necesita al menos un producto. Las peticiones van en el siguiente reparto que salga o en una visita. Más adelante, las tiendas tendrán un botón para cerrar sus peticiones especiales.
