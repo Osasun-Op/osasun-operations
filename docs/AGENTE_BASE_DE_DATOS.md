@@ -62,11 +62,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 14** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.27, §5 R1c** (rehecha).
+**Ninguna.** La Tarea 14 está fusionada (PR #13). Espera a que el coordinador escriba la siguiente.
 
 ---
 
-## 7. TAREA 14 (activa): cuenta del almacén entre recuentos y cajas en camino con hora, en pruebas
+## 7. TAREA 14 (fusionada en el PR #13): cuenta del almacén entre recuentos y cajas en camino con hora, en pruebas
 
 Sustituye a la versión anterior de R1c, la de «en camino hasta la mañana siguiente», que construiste en la Tarea 12.
 
@@ -391,3 +391,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.15 | 28/10/2026 | Tarea 12 fusionada. Sin tarea activa. |
 | 1.16 | 28/10/2026 | Tarea 13 activa: peticiones especiales e histórico. |
 | 1.17 | 28/10/2026 | Tarea 13 fusionada. Tarea 14 activa: cuenta del almacén y cajas en camino con hora. |
+| 1.18 | 28/10/2026 | Tarea 14 fusionada (PR #13). Sin tarea activa. |
