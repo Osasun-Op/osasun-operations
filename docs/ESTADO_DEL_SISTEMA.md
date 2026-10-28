@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.25 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.26 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -136,6 +136,8 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
 - **Destinos** (decisión del propietario, 28/10/2026): **reparto** a BILBAO, ALGORTA, BARAKALDO, BASAURI y PORTU; **envío** a GIPUZKOA y DURANGO. Donosti y Rentería no van en el reparto: les llega por el envío a Gipuzkoa. El orden es el de las pestañas de STOCK OSASUN. Están en la configuración (`destinos_reparto`).
 - **Envío a Gipuzkoa/Durango:** el mismo camino, con tipo «envío». Lo propone el operario, Administración lo aprueba y el operario lo prepara en la app. Un solo bloque GIPUZKOA (pestaña GIPUZKOA de la hoja) va entero a Rentería por Nacex, y allí la persona de Rentería lo reparte entre Donosti y Rentería. Donosti y Rentería son las únicas tiendas en franquicia. Durango, cuando abra, irá como bloque propio. Si el envío se prepara antes del recuento de la mañana del mismo día que un reparto, primero se apartan las cajas del reparto.
 - **Ya no aplica:** pegar texto, la línea `SALE:` obligatoria y la normalización de nombres escritos.
+
+**R1d. Peticiones especiales** (decisión del propietario, 28/10/2026). En «Preparar reparto» y «Preparar envío», cada tienda tiene una casilla **«Peticiones especiales para [tienda]»**: una petición por línea (rollos de TPV, muestras, cajas vacías…). **No cuentan como stock ni van a producción.** En las bolsas aparecen como **«Además, mete:»**, una por una para tocarlas, y la bolsa no se da por terminada hasta tocarlas todas. También salen en el texto para WhatsApp. Si algo no está en el almacén, el operario lo avisa con Incidencia → «Hay que pedir o comprar algo».
 
 **R1b. Pedidos de cliente** (decisión del propietario, 28/10/2026). Quien recibe el pedido (Administración u operario) pulsa **«Pedido de cliente»**, apunta las cajas con **la misma lista** (− y +) y elige **cómo se entrega**:
 - **Recoger en tienda** (elige la tienda): el pedido se añade **al siguiente reparto de esa tienda**. Si el de hoy aún no está calculado, entra en él; si ya está calculado o ha salido, en el siguiente. Las cajas que falten van a la producción.
@@ -315,6 +317,7 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 - **Lenguaje:** frases, no casillas. Por ejemplo: «Indoor: queda para menos de media semana. Avisa a Administración».
 
 ### Administración
+- **Histórico** (decisión del propietario, 28/10/2026): con un calendario, cualquier día pasado. Muestra el reparto y el envío (quién salió, tiendas, cajas, peticiones especiales y «Copiar para WhatsApp»), los pedidos de cliente y los cierres de ese día. Solo consulta.
 - **Inicio (móvil):** en qué está el almacén ahora, problemas abiertos, pendientes que se arrastran, tareas de hoy y botón **Nueva tarea**.
 - **Nueva tarea:** qué · para quién (almacén por defecto) · cuándo (hoy, un día o antes de una hora) · duración orientativa · urgente (no por defecto) · por qué (opcional).
 - **Cierre:** llega al móvil. Contiene lo hecho con su resultado, lo no hecho con su motivo, los problemas (tiempo y solución), las incidencias (tiempo), los pendientes arrastrados y lo que toca mañana. Los viernes, además, el indicador de calidad.
@@ -490,3 +493,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.23 | 28/10/2026 | Pedidos de cliente con la lista (recoger en tienda en bolsa aparte con su tarea, o envío por Nacex). La lista con − y + es la pieza central reutilizable. |
 | 1.24 | 28/10/2026 | Orden de los pedidos (primero lo oficial; «coge / haz»). R1c: cajas en camino del almacén a las tiendas hasta la mañana siguiente, solo en los cálculos de la app. |
 | 1.25 | 28/10/2026 | Detalles de los pedidos de cliente decididos en la Tarea 12 (salida = bolsas listas, Nacex hasta las 18:00, pasar a mañana, «coge / haz» al salir la tarea). |
+| 1.26 | 28/10/2026 | Peticiones especiales en el reparto y el envío (R1d). Histórico por día en el panel de Administración. |

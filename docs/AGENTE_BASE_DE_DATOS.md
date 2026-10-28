@@ -62,7 +62,25 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 12 está fusionada (PR #11).
+**Tarea 13** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.26**: §5 R1d y §8 «Histórico».
+
+---
+
+## 7. TAREA 13 (activa): peticiones especiales e histórico, en pruebas
+
+**A. Peticiones especiales (R1d):**
+1. `guardar_reparto` acepta `peticiones: [{ destino_id, texto }]`, una línea por petición (texto libre, de 120 caracteres como máximo). Se guardan con el reparto o el envío y se conservan al modificarlo, como las líneas. Las vacías se ignoran.
+2. **No van a producción ni cuentan como stock.** En la tarea de bolsas (y en la del envío), cada petición es un elemento de la bolsa de su tienda, de un tipo nuevo (por ejemplo, `peticion`), con `cantidad` 1 y el texto en `producto` o en un campo `texto`. Se marca con `marcar_cajas` (0 o 1). La bolsa (y la tarea) no se da por terminada hasta marcarlas todas.
+3. `texto_whatsapp`: por cada tienda con peticiones, una línea «Además: …» después de sus productos.
+4. `reparto_de_hoy_detalle` devuelve también `peticiones`.
+
+**B. Histórico (§8):**
+5. **`historico_dia(fecha)`** (solo Administración): todo lo de ese día del operario por defecto. Incluye `reparto` y `envio` (con el mismo objeto que `reparto_de_hoy_detalle`, con líneas, peticiones y `texto_whatsapp`), `pedidos_cliente` (los de ese día, objeto de §3.17), `cierres` (los de ese día, con su contenido y su texto) y un resumen de tareas (hechas y no hechas). Solo consulta. Una fecha sin jornada devuelve todo vacío, sin error.
+6. `historico_dias(desde, hasta)` (opcional, si es sencillo): qué días tienen datos, para marcarlos en el calendario.
+
+**C.** Pruebas de las dos partes; `CONTRATOS.md` a la 1.2, con su nota de cambios. Todo en verde y pruebas coincidiendo con el repositorio.
+
+**Entrega:** Pull Request **«Tarea 13 — Peticiones especiales e histórico»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.
 
 ---
 
@@ -343,3 +361,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.13 | 28/10/2026 | Tarea 10 fusionada. Tarea 11 activa: nombre «Asier». |
 | 1.14 | 28/10/2026 | La Tarea 11 (sin empezar) se integra en la Tarea 12: nombre «Asier» y pedidos de cliente con la lista. |
 | 1.15 | 28/10/2026 | Tarea 12 fusionada. Sin tarea activa. |
+| 1.16 | 28/10/2026 | Tarea 13 activa: peticiones especiales e histórico. |
