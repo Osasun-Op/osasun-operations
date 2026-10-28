@@ -62,11 +62,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 12** (sección 7). Incluye lo que era la Tarea 11. Lee antes `ESTADO_DEL_SISTEMA.md` **v1.24**, §5 R1b y R1c.
+**Ninguna.** La Tarea 12 está fusionada (PR #11).
 
 ---
 
-## 7. TAREA 12 (activa): nombre del propietario y pedidos de cliente con la lista, en pruebas
+## 7. TAREA 12 (fusionada en el PR #11): nombre del propietario y pedidos de cliente con la lista, en pruebas
 
 **A. Nombre (era la Tarea 11):** el propietario aparece como **«Asier»**: en su ficha (`personas.nombre`) y en su entrada de `cuentas_autorizadas` de pruebas, para que un alta nueva no lo deshaga. Son datos del entorno: no van al repositorio. Las frases que se refieren a la persona usan su nombre («Reparto preparado por Asier»); las que hablan del rol («Avisa a Administración») se quedan igual.
 
@@ -342,3 +342,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.12 | 28/10/2026 | Tarea 10 activa: reparto con lista (R1 rediseñada tras la prueba real). |
 | 1.13 | 28/10/2026 | Tarea 10 fusionada. Tarea 11 activa: nombre «Asier». |
 | 1.14 | 28/10/2026 | La Tarea 11 (sin empezar) se integra en la Tarea 12: nombre «Asier» y pedidos de cliente con la lista. |
+| 1.15 | 28/10/2026 | Tarea 12 fusionada. Sin tarea activa. |

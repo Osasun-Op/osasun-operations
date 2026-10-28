@@ -106,3 +106,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - PR #10 fusionado (reparto con lista). Tarea 11 de BD (nombre «Asier») encargada. Tarea 4 de Lovable («Preparar reparto» con lista) enviada.
 - Tarea 4 de Lovable terminada («Preparar reparto» con lista; 31 pruebas; capturas con datos simulados). Pendiente: prueba real con la hoja.
 - Pedidos de cliente rediseñados con la lista (v1.23). **Tarea 12 de BD** (incluye «Asier»). Después, la Tarea 5 de Lovable: pantalla «Pedido de cliente» con la lista, entrega (tienda o Nacex) y datos de envío; en el Pixel, la bolsa aparte de pedido; y la nueva tarea en el Chromebook.
+- PR #11 (Tarea 12) fusionado. **Tarea 5 de Lovable** (pedidos de cliente con la lista, bolsa aparte en el Pixel, tareas del pedido) enviada (`umsg_01m6161rjrfte8kn9nsyrwsyey`); aviso a los 3 min.
