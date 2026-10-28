@@ -62,7 +62,23 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 9 está fusionada (PR #9). La siguiente saldrá de la prueba en el almacén del 28/10/2026.
+**Tarea 10** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.21, §5 R1** (rediseñada).
+
+---
+
+## 7. TAREA 10 (activa): el reparto se prepara con una lista, en pruebas
+
+**Contexto:** en la prueba real del 28/10 se pegó el reparto de WhatsApp (reparto `8585eede-…` en pruebas) y 36 de 52 líneas dieron `PRODUCTO_DESCONOCIDO` por abreviaturas («bz1 4gr», «ind relax», «berry4», «mini», «*PORTU*»…). El propietario decide que **ya no se pegue texto**: el reparto se prepara en la app eligiendo productos de PRINCIPAL con contadores.
+
+1. **`catalogo()`** (función del servidor, lee la hoja en solo lectura): las tiendas activas para reparto y envío (con su nombre) y los productos de PRINCIPAL con sus formatos, en el orden de la hoja y con su categoría (pestaña ALMACEN; los que no tengan categoría van en «Otros»). Cada referencia lleva una clave estable (producto + formato). Mismos errores si la hoja falla. Para el operario y para Administración.
+2. **`guardar_reparto(id_cliente, tipo, sale?, lineas: [{ destino_id, producto, formato, cantidad }])`** (función del servidor): valida cada referencia contra el catálogo leído en ese momento (si una ya no existe: `REFERENCIA_NO_EXISTE`, con cuál) y hace **el mismo cálculo y la misma sustitución que hoy hace `pegar_reparto`** (lo que falta, bolsas por tienda, conservar lo hecho, reglas del envío), reutilizando su código. `sale` obligatorio en tipo reparto. Guarda también un `texto_whatsapp` generado (formato: `REPARTO dd/mm`, `SALE: ALMACÉN|YO`, tienda en mayúsculas, `Nx PRODUCTO FORMATO`) y lo devuelve.
+3. **`reparto_de_hoy_detalle(tipo)`**: las líneas del reparto (o envío) aceptado hoy, para abrirlo y modificarlo con los contadores en sus valores, más `texto_whatsapp` y quién sale.
+4. La tarea del operario pasa a llamarse **«Prepara el reparto»** (código `pegar_reparto` se puede mantener) y se cierra sola al guardarse un reparto.
+5. `pegar_reparto` deja de usarse en las pantallas. Déjalo en su sitio (no lo borres), marcado como obsoleto en `CONTRATOS.md`.
+6. Pruebas: el reparto real del 28/10, rehecho con estas líneas, da producción y bolsas coherentes; idempotencia por `id_cliente`; modificar conserva lo hecho; referencia inexistente; permisos (operario y Administración); hoja no disponible.
+7. `CONTRATOS.md` a la 1.0, con la nota de cambios. Todo en verde y pruebas coincidiendo con el repositorio.
+
+**Entrega:** Pull Request **«Tarea 10 — Reparto con lista»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.
 
 ---
 
@@ -304,3 +320,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.9 | 27/10/2026 | Tarea 8 activa: «¿Quién sale?» al pegar el reparto. |
 | 1.10 | 27/10/2026 | Tarea 8 fusionada. Tarea 9 activa: `reparto_de_hoy` en `estado_actual`. |
 | 1.11 | 27/10/2026 | Tarea 9 fusionada. Sin tarea activa. |
+| 1.12 | 28/10/2026 | Tarea 10 activa: reparto con lista (R1 rediseñada tras la prueba real). |

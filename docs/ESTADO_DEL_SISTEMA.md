@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.20 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.21 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -122,30 +122,20 @@ La limpieza del viernes hecha (sale de la tarea). Los papeles de resinas rectos 
 > Todos los cálculos son deterministas, se ejecutan en el servidor (Supabase) y tienen pruebas. La IA no calcula nada crítico.
 > **La app nunca propone cantidades para las tiendas.** Solo calcula sobre lo que ya ha decidido Administración.
 
-**R1. Reparto y envíos.** Administración publica en WhatsApp:
-```
-REPARTO dd/mm
-SALE: ALMACÉN | YO
-BILBAO
-1x PRODUCTO FORMATO
-...
-ALGORTA
-...
-```
-**El reparto lo puede pegar Administración (desde su panel) o el operario.** Al pegarlo se elige en un **desplegable quién sale** (con los nombres: Administración u operario). La elección del desplegable manda sobre la línea `SALE:`, que pasa a ser opcional. Se puede cambiar quién sale sin volver a pegar el reparto. Si sale el operario, después de «Bolsas listas en la mesa de salida» (10:45) le aparece «Salida del reparto» y, a la vuelta, «Efectivo y reporte» (decisión del propietario, 27/10/2026). La tarea «Pega el reparto» **se cierra sola al aceptarse un reparto**; si se pulsa «Terminada» sin pegarlo, la app pide el motivo (por ejemplo, «hoy no hay reparto»). La app:
-1. Comprueba cada nombre contra el catálogo (PRINCIPAL). Ignora espacios y mayúsculas.
-2. Si algún nombre no existe, avisa antes de calcular.
-3. Suma las cajas por producto y formato.
-4. Resta las cajas hechas en el almacén.
-5. Genera la lista de producción con lo que falta.
-6. Organiza la jornada según la línea `SALE:`. Si falta esa línea, se lo pregunta al operario.
+**R1. Reparto y envíos** (rediseñado por el propietario el 28/10/2026, tras la primera prueba real: el texto de WhatsApp usa abreviaturas que no coinciden con PRINCIPAL y 36 de 52 líneas no se reconocían).
 
-- **Tiendas en el texto:** se escriben igual que en la hoja de stock: BILBAO, ALGORTA, DONOSTI, BARAKALDO, RENTERIA, BASAURI, PORTU, GIPUZKOA; Durango como DURANGO o LAUDIO (decisión del propietario, 26/10/2026).
-- **Reparto corregido:** si se pega una versión nueva el mismo día, sustituye a la anterior. Se recalcula lo que falta producir sin perder las cajas ya hechas; las bolsas de tiendas que no cambian se conservan y las que cambian se vuelven a comprobar caja a caja (decisión del propietario, 26/10/2026).
+El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una lista.
+1. **Quién sale:** desplegable con los nombres (Administración u operario).
+2. **Tienda:** las tiendas activas o, para el envío, GIPUZKOA (y Durango cuando abra).
+3. **Lista de productos de PRINCIPAL** (catálogo leído de la hoja, en solo lectura), agrupada por categoría y con buscador. Cada producto y formato tiene **− cantidad +**. Nadie escribe nombres, así que no puede haber errores de nombre.
+4. **Calcular:** la app suma las cajas por producto y formato, resta las del almacén y crea la producción (lo que falta) y las bolsas por tienda. La app **no propone cantidades**: las pone quien prepara el reparto.
+5. **Copiar para WhatsApp:** la app genera el texto del reparto con el formato de siempre (`REPARTO dd/mm`, `SALE:`, tienda y `Nx PRODUCTO FORMATO`) para mandarlo al grupo si se quiere.
+6. Lo pueden preparar **Administración y el operario**. **Modificar** = abrir el de hoy, cambiar números y volver a calcular: sustituye al anterior y conserva lo ya hecho. La tarea «Prepara el reparto» se cierra sola al calcularse uno; si se pulsa «Terminada» sin reparto, la app pide el motivo.
+7. Se puede cambiar quién sale sin tocar el reparto. Si sale el operario, tras «Bolsas listas en la mesa de salida» (10:45) le aparece «Salida del reparto» y, a la vuelta, «Efectivo y reporte».
 
-El envío a Gipuzkoa/Durango sigue el mismo camino: él propone, Administración aprueba por WhatsApp y él pega la versión final.
-
-- **Destinos del envío (decisión del propietario, 26/10/2026):** el envío lleva un solo bloque **GIPUZKOA** (se calcula con la pestaña GIPUZKOA de la hoja) y va entero a Rentería por Nacex; allí la persona de Rentería lo reparte entre Donosti y Rentería según su criterio. Donosti y Rentería son las únicas tiendas en franquicia. Cada pestaña de tienda es de su tienda. **Durango**, cuando abra, irá como bloque propio con sus necesidades.
+- **Tiendas:** BILBAO, ALGORTA, DONOSTI, BARAKALDO, RENTERIA, BASAURI, PORTU, GIPUZKOA (el envío) y Durango (inactiva hasta que abra).
+- **Envío a Gipuzkoa/Durango:** el mismo camino, con tipo «envío». Lo propone el operario, Administración lo aprueba y el operario lo prepara en la app. Un solo bloque GIPUZKOA (pestaña GIPUZKOA de la hoja) va entero a Rentería por Nacex, y allí la persona de Rentería lo reparte entre Donosti y Rentería. Donosti y Rentería son las únicas tiendas en franquicia. Durango, cuando abra, irá como bloque propio. Si el envío se prepara antes del recuento de la mañana del mismo día que un reparto, primero se apartan las cajas del reparto.
+- **Ya no aplica:** pegar texto, la línea `SALE:` obligatoria y la normalización de nombres escritos.
 
 **R2. Stock negativo en una tienda** = encargo de cliente pendiente. Hay que llevar esas cajas además de la reposición normal. Es información de contexto para el operario: la app no modifica las cantidades del reparto.
 
@@ -469,3 +459,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.18 | 27/10/2026 | El propietario contrata Lovable Pro (el plan gratuito se quedó sin créditos en la Tarea 2 de pantallas). |
 | 1.19 | 27/10/2026 | Marca de Osasun aplicada a las pantallas (logotipo, isotipo y tipografía); las formas de colores solo en la pantalla de entrada. Tarea 2 de Lovable terminada. |
 | 1.20 | 27/10/2026 | Desplegable «¿Quién sale?» al pegar el reparto (manda sobre `SALE:`). Se adelanta el panel de Administración para poder probar el sistema completo. |
+| 1.21 | 28/10/2026 | Prueba real en el almacén: el texto del WhatsApp no coincide con los nombres de PRINCIPAL (36 de 52 líneas). **R1 rediseñada:** el reparto se prepara en la app con una lista de productos de PRINCIPAL y contadores − y +; se quita pegar texto; «Copiar para WhatsApp». |
