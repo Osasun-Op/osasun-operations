@@ -221,3 +221,63 @@ Deno.test("guardar_reparto: petición de más de 120 letras o de una tienda que 
   const ok = await guardarRepartoDe(falso().d, "p", cuerpo({ peticiones: [{ destino_id: "bilbao", texto: "x".repeat(120) }] }));
   assertEquals((ok as Record<string, unknown>).error, undefined);
 });
+
+// ===== Tarea 14: almacén ahora (R1c) y pedidos que activan el reparto =====
+const conAlmacen = (bz1: string): DatosHoja => ({
+  ...DATOS, productos: DATOS.productos.map((p) => p.nombre === "BZ1" ? { ...p, formatos: [{ formato: "4g", almacen: bz1 }] } : p),
+});
+const mov = (m: Record<string, { producto: string; formato: string; cantidad: number }[]>) =>
+  ({ recuento_en: "2026-10-27T17:15:00Z", producido: [], producido_reparto: [], producido_envio: [], salido: [], ...m });
+const bz1 = (cantidad: number) => [{ producto: "BZ1", formato: "4g", cantidad }];
+
+Deno.test("guardar_reparto: el hueco — 6 BZ1 4g hechas para stock con 4 en la hoja; se piden 5 más → no hay que hacer ninguna", async () => {
+  const lineas = [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 5 }];
+  const sin = falso({ lectura: { ok: true, datos: conAlmacen("4") } });
+  await guardarRepartoDe(sin.d, "p", cuerpo({ lineas }));
+  assertEquals((sin.args("servidor_guardar_reparto")!.p_produccion as { faltan: number }[])[0].faltan, 1);
+  const f = falso({ lectura: { ok: true, datos: conAlmacen("4") }, ctx: { ...CTX, almacen: mov({ producido: bz1(6) }) } });
+  await guardarRepartoDe(f.d, "p", cuerpo({ lineas }));
+  const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { en_almacen: number; faltan: number }[])[0];
+  assertEquals([prod.en_almacen, prod.faltan], [10, 0]);
+});
+
+Deno.test("guardar_reparto: lo producido para el propio reparto no cuenta dos veces (ya está hecho en sus elementos)", async () => {
+  const lineas = [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 10 }];
+  const f = falso({ lectura: { ok: true, datos: conAlmacen("4") },
+                    ctx: { ...CTX, almacen: mov({ producido: bz1(6), producido_reparto: bz1(6) }) } });
+  await guardarRepartoDe(f.d, "p", cuerpo({ lineas }));
+  assertEquals((f.args("servidor_guardar_reparto")!.p_produccion as { faltan: number }[])[0].faltan, 6);
+});
+
+Deno.test("guardar_reparto: el envío cuenta lo que ya ha salido (bolsas listas antes del recuento) y no lo vuelve a apartar", async () => {
+  const f = falso({ ctx: { ...CTX, almacen: mov({ salido: [{ producto: "V2", formato: "4g", cantidad: 25 }] }) } });
+  await guardarRepartoDe(f.d, "p", { id_cliente: ID, tipo: "envio", lineas: [{ destino_id: "gipuzkoa", producto: "V2", formato: "4g", cantidad: 8 }] });
+  // V2 4g: 30 en la hoja − 25 que ya han salido = 5; el reparto ya no está pendiente: faltan 3.
+  const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { en_almacen: number; faltan: number; apartado_reparto: number }[])[0];
+  assertEquals([prod.apartado_reparto, prod.en_almacen, prod.faltan], [0, 5, 3]);
+});
+
+Deno.test("catalogo: los pedidos de tienda del reparto de hoy, para mostrarlos marcados y fijos («Pedido de Ane a tienda de Bilbao»)", async () => {
+  const pedidos = [{ id: "pedido-1", cliente: "Ane", destino_id: "bilbao", lineas: [{ producto: "V2", formato: "4g", cantidad: 3 }] },
+                   { id: "pedido-9", cliente: "Mikel", destino_id: "donosti", lineas: [{ producto: "V2", formato: "4g", cantidad: 1 }] }];
+  const r = await catalogoDe(falso({ ctx: { ...CTX, pedidos_tienda: pedidos } }).d, "p") as Record<string, unknown>;
+  assertEquals(r.pedidos_cliente, [{ id: "pedido-1", cliente: "Ane", destino_id: "bilbao", destino: "Bilbao",
+                                     lineas: [{ producto: "V2", formato: "4g", cantidad: 3 }], texto: "Pedido de Ane a tienda de Bilbao" }]);
+  assertEquals((await catalogoDe(falso().d, "p") as Record<string, unknown>).pedidos_cliente, []);
+});
+
+Deno.test("guardar_reparto: con un pedido de tienda esperando, el reparto puede ir solo con el pedido; sin pedido, hace falta un producto", async () => {
+  const pedidos = [{ id: "pedido-1", cliente: "Ane", destino_id: "bilbao", lineas: [{ producto: "V2", formato: "4g", cantidad: 3 }] }];
+  const f = falso({ ctx: { ...CTX, pedidos_tienda: pedidos } });
+  const r = await guardarRepartoDe(f.d, "p", cuerpo({ lineas: [] })) as Record<string, unknown>;
+  const g = f.args("servidor_guardar_reparto")!;
+  assertEquals([r.error, g.p_texto, g.p_produccion, g.p_bolsas], [undefined, "REPARTO 28/10\nSALE: YO", [], []]);
+  assertEquals((f.args("servidor_asignar_pedidos")!.p_pedidos as { pedido_id: string }[]).map((p) => p.pedido_id), ["pedido-1"]);
+  const sin = await guardarRepartoDe(falso().d, "p", cuerpo({ lineas: [] })) as { error: { mensaje: string } };
+  assertEquals(sin.error.mensaje, "Añade al menos un producto.");
+  const donosti = falso({ ctx: { ...CTX, pedidos_tienda: [{ ...pedidos[0], destino_id: "donosti" }] } });
+  assertEquals(((await guardarRepartoDe(donosti.d, "p", cuerpo({ lineas: [] }))) as { error: { codigo: string } }).error.codigo,
+               "DATOS_NO_VALIDOS");
+  const envio = await guardarRepartoDe(f.d, "p", { id_cliente: ID, tipo: "envio", lineas: [] }) as { error: { codigo: string } };
+  assertEquals(envio.error.codigo, "DATOS_NO_VALIDOS");
+});

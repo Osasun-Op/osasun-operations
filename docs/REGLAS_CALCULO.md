@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1 y R3 (especificación V1)
 
-**Versión:** 0.8 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10).
+**Versión:** 0.9 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27).
 
 > Especificación exacta de las dos reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto) y **R3** (stock del almacén +35 %).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -74,7 +74,7 @@ en_almacen(p, f) = PRINCIPAL!R de la fila de formato
 faltan(p, f)     = max(0, pedido − en_almacen)
 ```
 - `en_almacen` vacío o negativo → **cuenta como 0, con aviso** en la línea (decidido, D-R1b).
-- **Envío pegado antes del recuento de la mañana del mismo día** (decidido en el PR #3, `ESTADO_DEL_SISTEMA.md` v1.11): la hoja aún no refleja las cajas del reparto aceptado ese día, así que primero se apartan: `disponible = max(0, en_almacen − pedido en el reparto de hoy)` y `faltan = max(0, pedido − disponible)`. Se devuelve `apartado_reparto` por referencia. Después del recuento (tarea «Recuento» de la mañana hecha; desde la Tarea 12, hecha después de terminar las bolsas, §2.10) no se descuenta nada: la hoja ya lo refleja. El reparto nunca descuenta.
+- **Envío pegado antes del recuento de la mañana del mismo día** (decidido en el PR #3, `ESTADO_DEL_SISTEMA.md` v1.11): la hoja aún no refleja las cajas del reparto aceptado ese día, así que primero se apartan: `disponible = max(0, en_almacen − pedido en el reparto de hoy)` y `faltan = max(0, pedido − disponible)`. Se devuelve `apartado_reparto` por referencia. Desde la Tarea 14 se aparta lo que aún no ha salido (bolsas sin terminar); lo que ya ha salido se resta como salido del almacén ahora (§2.10). El reparto nunca descuenta.
 - Lista de producción = referencias con `faltan > 0`; orden sugerido, el del catálogo. El operario elige el orden.
 - Bolsas = una por tienda (o destino) con sus referencias y cantidades del texto.
 - Duración prevista de la producción = cajas que faltan × 1 min; de las bolsas = tiendas × 3 min (§6.10).
@@ -147,6 +147,7 @@ Destinos: BILBAO, ALGORTA, DURANGO (alias `DURANGO`, `LAUDIO`), GIPUZKOA. Hoy = 
 | R1-27 | `BILBAO` · `1x V2 4g` sin desplegable; y `SALE: YO` · … sin desplegable | `FALTA_SALE`; y aceptado con Administración (manda el texto). |
 | R1-28 | `BILBAO` · `2x V2 4g` · `Además: rollos de TPV; muestras` · `ALGORTA` · `ademas: cajas vacías` | Aceptado. Las líneas «Además:» son peticiones de su tienda (clase `peticion`): no cuentan para producción ni bolsas. |
 | R1-29 | `Además: rollos` antes de ninguna tienda; `Además:` vacío | `LINEA_NO_RECONOCIDA` en las dos. |
+| R1-30 | Reparto sin productos (`SALE: ALMACÉN` y nada más); y lo mismo llevando pedidos de cliente (Tarea 14) | `REPARTO_VACIO`; con pedidos, aceptado sin producción ni bolsas. |
 
 ### 2.9 Reparto con lista (Tarea 10, `ESTADO_DEL_SISTEMA.md` v1.21)
 El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 no cambia; la lista se convierte en el texto de siempre y se calcula con R1.
@@ -169,53 +170,68 @@ El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 n
 | L-09 | Envío a Durango y Gipuzkoa (`guardar_reparto`) | `ENVÍO dd/mm` · `GIPUZKOA` … · `DURANGO` …, en ese orden; Donosti, Rentería, Gipuzkoa o Durango en el reparto → `DATOS_NO_VALIDOS`. |
 | L-10 | Peticiones: Portu «Rollos de TPV»; Bilbao « muestras de V2 », «   » y «MUESTRAS DE V2»; Bilbao con 6 MINI 10g | `BILBAO` · `6x MINI 10g` · `Además: muestras de V2` · `PORTU` · `Además: Rollos de TPV` (Portu solo con peticiones). Más de 120 letras o tienda que no vale → `DATOS_NO_VALIDOS`. La producción y las bolsas son las mismas que sin peticiones. |
 
-### 2.10 Pedidos de cliente y cajas en camino (Tarea 12, `ESTADO_DEL_SISTEMA.md` v1.24, R1b y R1c)
+### 2.10 Pedidos de cliente, almacén ahora y cajas en camino (Tareas 12 y 14, `ESTADO_DEL_SISTEMA.md` v1.27, R1b y R1c)
+**Almacén ahora (R1c, rehecha en la Tarea 14).** La hoja solo cambia con los recuentos y con el «FIN DE DÍA» de cada tienda. Entre medias la app lleva su propia cuenta, **solo en sus cálculos y nunca en la hoja**. Hay una sola fuente: `motor.movimientos_almacen` y `motor.en_camino_en`, que usan todos (`servidor_preparar`, «coge / haz», `lista_stock`, `estado_actual`).
+- **Almacén ahora** = hoja del almacén + lo producido y marcado desde el último recuento − lo que ha salido desde ese recuento.
+  - **Producido:** referencias de producción terminadas (del reparto, del envío, de los pedidos y de la lista del +35 %). De un pedido, solo lo que había que hacer («haz»).
+  - **Salido:** las bolsas listas (reparto y pedidos de tienda), el envío preparado y los pedidos de Nacex preparados.
+- **Cada recuento** (12:45; 17:55 o 18:15) pone el almacén al día: la hoja leída después ya lo recoge, y lo producido y lo salido vuelven a contar desde él. Cada cálculo usa la última lectura de la hoja y cuenta desde el recuento que esa lectura ya recoge.
+- **Cajas de todas partes** (lista del +35 %, §3.9) = almacén ahora + lo que dicen las tiendas en la hoja + **lo que va en camino** a cada tienda:
+  - el reparto en coche (y los pedidos para recoger en tienda), desde las bolsas listas **hasta las 23:30** de ese día;
+  - el envío a Gipuzkoa o Durango, desde que está preparado **hasta las 11:59 del día siguiente**, todos los días.
+  - El recuento no las borra. Las horas están en `configuracion` (`en_camino_reparto_hasta`, `en_camino_envio_hasta`).
+  - El envío en camino cuenta **solo para su tienda, nunca para el almacén** (decisión del propietario, 28/10/2026).
+- **Pedidos de cliente por Nacex:** salen del stock. Se restan del almacén y no se suman a ninguna tienda.
+- **Antes del recuento no se cuenta dos veces:** lo que ha salido sigue en la hoja del almacén hasta el recuento, pero se resta como salido; a la vez se suma en camino a su tienda.
+- **Lo comprometido** (`motor.pendiente_salir`) es lo que aún no ha salido: el reparto hasta las bolsas listas, el envío hasta prepararlo y los pedidos. Se aparta para lo que va después: el envío aparta el reparto y los pedidos de tienda de hoy (§2.5); el pedido aparta lo oficial y los pedidos anteriores.
+- Se usa en el reparto (también el primero del día: a las 8:30 da lo mismo que la hoja; decidido por el propietario, 28/10/2026), al modificarlo, en el envío, en el «coge / haz» y en la lista del +35 %. Al recalcular un reparto o un envío no se suma lo producido para él mismo, que ya cuenta como hecho en sus elementos.
+
 **Coge / haz** (`motor.calcular_pedido`). Cada referencia de un pedido de cliente dice «Coge N del almacén» o «Haz N» (o las dos: «Coge 2 del almacén y haz 1»). **Se calcula al salir la tarea de prepararlo** (cuando le toca al operario; decidido por el propietario, 28/10/2026), no al guardar el pedido:
-- La hoja es la **última lectura correcta** (de cualquier motivo: reparto, envío, pedido o stock), y lo comprometido se mira **tal como estaba la hoja en ese momento** (columna 2 de la tabla de abajo).
-- `queda = máx(0, almacén de la hoja − comprometido antes que él que la hoja aún contaba)` (almacén vacío, negativo o con texto en PRINCIPAL: 0; con decimales, la parte entera, como en R1).
+- `queda = máx(0, almacén ahora − lo que aún no ha salido y va antes que él)` (almacén vacío, negativo o con texto en PRINCIPAL: 0; con decimales, la parte entera, como en R1).
 - `coge = mín(pedido, queda)`; `haz = pedido − coge`.
 - **Primero lo oficial y después el pedido:** «antes» es el reparto y el envío de ese día y los pedidos (de tienda o de Nacex) que llegaron antes que él.
 - La producción del reparto **no cambia**: solo lleva las cajas del reparto oficial. Lo que haya que hacer para el pedido está en su propia tarea («Haz N»).
 - Si la tarea pasa al día siguiente (a mano o sin terminar), se vuelve a calcular al salir ese día.
 
-**Cajas en camino (R1c)** (`motor.comprometido` y `motor.hoja_sin_reparto`). La hoja no refleja en el momento lo que sale: el almacén baja con el recuento de cada turno y la tienda lo apunta en su «FIN DE DÍA». La app lo corrige en sus cálculos, **nunca en la hoja**.
-- **Salida** (decidido por el propietario, 28/10/2026): cuando el almacén termina **las bolsas** (las termina siempre él, salga quien salga); el viernes, además, el **envío preparado**.
-- **La hoja deja de contarlo en el almacén** con el recuento de la mañana hecho **después** de la salida. Si el recuento se hace antes de terminar las bolsas, la hoja lo sigue contando hasta el día siguiente.
-
-| Lo comprometido hoy | La hoja lo cuenta en el almacén… | Después va «en camino» |
-| --- | --- | --- |
-| Reparto y pedidos de tienda (salen con el reparto) | hasta el recuento de la mañana hecho después de terminar las bolsas | desde ese recuento hasta la mañana siguiente |
-| Envío y pedidos de Nacex del viernes (salen con el reparto) | hasta el recuento de la mañana hecho después de terminar las bolsas y el envío | desde ese recuento hasta la mañana siguiente |
-| Envío y pedidos de Nacex de lunes a jueves (salen a las 18:10, después del recuento de las 17:55) | todo el día | — (la lista del +35 % de la tarde se hace antes) |
-
-- **Lo que queda en el almacén** para el envío y los pedidos del mismo día = hoja − lo comprometido que la hoja aún cuenta (columna 2). Es la regla de siempre del envío antes del recuento (§2.5, R1-22), que ahora aparta también los pedidos de tienda de ese día.
-- **R3 (+35 %):** el contador sube por las cajas en camino (columna 3), que el recuento ya ha quitado del almacén y la tienda aún no ha apuntado (§3.9).
+**Un pedido para recoger en tienda activa el reparto** (decisión del propietario, 28/10/2026, Tarea 14):
+- Entra en el reparto de hoy mientras **las bolsas no estén listas**. Si aún no hay reparto, mientras «Prepara el reparto» siga abierta. Si no, va al siguiente día de trabajo.
+- Si el reparto de hoy ya está guardado, entra en él al momento, con su tarea y su bolsa aparte.
+- Con un pedido esperando, «Prepara el reparto» **no se cierra sin reparto** (ni con motivo): hay que prepararlo, aunque sea **solo con el pedido**. Un reparto sin productos vale solo si lleva pedidos de cliente.
+- En «Preparar reparto», los pedidos salen **marcados y fijos** en su tienda («Pedido de Ane a tienda de Bilbao»).
 
 **Nacex: hasta cuándo entra un pedido** (decidido por el propietario, 28/10/2026): de lunes a jueves, **hasta las 18:00** (el viernes, hasta las 10:45) y mientras la salida a Nacex no esté hecha; si no, al siguiente día de trabajo. Si por la producción no llega a salir ese día, el operario lo pasa al día siguiente (`aplazar_pedido_nacex`); si queda sin hacer, pasa solo. En los dos casos va como tarea de Nacex de ese día, con su lista y Nacex activado.
 
-**Desfase aceptado** (decisión del propietario, 28/10/2026): si una tienda rellena su «FIN DE DÍA» a mediodía, por la tarde esas cajas cuentan dos veces (en la tienda y en camino) y la lista del +35 % puede pedir un poco menos de lo justo; se corrige solo al día siguiente. Tampoco se cuentan en camino, a la mañana siguiente, el envío y los pedidos de Nacex que salieron la tarde anterior (la regla los da por llegados a la mañana siguiente). En la etapa 2, la tienda confirmará «bolsa recibida» (E2-2).
+**Desfase aceptado** (decisión del propietario, 28/10/2026): si una tienda rellena su «FIN DE DÍA» antes de las 23:30, esas cajas cuentan dos veces hasta esa hora (en la tienda y en camino) y la lista del +35 % puede pedir un poco menos de lo justo. Lo mismo con el envío hasta las 11:59 del día siguiente. En la etapa 2, la tienda confirmará «bolsa recibida» (E2-2).
 
 | # | Entrada | Resultado esperado |
 | --- | --- | --- |
+| A-01 | 12:45: almacén 5 y tienda 3 en la hoja, más 3 del reparto en camino | Cajas de todas partes: **11**. |
+| A-02 | 17:55: almacén 8 y Gipuzkoa 4 en la hoja, más 4 en la caja de Nacex | **16**. |
+| A-03 | El hueco: a las 09:30 se hacen 6 BZ1 4g (con 4 en la hoja); a las 11:00 se modifica el reparto pidiendo 5 más | Almacén ahora 10: **no hay que hacer ninguna**. |
+| A-04 | Antes del recuento: la hoja aún cuenta 3 cajas que ya salieron con las bolsas (almacén 8 y tienda 3 en la hoja) | 8 + 3 − 3 salidas + 3 en camino = **11** (no 14). |
+| A-05 | Lo producido para el propio reparto | No cuenta dos veces: ya está hecho en sus elementos. |
+| A-06 | Cada recuento (mañana y tarde) | Pone a cero lo producido y lo salido; lo que va en camino sigue. |
+| A-07 | Reparto con bolsas listas a las 10:45 | En camino a su tienda hasta las 23:30 (a las 23:31, ya no). |
+| A-08 | Envío del miércoles preparado a las 16:30 | En camino a Gipuzkoa hasta el jueves a las 11:59 (a las 12:00, ya no). |
+| A-09 | Pedido de Nacex de 2 (coge 1, haz 1) preparado | Salido 2, producido 1; no va en camino a ninguna tienda. |
+| A-10 | Pedido de tienda con el reparto guardado y las bolsas sin terminar; con las bolsas listas | Entra en el de hoy; al siguiente día de trabajo. |
+| A-11 | Pedido de tienda sin reparto y «Prepara el reparto» abierta | Para hoy; «Prepara el reparto» no se cierra sin reparto; reparto solo con el pedido. |
 | P-01 | Martes: hoja V2 4g 30, reparto 20; al terminar la producción sale el pedido de tienda (3 V2 4g) | «Coge 3 del almacén» (quedan 10). |
-| P-02 | El mismo martes: pedido de Nacex (4 V2 4g), con la hoja de antes del recuento (30) y reparto 24 y pedido de tienda 3 | Queda 3: «Coge 3 del almacén y haz 1». |
+| P-02 | El mismo martes, 13:00: pedido de Nacex (4 V2 4g); con la hoja de las 08:30 (30) han salido 29 con las bolsas (reparto 24 y pedidos de tienda 3 + 2) | Queda 1: «Coge 1 del almacén y haz 3». |
 | P-03 | Almacén vacío, negativo, con texto o referencia que ya no está; decimales | «Haz N»; con «2,5», 2 cajas. |
-| P-04 | Después del recuento (hoja V2 4g 3; el reparto ya no cuenta): sale Nacex de Miren (4) y después el de Koldo (1, llegó después) | Miren: «Coge 3 del almacén y haz 1». Koldo: «Haz 1». |
+| P-04 | Con la hoja del recuento de las 12:50 (hecho antes de las bolsas: aún las contaba, 30): sale Nacex de Miren (4) y después el de Koldo (1, llegó después) | Miren: «Coge 1 del almacén y haz 3». Koldo: «Haz 1». |
 | P-05 | Frases | «Coge 2 del almacén», «Haz 3», «Coge 1 del almacén y haz 1». |
 | P-06 | Al guardar el pedido | `motivo` aún `null`: se calcula al salir la tarea. |
 | P-07 | Nacex el martes a las 18:05; el viernes a las 11:00 | Al miércoles; al lunes. Con Nacex activado ese día. |
 | P-08 | Pasar a mañana el pedido de Nacex de Koldo («Producción tarde»); Miren queda sin hacer | Los dos, en la tarde del miércoles con su lista y Nacex activado; la tarea del martes, «Pasa al 25/11: …». |
-| C-01 | Martes, antes del recuento: reparto 24 V2 4g, pedido de tienda 3, dos pedidos de Nacex (4 y 1) | Comprometido: reparto 24, pedidos de tienda 3, Nacex 4 + 1; en camino: nada. |
-| C-02 | El mismo martes: recuento de la mañana hecho (12:50) pero bolsas sin terminar; o bolsas terminadas después del recuento | Reparto y pedido de tienda siguen en el almacén; nada en camino. |
-| C-03 | Bolsas terminadas (10:40) y recuento después (12:50) | Reparto y pedido de tienda: en camino (24 + 3). Nacex sigue contando en el almacén (4 + 1). |
-| C-04 | Al día siguiente | Nada en camino. |
-| C-05 | Viernes: envío 6 y pedido de Nacex 2 (salen con el reparto), envío preparado y recuento después | En camino: 6 + 2; el envío y Nacex ya no cuentan en el almacén. |
-| C-06 | Envío antes del recuento con reparto 20 y pedido de tienda 6 (V2 4g 30 en la hoja) | Apartadas 26: quedan 4. |
-| C-07 | R3: V2 4g, consumo 74, contador de la hoja +20, 5 en camino | Contador +25 → 1 caja (sin la corrección, 6). |
-| C-08 | R3: 10 INDOOR PR RELAX 4g en camino | Suman al «INDOOR TOTAL» 4g: 35 cajas en vez de 45. |
-| C-09 | R3 sin cajas en camino | La lista de siempre. |
+| C-01 | Antes de las bolsas: reparto 24 V2 4g, pedidos de tienda 3 y 2, dos pedidos de Nacex (4 y 1) | Comprometido: todo; en camino: nada. |
+| C-02 | Recuento hecho pero bolsas sin terminar | El reparto y los pedidos de tienda siguen comprometidos. |
+| C-03 | Bolsas listas | Reparto y pedidos de tienda: salidos y en camino a su tienda (Bilbao 27, Portugalete 2). Nacex sigue en el almacén. |
+| C-04 | Al día siguiente | El reparto de ayer ya no va en camino. |
+| C-05 | Viernes: envío 6 y pedido de Nacex 2 preparados | En camino: Gipuzkoa 6. El pedido de Nacex, no (sale del stock). |
+| C-06 | Envío con reparto 20 y pedido de tienda 6 sin salir (V2 4g 30 en la hoja) | Apartadas 26: quedan 4. Con las bolsas ya listas (25 salidas), no se aparta nada: quedan 5. |
 
-P-01 a P-08 y C-01 a C-05 están en `supabase/tests/17_pedidos_cliente.sql`; C-06, en `reparto_lista_test.ts`; C-07 a C-09 son R3-21 a R3-23.
+A-01, A-02 y A-04 son R3-24 a R3-26; A-03 y A-05, en `reparto_lista_test.ts`; A-06 a A-11 y C-01 a C-05, en `supabase/tests/19_almacen_ahora.sql` y `17_pedidos_cliente.sql`; P-01 a P-08, en la 17; C-06, en `reparto_lista_test.ts`.
 
 ## 3. R3 — Stock del almacén (+35 %)
 
@@ -283,9 +299,13 @@ Una vez por turno (al pedirse la lista por primera vez en el turno), y se guarda
 | R3-21 | V2 4g: consumo 74, contador de la hoja +20, 5 cajas en camino (R1c) | Contador +25: **1 caja** («Tienes +25 (con 5 en camino a las tiendas)…»). |
 | R3-22 | 10 INDOOR PR RELAX 4g en camino; INDOOR TOTAL 4g: consumo 51, contador −27 | Suman al total de la categoría y formato: −17 → **35 cajas** (10g, sin cambios). |
 | R3-23 | Sin cajas en camino | La lista de siempre. |
+| R3-24 | 12:45: V2 4g, consumo 40; hoja 8 (almacén 5 y tienda 3); 3 del reparto en camino | Contador +11 → **3 cajas** («Tienes +11 (con 3 en camino a las tiendas)…»). |
+| R3-25 | 17:55: consumo 60; hoja 12 (almacén 8 y Gipuzkoa 4); 4 en la caja de Nacex | Contador +16 → **5 cajas**. |
+| R3-26 | Antes del recuento: hoja 11 (aún cuenta las 3 que salieron); 3 salidas y 3 en camino | Contador +11 (no 14) → **3 cajas**, sin explicación (se compensan). |
+| R3-27 | Hoja 8; 6 hechas desde el recuento; 2 salidas en un pedido de Nacex | Contador +12 → **2 cajas** («(con 6 hechas desde el recuento y sin 2 que ya han salido)»). |
 
-### 3.9 Cajas en camino (R1c, Tarea 12)
-Desde el recuento de la mañana hecho después de la salida (bolsas listas; el viernes, también el envío preparado), lo que ha salido hoy hacia las tiendas (reparto, pedidos de tienda y, el viernes, envío y pedidos de Nacex) se suma al contador de su referencia hasta la mañana siguiente; las variedades de Invernadero e Indoor, al total de su categoría del mismo formato. Así la lista del +35 % de la tarde no pide cajas que ya existen y van de camino. Regla completa y desfase aceptado en §2.10.
+### 3.9 Cajas de todas partes (R1c, rehecha en la Tarea 14)
+El contador de CONTEO DE CAJAS TOTAL se corrige con los movimientos desde el último recuento: **+ lo hecho − lo salido + lo que va en camino** a las tiendas (el reparto hasta las 23:30; el envío hasta las 11:59 del día siguiente). Un pedido de Nacex sale y no va a ninguna tienda: resta. Las variedades de Invernadero e Indoor suman al total de su categoría del mismo formato. Así la lista del +35 % no pide cajas que ya existen. El motivo lo explica: «(con 6 hechas desde el recuento y 5 en camino a las tiendas)»; antes del recuento, lo salido y lo que va en camino se compensan y no se nombran. Regla completa en §2.10.
 
 ## 4. Propuestas pendientes (no aprobadas)
 

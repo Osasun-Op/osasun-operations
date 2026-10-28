@@ -2,7 +2,7 @@
 // en hoja_test.ts y google_test.ts; R3-17 (dos veces en el turno) en supabase/tests/07.
 import { assertEquals } from "jsr:@std/assert@1";
 import type { Conteo, DatosHoja, Producto } from "./hoja.ts";
-import { cajasR3, calcularStock, type ConfigR3 } from "./r3.ts";
+import { ajustesStock, cajasR3, calcularStock, type ConfigR3 } from "./r3.ts";
 
 const CFG: ConfigR3 = {
   porcentaje: 35,
@@ -128,7 +128,7 @@ Deno.test("R3-21 cajas en camino (R1c): el contador sube por lo que ya salió ha
   // V2 4g: consumo 74, contador de la hoja +20 (el recuento ya quitó 5 cajas del reparto) → con las 5 en camino, +25 → 1 caja.
   const d = datos([c("V2 ", "4g", "20", "74")], [p("V2 ", "730")]);
   assertEquals(unico(d).lista[0].cajas, 6);
-  const r = calcularStock(d, CFG, [{ producto: "V2", formato: "4g", cantidad: 5 }]);
+  const r = calcularStock(d, CFG, [{ producto: "V2", formato: "4g", en_camino: 5 }]);
   assertEquals([r.lista[0].cajas, r.lista[0].en_camino], [1, 5]);
   assertEquals(r.lista[0].motivo, "Se venden 74 cajas a la semana. Tienes +25 (con 5 en camino a las tiendas) y el objetivo es +26. Haz 1.");
 });
@@ -136,7 +136,7 @@ Deno.test("R3-21 cajas en camino (R1c): el contador sube por lo que ya salió ha
 Deno.test("R3-22 cajas en camino de una variedad de Indoor: suman al total de su categoría y formato", () => {
   const d = datos([c("INDOOR TOTAL", "4g", "-27", "51", "INDOOR"), c("INDOOR TOTAL", "10g", "-5", "10", "INDOOR")],
     [p("INDOOR PR RELAX", "260")], { INVERNADERO: [], INDOOR: ["INDOOR PR RELAX"] });
-  const r = calcularStock(d, CFG, [{ producto: "INDOOR PR RELAX", formato: "4g", cantidad: 10 }, { producto: "NADA", formato: "4g", cantidad: 3 }]);
+  const r = calcularStock(d, CFG, [{ producto: "INDOOR PR RELAX", formato: "4g", en_camino: 10 }, { producto: "NADA", formato: "4g", en_camino: 3 }]);
   // 4g: −27 + 10 = −17 → 18 + 17 = 35 cajas (antes 45). 10g sin cambios: 4 + 5 = 9.
   assertEquals(r.lista.map((e) => [e.formato, e.cajas, e.en_camino ?? 0]), [["4g", 35, 10], ["10g", 9, 0]]);
 });
@@ -144,4 +144,34 @@ Deno.test("R3-22 cajas en camino de una variedad de Indoor: suman al total de su
 Deno.test("R3-23 sin cajas en camino (antes del recuento o al día siguiente) la lista es la de siempre", () => {
   const d = datos([c("V2 ", "4g", "25", "74")], [p("V2 ", "730")]);
   assertEquals(calcularStock(d, CFG, []).lista, unico(d).lista);
+});
+
+// R1c rehecha (Tarea 14): cajas de todas partes = hoja + hechas desde el recuento − salidas + en camino.
+Deno.test("R3-24 12:45, después del recuento: almacén 5 y tienda 3 en la hoja, más 3 del reparto en camino → 11", () => {
+  const d = datos([c("V2 ", "4g", "8", "40")], [p("V2 ", "730")]);
+  const r = calcularStock(d, CFG, ajustesStock({ producido: [], salido: [] }, [{ producto: "V2", formato: "4g", cantidad: 3 }]));
+  assertEquals(r.lista[0].motivo, "Se venden 40 cajas a la semana. Tienes +11 (con 3 en camino a las tiendas) y el objetivo es +14. Haz 3.");
+});
+
+Deno.test("R3-25 17:55: almacén 8 y Gipuzkoa 4 en la hoja, más 4 en la caja de Nacex → 16", () => {
+  const d = datos([c("V2 ", "4g", "12", "60")], [p("V2 ", "730")]);
+  const r = calcularStock(d, CFG, [{ producto: "V2", formato: "4g", en_camino: 4 }]);
+  assertEquals([r.lista[0].cajas, r.lista[0].en_camino], [5, 4]);
+  assertEquals(r.lista[0].motivo, "Se venden 60 cajas a la semana. Tienes +16 (con 4 en camino a las tiendas) y el objetivo es +21. Haz 5.");
+});
+
+Deno.test("R3-26 antes del recuento: la hoja aún cuenta en el almacén lo que ya salió; salido y en camino se compensan (no cuenta dos veces)", () => {
+  const d = datos([c("V2 ", "4g", "11", "40")], [p("V2 ", "730")]);
+  const r = calcularStock(d, CFG, ajustesStock({ producido: [], salido: [{ producto: "V2", formato: "4g", cantidad: 3 }] },
+                                              [{ producto: "V2", formato: "4g", cantidad: 3 }]));
+  assertEquals([r.lista[0].cajas, r.lista[0].en_camino], [3, undefined]);
+  assertEquals(r.lista[0].motivo, "Se venden 40 cajas a la semana. Tienes +11 y el objetivo es +14. Haz 3.");
+});
+
+Deno.test("R3-27 lo hecho desde el recuento suma; un pedido de Nacex sale del stock (no va a ninguna tienda)", () => {
+  const d = datos([c("V2 ", "4g", "8", "40")], [p("V2 ", "730")]);
+  const r = calcularStock(d, CFG, ajustesStock({ producido: [{ producto: "V2", formato: "4g", cantidad: 6 }],
+                                                 salido: [{ producto: "V2", formato: "4g", cantidad: 2 }] }, []));
+  assertEquals(r.lista[0].motivo,
+    "Se venden 40 cajas a la semana. Tienes +12 (con 6 hechas desde el recuento y sin 2 que ya han salido) y el objetivo es +14. Haz 2.");
 });

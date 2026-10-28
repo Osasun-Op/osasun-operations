@@ -7,6 +7,7 @@ import type { Pestanas, ResultadoLectura } from "./google.ts";
 import type { Destino } from "./r1.ts";
 import { prepararReparto, referencias, validarLineas, validarPeticiones } from "./lista.ts";
 import { type Cajas, type Comprometido, listaPedido, SIN_COMPROMISOS } from "./pedidos.ts";
+import { ajusteAlmacen, aplicarAjuste, type MovimientosAlmacen, SIN_MOVIMIENTOS } from "./almacen.ts";
 
 export interface Dependencias {
   rpc: <T = unknown>(nombre: string, args: Record<string, unknown>) => Promise<T>;
@@ -32,8 +33,10 @@ interface Contexto {
     sheets_pestanas: Pestanas;
     destinos_reparto?: { reparto: string[]; envio: string[] };
   };
-  /** R1c: lo comprometido hoy que la hoja aún cuenta en el almacén (motor.comprometido). */
+  /** R1c: lo comprometido hoy que aún no ha salido del almacén, y lo que va en camino (motor.comprometido_en). */
   comprometido?: Comprometido;
+  /** R1c: lo producido y lo salido desde el último recuento (almacén ahora = hoja + producido − salido). */
+  almacen?: MovimientosAlmacen;
   /** Pedidos de cliente para recoger en tienda que van en el reparto de hoy. */
   pedidos_tienda?: { id: string; cliente: string; destino_id: string; lineas: Cajas[] }[];
 }
@@ -58,6 +61,12 @@ export const tiendasDe = (ctx: Pick<Contexto, "destinos" | "config">, tipo: "rep
     .map((codigo) => ctx.destinos.find((d) => d.codigo === codigo))
     .filter((d): d is DestinoCtx => d !== undefined);
 
+/** Pedidos de cliente para recoger en tienda del reparto de hoy, en las tiendas del reparto. */
+const pedidosDelReparto = (ctx: Pick<Contexto, "pedidos_tienda">, destinos: Destino[]) => {
+  const enLista = new Set(destinos.map((x) => x.id));
+  return (ctx.pedidos_tienda ?? []).filter((p) => enLista.has(p.destino_id));
+};
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** catalogo(): tiendas y referencias de PRINCIPAL, con su categoría. */
@@ -71,12 +80,20 @@ export async function catalogoDe(d: Dependencias, persona: string): Promise<Resp
     return error("CATALOGO_AMBIGUO", "Hay nombres repetidos en PRINCIPAL. Avisa a Administración.", { claves: ambiguas });
   }
   const tienda = (x: DestinoCtx) => ({ id: x.id, codigo: x.codigo, nombre: x.nombre });
+  const reparto = tiendasDe(ctx, "reparto");
   return {
     tiendas: {
-      reparto: tiendasDe(ctx, "reparto").map(tienda),
+      reparto: reparto.map(tienda),
       envio: tiendasDe(ctx, "envio").map(tienda),
     },
     productos: lista,
+    // Pedidos de cliente para recoger en tienda que van en el reparto de hoy:
+    // en «Preparar reparto», marcados y fijos en su tienda (Tarea 14).
+    pedidos_cliente: pedidosDelReparto(ctx, reparto).map((p) => {
+      const destino = reparto.find((x) => x.id === p.destino_id)!.nombre;
+      return { id: p.id, cliente: p.cliente, destino_id: p.destino_id, destino, lineas: p.lineas,
+               texto: `Pedido de ${p.cliente} a tienda de ${destino}` };
+    }),
     datos_leidos_en: (d.ahora?.() ?? new Date()).toISOString(),
   };
 }
@@ -115,20 +132,24 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
     return error("CATALOGO_AMBIGUO", "Hay nombres repetidos en PRINCIPAL. Avisa a Administración.", { claves: ambiguas });
   }
   const destinos = tiendasDe(ctx, tipo);
-  const v = validarLineas(cuerpo.lineas, entradas, destinos);
+  // Un pedido para recoger en tienda activa el reparto: puede ir solo, sin productos.
+  const pedidos = tipo === "reparto" ? pedidosDelReparto(ctx, destinos) : [];
+  const v = validarLineas(cuerpo.lineas, entradas, destinos, pedidos.length > 0);
   if (!v.ok) return error(v.codigo, v.mensaje, v.detalle);
   const pv = validarPeticiones(cuerpo.peticiones, destinos);
   if (!pv.ok) return error("DATOS_NO_VALIDOS", pv.mensaje, pv.detalle);
 
   const c = ctx.comprometido ?? SIN_COMPROMISOS;
   const { texto, r } = prepararReparto({
-    tipo, hoy: { dia: ctx.dia, mes: ctx.mes }, sale, lineas: v.lineas, destinos, entradas, peticiones: pv.peticiones,
-    // Envío: primero se apartan las cajas que salen hoy con el reparto (reparto y
-    // pedidos de tienda) mientras la hoja aún las cuenta, es decir, antes del
-    // recuento de la mañana (v1.11 y R1c). Lo decide motor.comprometido.
+    tipo, hoy: { dia: ctx.dia, mes: ctx.mes }, sale, lineas: v.lineas, destinos, peticiones: pv.peticiones,
+    // R1c: el almacén ahora (hoja + lo producido desde el recuento − lo que ha salido).
+    entradas: aplicarAjuste(entradas, ajusteAlmacen(ctx.almacen ?? SIN_MOVIMIENTOS, tipo)),
+    // Envío: primero se apartan las cajas del reparto y de los pedidos de tienda de
+    // hoy que aún no han salido (bolsas sin terminar). Lo decide motor.comprometido_en.
     apartadoReparto: tipo === "envio"
       ? [...c.reparto, ...c.pedidos_tienda].map((x) => ({ producto: x.producto, formato: x.formato, pedido: x.cantidad }))
       : [],
+    permitirVacio: pedidos.length > 0,
   });
   if (r.estado !== "aceptado") {
     return error("REPARTO_NO_CALCULADO", "No se ha podido calcular el reparto. Avisa a Administración.",
@@ -153,8 +174,6 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   // reparto no cambia, para no perder un pedido si la llamada anterior se cortó.
   let pedidosCliente: unknown[] = [];
   if (tipo === "reparto") {
-    const enLista = new Set(destinos.map((x) => x.id));
-    const pedidos = (ctx.pedidos_tienda ?? []).filter((p) => enLista.has(p.destino_id));
     if (pedidos.length > 0) {
       const asignados = await d.rpc<{ pedidos: unknown[] }>("servidor_asignar_pedidos", {
         p_persona: persona, p_reparto: guardado.reparto_id,
