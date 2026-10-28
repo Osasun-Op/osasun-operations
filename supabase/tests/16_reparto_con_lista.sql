@@ -89,6 +89,12 @@ begin
     (select bool_and(x ? 'activo') from jsonb_array_elements(r -> 'destinos') x)
     and (select (x ->> 'activo')::boolean from jsonb_array_elements(r -> 'destinos') x where x ->> 'codigo' = 'DURANGO') = false
     and (select (x ->> 'activo')::boolean from jsonb_array_elements(r -> 'destinos') x where x ->> 'codigo' = 'BILBAO'), r -> 'destinos' #>> '{}');
+  perform pg_temp.comprobar('servidor_preparar entrega las tiendas del reparto y del envío en el orden de las hojas (sin Donosti ni Rentería)',
+    r -> 'config' -> 'destinos_reparto' = '{"reparto": ["BILBAO", "ALGORTA", "BARAKALDO", "BASAURI", "PORTU"], "envio": ["GIPUZKOA", "DURANGO"]}'::jsonb
+    and (select bool_and(exists (select 1 from public.centros_trabajo c where c.codigo = x))
+           from jsonb_array_elements_text((r -> 'config' -> 'destinos_reparto' -> 'reparto')
+                                          || (r -> 'config' -> 'destinos_reparto' -> 'envio')) x),
+    r -> 'config' #>> '{}');
 
   j := motor.generar_jornada(op, '2026-11-19');
   perform pg_temp.comprobar('La tarea del operario se llama «Prepara el reparto»',
@@ -105,8 +111,8 @@ begin
   r := pg_temp.guardar(j, adm, 5, 3, '2026-11-19 08:50+01');
   v_rep := (r ->> 'reparto_id')::uuid;
   perform public.servidor_reparto_anotar_id_cliente(v_rep, c1);
-  perform pg_temp.comprobar('Guardado: «Prepara el reparto» se cierra sola y la producción y las bolsas quedan creadas',
-    (select estado from public.tareas where jornada_id = j and clave = 'pegar_reparto') = 'hecha'
+  perform pg_temp.comprobar('Guardado: «Prepara el reparto» se cierra sola («Reparto preparado por Administración») y la producción y las bolsas quedan creadas',
+    (select estado = 'hecha' and resultado = 'Reparto preparado por Administración' from public.tareas where jornada_id = j and clave = 'pegar_reparto')
     and (select count(*) from public.tarea_elementos e join public.tareas t on t.id = e.tarea_id
           where t.jornada_id = j and t.clave = 'produccion_reparto') = 1
     and (select count(*) from public.tarea_elementos e join public.tareas t on t.id = e.tarea_id

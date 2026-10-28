@@ -16,8 +16,6 @@ export interface Dependencias {
 
 interface DestinoCtx extends Destino {
   codigo: string;
-  tipo: string;
-  activo: boolean;
 }
 
 interface Contexto {
@@ -28,7 +26,11 @@ interface Contexto {
   mes: number;
   fecha: string;
   destinos: DestinoCtx[];
-  config: { sheets_documento_id: string; sheets_pestanas: Pestanas };
+  config: {
+    sheets_documento_id: string;
+    sheets_pestanas: Pestanas;
+    destinos_reparto?: { reparto: string[]; envio: string[] };
+  };
   reparto_hoy: { producto: string; formato: string; pedido: number }[];
   recuento_manana_hecho: boolean;
 }
@@ -43,9 +45,15 @@ const errorHoja = (l: Extract<ResultadoLectura, { ok: false }>) =>
     ? "No puedo leer la hoja de stock ahora. Vuelve a intentarlo en un minuto; si sigue, avisa a Administración."
     : "La hoja de stock ha cambiado de forma. Avisa a Administración.", { detalle: l.detalle });
 
-/** Tiendas válidas: las activas para el reparto; el destino del envío (GIPUZKOA) para el envío. */
-export const tiendasDe = (destinos: DestinoCtx[], tipo: "reparto" | "envio") =>
-  destinos.filter((d) => d.activo && (tipo === "reparto" ? d.tipo === "tienda" : d.tipo === "destino"));
+/**
+ * Tiendas que se pueden elegir y su orden, el de las hojas de tienda de STOCK
+ * OSASUN (configuración `destinos_reparto`): reparto BILBAO, ALGORTA, BARAKALDO,
+ * BASAURI, PORTU; envío GIPUZKOA, DURANGO. Donosti y Rentería no entran.
+ */
+export const tiendasDe = (ctx: Pick<Contexto, "destinos" | "config">, tipo: "reparto" | "envio") =>
+  (ctx.config.destinos_reparto?.[tipo] ?? [])
+    .map((codigo) => ctx.destinos.find((d) => d.codigo === codigo))
+    .filter((d): d is DestinoCtx => d !== undefined);
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -62,8 +70,8 @@ export async function catalogoDe(d: Dependencias, persona: string): Promise<Resp
   const tienda = (x: DestinoCtx) => ({ id: x.id, codigo: x.codigo, nombre: x.nombre });
   return {
     tiendas: {
-      reparto: tiendasDe(ctx.destinos, "reparto").map(tienda),
-      envio: tiendasDe(ctx.destinos, "envio").map(tienda),
+      reparto: tiendasDe(ctx, "reparto").map(tienda),
+      envio: tiendasDe(ctx, "envio").map(tienda),
     },
     productos: lista,
     datos_leidos_en: (d.ahora?.() ?? new Date()).toISOString(),
@@ -103,7 +111,7 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   if (ambiguas.length > 0) {
     return error("CATALOGO_AMBIGUO", "Hay nombres repetidos en PRINCIPAL. Avisa a Administración.", { claves: ambiguas });
   }
-  const destinos = tiendasDe(ctx.destinos, tipo);
+  const destinos = tiendasDe(ctx, tipo);
   const v = validarLineas(cuerpo.lineas, entradas, destinos);
   if (!v.ok) return error(v.codigo, v.mensaje, v.detalle);
 

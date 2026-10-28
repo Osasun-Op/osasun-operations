@@ -10,15 +10,16 @@ import { HOJA_28_10, REPARTO_28_10 } from "./lista_test.ts";
 
 const DATOS: DatosHoja = { ...HOJA_28_10, conteo: [], variedades: { INVERNADERO: [], INDOOR: [] } };
 const destino = (id: string, codigo: string, nombre: string, tipo = "tienda", activo = true) =>
-  ({ id, codigo, nombre, tipo, activo, alias: [codigo === "DURANGO" ? "DURANGO" : codigo === "PORTU" ? "PORTU" : codigo] });
+  ({ id, codigo, nombre, tipo, activo, alias: codigo === "DURANGO" ? ["DURANGO", "LAUDIO"] : [codigo] });
 const CTX = {
   persona_id: "p", rol: "administracion", jornada_id: "jornada-eder", fecha: "2026-10-28", dia: 28, mes: 10,
   destinos: [destino("algorta", "ALGORTA", "Algorta"), destino("barakaldo", "BARAKALDO", "Barakaldo"),
              destino("basauri", "BASAURI", "Basauri"), destino("bilbao", "BILBAO", "Bilbao"),
-             destino("durango", "DURANGO", "Durango", "tienda", false),
+             destino("donosti", "DONOSTI", "Donosti"), destino("durango", "DURANGO", "Durango", "tienda", false),
              destino("gipuzkoa", "GIPUZKOA", "Gipuzkoa (envío a Rentería)", "destino"),
-             destino("portu", "PORTU", "Portugalete")],
-  config: { sheets_documento_id: "doc", sheets_pestanas: { principal: "PRINCIPAL", conteo: "CONTEO", almacen: "ALMACEN" } },
+             destino("portu", "PORTU", "Portugalete"), destino("renteria", "RENTERIA", "Rentería")],
+  config: { sheets_documento_id: "doc", sheets_pestanas: { principal: "PRINCIPAL", conteo: "CONTEO", almacen: "ALMACEN" },
+            destinos_reparto: { reparto: ["BILBAO", "ALGORTA", "BARAKALDO", "BASAURI", "PORTU"], envio: ["GIPUZKOA", "DURANGO"] } },
   reparto_hoy: [], recuento_manana_hecho: false,
 };
 const ID = "6b1f7a3e-9c1d-4f2a-8b7e-2d5c9a0e1f34";
@@ -46,11 +47,11 @@ function falso(o: { ctx?: Record<string, unknown>; previo?: unknown; lectura?: R
 }
 const cuerpo = (extra: Record<string, unknown> = {}) => ({ id_cliente: ID, tipo: "reparto", sale: "administracion", lineas: REPARTO_28_10, ...extra });
 
-Deno.test("catalogo: tiendas activas del reparto, destino del envío y productos con categoría", async () => {
+Deno.test("catalogo: tiendas del reparto y del envío en el orden de las hojas (sin Donosti ni Rentería) y productos con categoría", async () => {
   const f = falso();
   const r = await catalogoDe(f.d, "p") as { tiendas: Record<string, { codigo: string }[]>; productos: { clave: string }[] };
-  assertEquals(r.tiendas.reparto.map((t) => t.codigo), ["ALGORTA", "BARAKALDO", "BASAURI", "BILBAO", "PORTU"]);
-  assertEquals(r.tiendas.envio.map((t) => t.codigo), ["GIPUZKOA"]);
+  assertEquals(r.tiendas.reparto.map((t) => t.codigo), ["BILBAO", "ALGORTA", "BARAKALDO", "BASAURI", "PORTU"]);
+  assertEquals(r.tiendas.envio.map((t) => t.codigo), ["GIPUZKOA", "DURANGO"]);
   assertEquals([r.productos.length, r.productos[0].clave], [38, "MINI|10g"]);
 });
 
@@ -78,7 +79,7 @@ Deno.test("guardar_reparto: guarda el texto de WhatsApp, el cálculo R1 y anota 
   const g = f.args("servidor_guardar_reparto")!;
   assertEquals([g.p_jornada, g.p_tipo, g.p_sale, g.p_aceptado, g.p_lectura, g.p_fecha_texto],
                ["jornada-eder", "reparto", "administracion", true, "lectura-1", "2026-10-28"]);
-  assertEquals((g.p_texto as string).split("\n").slice(0, 4), ["REPARTO 28/10", "SALE: YO", "", "ALGORTA"]);
+  assertEquals((g.p_texto as string).split("\n").slice(0, 4), ["REPARTO 28/10", "SALE: YO", "", "BILBAO"]);
   assertEquals((g.p_produccion as { faltan: number }[]).filter((p) => p.faltan > 0).length, 4);
   assertEquals((g.p_bolsas as unknown[]).length, 5);
   assertEquals(f.args("servidor_reparto_anotar_id_cliente"), { p_reparto: "reparto-1", p_id_cliente: ID });
@@ -98,17 +99,20 @@ Deno.test("guardar_reparto: el mismo contenido que el de hoy no cambia nada (avi
   assertEquals([(r.aviso as { codigo: string }).codigo, typeof r.texto_whatsapp], ["REPARTO_SIN_CAMBIOS", "string"]);
 });
 
-Deno.test("guardar_reparto: referencia que ya no está en la hoja, sin quién sale, sin jornada o tienda de otro tipo", async () => {
+Deno.test("guardar_reparto: referencia que ya no está en la hoja, sin quién sale, sin jornada o tienda que no está en la lista", async () => {
   const codigo = async (c: Record<string, unknown>, o = {}) =>
     ((await guardarRepartoDe(falso(o).d, "p", c)) as { error?: { codigo: string } }).error?.codigo;
   assertEquals(await codigo(cuerpo({ lineas: [{ destino_id: "bilbao", producto: "GELATO", formato: "4g", cantidad: 1 }] })), "REFERENCIA_NO_EXISTE");
   assertEquals(await codigo(cuerpo({ sale: undefined })), "FALTA_SALE");
   assertEquals(await codigo(cuerpo({ id_cliente: "no" })), "DATOS_NO_VALIDOS");
   assertEquals(await codigo(cuerpo(), { ctx: { ...CTX, jornada_id: null } }), "SIN_JORNADA");
-  // Gipuzkoa no es una tienda del reparto; Bilbao no es destino del envío; Durango está inactiva.
-  assertEquals(await codigo(cuerpo({ lineas: [{ destino_id: "gipuzkoa", producto: "V2", formato: "4g", cantidad: 1 }] })), "DATOS_NO_VALIDOS");
-  assertEquals(await codigo(cuerpo({ tipo: "envio", lineas: [{ destino_id: "bilbao", producto: "V2", formato: "4g", cantidad: 1 }] })), "DATOS_NO_VALIDOS");
-  assertEquals(await codigo(cuerpo({ lineas: [{ destino_id: "durango", producto: "V2", formato: "4g", cantidad: 1 }] })), "DATOS_NO_VALIDOS");
+  // Gipuzkoa y Durango van en el envío, no en el reparto; Bilbao no es del envío; Donosti y Rentería no están en ninguna lista.
+  const linea = (destino_id: string) => [{ destino_id, producto: "V2", formato: "4g", cantidad: 1 }];
+  for (const d of ["gipuzkoa", "durango", "donosti", "renteria"]) {
+    assertEquals(await codigo(cuerpo({ lineas: linea(d) })), "DATOS_NO_VALIDOS");
+  }
+  assertEquals(await codigo(cuerpo({ tipo: "envio", lineas: linea("bilbao") })), "DATOS_NO_VALIDOS");
+  assertEquals(await codigo(cuerpo({ tipo: "envio", lineas: linea("renteria") })), "DATOS_NO_VALIDOS");
 });
 
 Deno.test("guardar_reparto: envío (sin quién sale) a Gipuzkoa, apartando el reparto de hoy antes del recuento", async () => {
@@ -117,4 +121,13 @@ Deno.test("guardar_reparto: envío (sin quién sale) a Gipuzkoa, apartando el re
   const g = f.args("servidor_guardar_reparto")!;
   assertEquals([g.p_tipo, g.p_sale, g.p_texto], ["envio", null, "ENVÍO 28/10\n\nGIPUZKOA\n8x V2 4g"]);
   assertEquals((g.p_produccion as { faltan: number }[])[0].faltan, 3);
+});
+
+Deno.test("guardar_reparto: envío a Gipuzkoa y a Durango (aunque Durango esté cerrada como tienda), en ese orden", async () => {
+  const f = falso();
+  await guardarRepartoDe(f.d, "p", { id_cliente: ID, tipo: "envio", lineas: [
+    { destino_id: "durango", producto: "BZ1", formato: "4g", cantidad: 2 }, { destino_id: "gipuzkoa", producto: "V2", formato: "4g", cantidad: 4 }] });
+  const g = f.args("servidor_guardar_reparto")!;
+  assertEquals(g.p_texto, "ENVÍO 28/10\n\nGIPUZKOA\n4x V2 4g\n\nDURANGO\n2x BZ1 4g");
+  assertEquals((g.p_bolsas as { destino_id: string }[]).map((b) => b.destino_id), ["gipuzkoa", "durango"]);
 });

@@ -231,7 +231,7 @@ Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 | Tareas de Administración | Encaje (§2.3), conflicto (§2.4) | ✅ 05, 10 |
 | Problemas | §2.5 | ✅ 05, 09, 13 |
 | Incidencias (§6.6 v1.17) · Nunca sin tarea · Reparto desde Administración | §2.3, `CONTRATOS.md` §3.11 | ✅ 05, 13 |
-| Reparto con lista (§5 R1 v1.21): catálogo, guardar con el mismo cálculo, texto para WhatsApp, «Prepara el reparto» | `CONTRATOS.md` §3.13 a §3.15, `REGLAS_CALCULO.md` §2.9 | ✅ 16, 05; unitarias L-01 a L-08 y `reparto_lista_test.ts`; catálogo real de la hoja en el PR |
+| Reparto con lista (§5 R1 v1.21): catálogo, guardar con el mismo cálculo, texto para WhatsApp, «Prepara el reparto» | `CONTRATOS.md` §3.13 a §3.15, `REGLAS_CALCULO.md` §2.9 | ✅ 16, 05; unitarias L-01 a L-09 y `reparto_lista_test.ts`; catálogo real de la hoja en el PR |
 | Quién sale (§5 R1 v1.20): desplegable, cambiar sin volver a pegar, orden bolsas → salida → efectivo | `CONTRATOS.md` §3.8 y §3.12 | ✅ 14; unitarias R1-25 a R1-27 |
 | Cierre | §2.5 bis, `cierres` + correo | ✅ 10; envío real en el PR de la Tarea 4 |
 | Permisos | §5 | ✅ 04, 08, 11, 12 (acceso) |

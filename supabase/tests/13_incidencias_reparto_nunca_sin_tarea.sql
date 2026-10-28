@@ -115,7 +115,7 @@ begin
   perform pg_temp.comprobar('Al pegarlo Administración, la respuesta no trae la tarea activa (no es su jornada)',
     r -> 'tarea_activa' is null or r -> 'tarea_activa' = 'null'::jsonb, r -> 'tarea_activa' #>> '{}');
   perform pg_temp.comprobar('«Pega el reparto» se cierra sola al aceptarse el reparto',
-    (select estado = 'hecha' and resultado = 'Reparto pegado por Administración' and terminada_en = pg_temp.h(lun, '08:48')
+    (select estado = 'hecha' and resultado = 'Reparto preparado por Administración' and terminada_en = pg_temp.h(lun, '08:48')
        from public.tareas where id = v_t));
   r := motor.tarea_activa_de(op, pg_temp.h(lun, '08:49'));
   perform pg_temp.comprobar('tarea_activa: reparto_de_hoy con el reparto, cuándo y quién lo pegó (la pantalla muestra «Modificar reparto»)',

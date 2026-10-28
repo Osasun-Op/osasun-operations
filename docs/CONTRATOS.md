@@ -3,10 +3,10 @@
 **Versión:** 1.0 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 10).
 
 > **Cambios en 1.0 (Tarea 10) — para Lovable: el reparto se prepara con una lista, ya no se pega texto** (`ESTADO_DEL_SISTEMA.md` v1.21, §5 R1).
-> 1. **`catalogo()`** (función del servidor, §3.13): tiendas del reparto y del envío, y las referencias de PRINCIPAL (producto + formato) en el orden de la hoja, con su categoría. Para montar la lista.
-> 2. **`guardar_reparto(id_cliente, tipo, sale?, lineas)`** (función del servidor, §3.14): guarda el reparto o el envío preparado con la lista. Mismo cálculo y misma sustitución que antes; devuelve además `texto_whatsapp` para copiarlo al grupo.
+> 1. **`catalogo()`** (función del servidor, §3.13): tiendas del reparto (Bilbao, Algorta, Barakaldo, Basauri, Portu) y del envío (Gipuzkoa, Durango), en ese orden, y las referencias de PRINCIPAL (producto + formato) en el orden de la hoja, con su categoría. Para montar la lista.
+> 2. **`guardar_reparto(id_cliente, tipo, sale?, lineas)`** (función del servidor, §3.14): guarda el reparto o el envío preparado con la lista. Mismo cálculo y misma sustitución que antes; devuelve además `texto_whatsapp`, que la pantalla copia **tal cual** con un botón para pegarlo en el grupo (sin abreviar).
 > 3. **`reparto_de_hoy_detalle(tipo)`** (base de datos, §3.15): las líneas del reparto (o envío) de hoy, para abrir «Modificar reparto» con la lista ya rellena, con su `texto_whatsapp` y quién sale.
-> 4. La tarea del operario se llama **«Prepara el reparto»** (la clave sigue siendo `pegar_reparto`) y se cierra sola al guardarse un reparto.
+> 4. La tarea del operario se llama **«Prepara el reparto»** (la clave sigue siendo `pegar_reparto`) y se cierra sola al guardarse un reparto, con el resultado «Reparto preparado» o «Reparto preparado por Administración».
 > 5. **`pegar_reparto` queda obsoleta** (§3.8): sigue funcionando, pero las pantallas ya no la usan.
 
 > **Cambios en 0.9 (Tarea 9) — para Lovable:** `estado_actual` trae también `reparto_de_hoy` (el mismo objeto que `tarea_activa`: `{ reparto_id, aceptado_en, pegado_por, pegado_por_nombre }` o `null`), para que el panel de Administración muestre «Pegar reparto» o «Modificar reparto». Nada más cambia.
@@ -161,7 +161,7 @@ Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas 
 - Si el mismo texto ya estaba pegado, responde `REPARTO_YA_PEGADO` y **no cambia quién sale**: para eso, `cambiar_quien_sale` (§3.12).
 - **Proceso:** lee Sheets, interpreta el texto según `REGLAS_CALCULO.md` §2 y, si no hay errores, crea o actualiza las tareas «Producción del reparto» y «Bolsas» con sus elementos. Si ya había un reparto aceptado hoy, lo sustituye conservando lo hecho (§5 R1).
 - **Quién:** el operario o **Administración** (Tarea 7). Si lo pega Administración, va a la jornada del operario por defecto, con el mismo cálculo y la misma sustitución; la respuesta no trae `tarea_activa`. Sin jornada del operario ese día: `SIN_JORNADA`.
-- Al aceptarse un reparto, la tarea «Prepara el reparto» queda hecha («Reparto pegado» o «Reparto pegado por Administración»).
+- Al aceptarse un reparto, la tarea «Prepara el reparto» queda hecha («Reparto preparado» o «Reparto preparado por Administración»; antes de la Tarea 10, «Reparto pegado»).
 - **Salida correcta:**
 ```json
 {
@@ -252,17 +252,17 @@ Lo que se puede elegir al preparar el reparto o el envío. Solo lee (la hoja y l
 ```json
 {
   "tiendas": {
-    "reparto": [ { "id": "...", "codigo": "ALGORTA", "nombre": "Algorta" }, { "id": "...", "codigo": "PORTU", "nombre": "Portugalete" } ],
-    "envio":   [ { "id": "...", "codigo": "GIPUZKOA", "nombre": "Gipuzkoa (envío a Rentería)" } ]
+    "reparto": [ { "id": "...", "codigo": "BILBAO", "nombre": "Bilbao" }, { "id": "...", "codigo": "ALGORTA", "nombre": "Algorta" }, "…" ],
+    "envio":   [ { "id": "...", "codigo": "GIPUZKOA", "nombre": "Gipuzkoa (envío a Rentería)" }, { "id": "...", "codigo": "DURANGO", "nombre": "Durango" } ]
   },
   "productos": [
     { "clave": "V2|4g", "producto": "V2", "formato": "4g", "categoria": "INVERNADERO", "orden": 2300 },
-    { "clave": "SUGAR|CBD", "producto": "SUGAR", "formato": "CBD", "categoria": "Otros", "orden": 5100 }
+    { "clave": "SUGAR|CBD", "producto": "SUGAR", "formato": "CBD", "categoria": "HIGH TECH", "orden": 5100 }
   ],
   "datos_leidos_en": "2026-11-03T07:47:12.000Z"
 }
 ```
-- `tiendas.reparto`: las tiendas activas (Durango no, mientras esté cerrada). `tiendas.envio`: el destino del envío. Ordenadas por nombre de código.
+- `tiendas.reparto`: BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU. `tiendas.envio`: GIPUZKOA, DURANGO. **En el orden de las hojas de tienda de STOCK OSASUN** (decisión del propietario, 28/10). Donosti y Rentería no salen: sus hojas son solo de consulta. La lista y el orden están en la configuración (`destinos_reparto`), así que se pueden cambiar sin tocar las pantallas.
 - `productos`: una referencia por producto y formato de PRINCIPAL (y los productos sin formato, con `formato: ""`), **en el orden de la hoja**. `clave` (`producto|formato`) es estable mientras no cambie el nombre en la hoja: sirve para la lista y para los contadores. `categoria`: el grupo de la pestaña ALMACEN; si el producto no está allí, `"Otros"`.
 - **Errores:** `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` (los mismos de siempre), `CATALOGO_AMBIGUO`, `NO_AUTORIZADO`.
 
@@ -292,7 +292,7 @@ Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_rep
   "texto_whatsapp": "REPARTO 03/11\nSALE: ALMACÉN\n\nBILBAO\n12x V2 4g\n\nPORTU\n2x V2 4g"
 }
 ```
-- **`texto_whatsapp`:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN` / `SALE: YO` (solo reparto), y por cada tienda una línea en blanco, su código en mayúsculas y `Nx PRODUCTO FORMATO`, con los nombres exactos de la hoja. Tiendas en el orden de `catalogo` y productos en el de la hoja.
+- **`texto_whatsapp`:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN` / `SALE: YO` (solo reparto), y por cada tienda una línea en blanco, su código en mayúsculas y `Nx PRODUCTO FORMATO`, con los nombres exactos de la hoja. Tiendas en el orden de `catalogo` y productos en el de la hoja. La pantalla lo copia **tal cual** con un botón para pegarlo en WhatsApp: no se abrevia nada.
 - **Reintentos:** repetir con el mismo `id_cliente` devuelve lo ya guardado (con su `texto_whatsapp`), sin volver a leer la hoja ni calcular, con `ya_guardado: true` y `aviso: { codigo: "REPARTO_YA_GUARDADO" }`. Cada vez que se pulsa «Guardar» en una lista nueva o modificada, `id_cliente` nuevo.
 - **Avisos (no son errores):** `REPARTO_YA_GUARDADO` (reintento) y `REPARTO_SIN_CAMBIOS` («El reparto de hoy ya era este: no cambia nada»; devuelve lo de antes con `ya_pegado: true`). Para cambiar solo quién sale, `cambiar_quien_sale` (§3.12).
 - **Errores** (no se guarda nada):
@@ -472,5 +472,5 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 4. **Tarea 7 · «Estoy bloqueado»:** no crea una incidencia aparte; es el problema de siempre (sale en `problemas_abiertos` y en PROBLEMAS del cierre), para no contarlo dos veces.
 5. **Tarea 7 · Nunca sin tarea:** solo dentro del turno; entre turnos (13:00–15:30) `tarea` es `null` y `siguiente` dice lo que viene.
 6. **Tarea 10 · Solo cambia quién sale:** si la lista no cambia y solo cambia el desplegable, la pantalla llama a `cambiar_quien_sale` (si llama a `guardar_reparto`, se recalcula y se sustituye el reparto con lo mismo, conservando lo hecho).
-7. **Tarea 10 · Orden de las tiendas:** por código (alfabético), igual en `catalogo` y en el texto de WhatsApp. Si se quiere el orden de la ruta, hace falta el dato.
+7. **Tarea 10 · Tiendas y orden** (decidido por el propietario, 28/10): reparto BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU; envío GIPUZKOA, DURANGO; en el orden de las hojas de STOCK OSASUN. Donosti y Rentería, solo de consulta.
 8. **Tarea 10 · `pegar_reparto`:** se deja publicada (obsoleta) hasta que el coordinador diga quitarla.
