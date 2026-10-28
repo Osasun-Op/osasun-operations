@@ -19,6 +19,8 @@ interface Contexto {
     stock_excluidos: ConfigR3["excluidos"];
   };
   stock: Record<string, unknown> | null;
+  /** R1c: lo que ha salido hoy hacia las tiendas y el recuento ya ha quitado del almacén. */
+  comprometido?: { en_camino: { producto: string; formato: string; cantidad: number }[] };
 }
 
 Deno.serve(async (req) => {
@@ -50,7 +52,7 @@ Deno.serve(async (req) => {
     const r = calcularStock(lectura.datos, {
       porcentaje: Number(ctx.config.stock_objetivo_pct ?? 35),
       excluidos: ctx.config.stock_excluidos ?? [],
-    });
+    }, ctx.comprometido?.en_camino ?? []);
     const leidoEn = new Date().toISOString();
 
     if (ctx.rol !== "operario") {

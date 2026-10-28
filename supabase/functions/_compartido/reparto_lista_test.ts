@@ -20,7 +20,8 @@ const CTX = {
              destino("portu", "PORTU", "Portugalete"), destino("renteria", "RENTERIA", "Rentería")],
   config: { sheets_documento_id: "doc", sheets_pestanas: { principal: "PRINCIPAL", conteo: "CONTEO", almacen: "ALMACEN" },
             destinos_reparto: { reparto: ["BILBAO", "ALGORTA", "BARAKALDO", "BASAURI", "PORTU"], envio: ["GIPUZKOA", "DURANGO"] } },
-  reparto_hoy: [], recuento_manana_hecho: false,
+  comprometido: { reparto: [], pedidos_tienda: [], envio: [], pedidos_nacex: [], en_camino: [] },
+  pedidos_tienda: [] as { id: string; cliente: string; destino_id: string; lineas: { producto: string; formato: string; cantidad: number }[] }[],
 };
 const ID = "6b1f7a3e-9c1d-4f2a-8b7e-2d5c9a0e1f34";
 
@@ -36,6 +37,7 @@ function falso(o: { ctx?: Record<string, unknown>; previo?: unknown; lectura?: R
         servidor_guardar_lectura: "lectura-1",
         servidor_guardar_reparto: o.guardado ?? { reparto_id: "reparto-1", estado: "aceptado", tarea_activa: null },
         servidor_reparto_anotar_id_cliente: null,
+        servidor_asignar_pedidos: { pedidos: [{ id: "pedido-1", estado: "por_preparar" }] },
       };
       return Promise.resolve(r[nombre] as T);
     },
@@ -116,7 +118,7 @@ Deno.test("guardar_reparto: referencia que ya no está en la hoja, sin quién sa
 });
 
 Deno.test("guardar_reparto: envío (sin quién sale) a Gipuzkoa, apartando el reparto de hoy antes del recuento", async () => {
-  const f = falso({ ctx: { ...CTX, reparto_hoy: [{ producto: "V2", formato: "4g", pedido: 25 }] } });
+  const f = falso({ ctx: { ...CTX, comprometido: { ...CTX.comprometido, reparto: [{ producto: "V2", formato: "4g", cantidad: 25 }] } } });
   await guardarRepartoDe(f.d, "p", { id_cliente: ID, tipo: "envio", lineas: [{ destino_id: "gipuzkoa", producto: "V2", formato: "4g", cantidad: 8 }] });
   const g = f.args("servidor_guardar_reparto")!;
   assertEquals([g.p_tipo, g.p_sale, g.p_texto], ["envio", null, "ENVÍO 28/10\n\nGIPUZKOA\n8x V2 4g"]);
@@ -130,4 +132,46 @@ Deno.test("guardar_reparto: envío a Gipuzkoa y a Durango (aunque Durango esté 
   const g = f.args("servidor_guardar_reparto")!;
   assertEquals(g.p_texto, "ENVÍO 28/10\n\nGIPUZKOA\n4x V2 4g\n\nDURANGO\n2x BZ1 4g");
   assertEquals((g.p_bolsas as { destino_id: string }[]).map((b) => b.destino_id), ["gipuzkoa", "durango"]);
+});
+
+Deno.test("guardar_reparto: el envío aparta también los pedidos de tienda que salen hoy con el reparto (R1c)", async () => {
+  const f = falso({ ctx: { ...CTX, comprometido: { ...CTX.comprometido,
+    reparto: [{ producto: "V2", formato: "4g", cantidad: 20 }], pedidos_tienda: [{ producto: "V2", formato: "4g", cantidad: 6 }] } } });
+  await guardarRepartoDe(f.d, "p", { id_cliente: ID, tipo: "envio", lineas: [{ destino_id: "gipuzkoa", producto: "V2", formato: "4g", cantidad: 8 }] });
+  // V2 4g: 30 en la hoja − 20 del reparto − 6 del pedido = 4; faltan 4.
+  const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { en_almacen: number; faltan: number; apartado_reparto: number }[])[0];
+  assertEquals([prod.apartado_reparto, prod.en_almacen, prod.faltan], [26, 4, 4]);
+  assertEquals(f.args("servidor_asignar_pedidos"), undefined);
+});
+
+Deno.test("guardar_reparto: los pedidos de tienda van en el reparto con «coge / haz», sin tocar la producción oficial", async () => {
+  const pedidos = [
+    { id: "pedido-1", cliente: "Ane", destino_id: "bilbao", lineas: [{ producto: "V2", formato: "4g", cantidad: 3 }] },
+    { id: "pedido-2", cliente: "Jon", destino_id: "portu", lineas: [{ producto: "V2", formato: "4g", cantidad: 4 }, { producto: "MINI", formato: "10g", cantidad: 2 }] },
+    { id: "pedido-3", cliente: "Mikel", destino_id: "donosti", lineas: [{ producto: "V2", formato: "4g", cantidad: 1 }] },
+  ];
+  const f = falso({ ctx: { ...CTX, pedidos_tienda: pedidos } });
+  const lineas = [{ destino_id: "bilbao", producto: "V2", formato: "4g", cantidad: 25 }];
+  const r = await guardarRepartoDe(f.d, "p", cuerpo({ lineas })) as Record<string, unknown>;
+  // La producción del reparto es solo la oficial: 25 pedidas, 30 en el almacén, faltan 0.
+  const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { pedido: number; faltan: number }[])[0];
+  assertEquals([prod.pedido, prod.faltan], [25, 0]);
+  // Quedan 5 V2 4g: Ane coge 3; Jon coge 2 y hace 2. MINI 10g: 30 en el almacén, coge 2. Donosti no es del reparto.
+  const plan = f.args("servidor_asignar_pedidos")!.p_pedidos as { pedido_id: string; elementos: { producto: string; motivo: string }[] }[];
+  assertEquals(plan.map((p) => [p.pedido_id, p.elementos.map((e) => `${e.producto}: ${e.motivo}`)]), [
+    ["pedido-1", ["V2: Coge 3 del almacén"]],
+    ["pedido-2", ["V2: Coge 2 del almacén y haz 2", "MINI: Coge 2 del almacén"]],
+  ]);
+  assertEquals(f.args("servidor_asignar_pedidos")!.p_reparto, "reparto-1");
+  assertEquals(r.pedidos_cliente, [{ id: "pedido-1", estado: "por_preparar" }]);
+  // Se asignan antes de anotar el id_cliente: si la llamada se corta, el reintento lo vuelve a hacer.
+  const orden = f.llamadas.map((l) => l.nombre);
+  assertEquals(orden.indexOf("servidor_asignar_pedidos") < orden.indexOf("servidor_reparto_anotar_id_cliente"), true);
+});
+
+Deno.test("guardar_reparto: sin cambios en el reparto, los pedidos que esperan se asignan igual", async () => {
+  const f = falso({ ctx: { ...CTX, pedidos_tienda: [{ id: "pedido-1", cliente: "Ane", destino_id: "bilbao", lineas: [{ producto: "V2", formato: "4g", cantidad: 1 }] }] },
+                    guardado: { reparto_id: "reparto-0", estado: "aceptado", ya_pegado: true } });
+  const r = await guardarRepartoDe(f.d, "p", cuerpo()) as Record<string, unknown>;
+  assertEquals([(r.aviso as { codigo: string }).codigo, f.args("servidor_asignar_pedidos")!.p_reparto], ["REPARTO_SIN_CAMBIOS", "reparto-0"]);
 });
