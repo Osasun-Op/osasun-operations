@@ -98,3 +98,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - Después: poner la Site URL de Supabase Auth en la previsualización (lo hace el propietario) y probar el acceso con Google.
 
 **28/10/2026 · Prueba en el almacén:** al pegar el reparto real, 36 de 52 líneas no se reconocían por abreviaturas. El propietario decide preparar el reparto **con una lista y contadores − y +** (R1 rediseñada, `ESTADO_DEL_SISTEMA.md` v1.21). **Tarea 10 de BD** encargada (`catalogo`, `guardar_reparto`, `reparto_de_hoy_detalle`). Cuando se fusione, **Tarea 4 de Lovable**: pantalla «Preparar reparto» (quién sale, tienda, lista por categorías con buscador y − y +, resumen por tienda, Calcular, Copiar para WhatsApp) en el panel y en el operario, sustituyendo a «Pegar reparto».
+- PR #10 fusionado (reparto con lista). Tarea 11 de BD (nombre «Asier») encargada. Tarea 4 de Lovable («Preparar reparto» con lista) enviada.

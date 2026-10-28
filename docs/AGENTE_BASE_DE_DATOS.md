@@ -62,11 +62,21 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 10** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.21, §5 R1** (rediseñada).
+**Tarea 11** (sección 7).
 
 ---
 
-## 7. TAREA 10 (activa): el reparto se prepara con una lista, en pruebas
+## 7. TAREA 11 (activa): el nombre del propietario, en pruebas
+
+1. El propietario quiere aparecer como **«Asier»**, no como «Administración»: en `quien_sale_opciones`, en `pegado_por_nombre` y en el resto de la app. Cambia el nombre de su ficha (`personas.nombre`) y el de su entrada en `cuentas_autorizadas` de pruebas, para que un alta nueva no lo deshaga. Son datos del entorno: **no van en el repositorio** (ni en una migración ni en el seed).
+2. Si alguna frase de la base de datos pone «Administración» cuando se refiere a la persona (por ejemplo, «Reparto preparado por Administración»), que use el nombre de la ficha. Las que hablan del rol («Avisa a Administración») se quedan igual.
+3. Pruebas en verde.
+
+**Entrega:** Pull Request **«Tarea 11 — Nombre del propietario»** si cambia algo del repositorio. Si solo cambian datos de pruebas, déjalo anotado en el PR o en un comentario del PR #10.
+
+---
+
+## 7.0 TAREA 10 (fusionada en el PR #10): el reparto se prepara con una lista, en pruebas
 
 **Contexto:** en la prueba real del 28/10 se pegó el reparto de WhatsApp (reparto `8585eede-…` en pruebas) y 36 de 52 líneas dieron `PRODUCTO_DESCONOCIDO` por abreviaturas («bz1 4gr», «ind relax», «berry4», «mini», «*PORTU*»…). El propietario decide que **ya no se pegue texto**: el reparto se prepara en la app eligiendo productos de PRINCIPAL con contadores.
 
@@ -321,3 +331,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.10 | 27/10/2026 | Tarea 8 fusionada. Tarea 9 activa: `reparto_de_hoy` en `estado_actual`. |
 | 1.11 | 27/10/2026 | Tarea 9 fusionada. Sin tarea activa. |
 | 1.12 | 28/10/2026 | Tarea 10 activa: reparto con lista (R1 rediseñada tras la prueba real). |
+| 1.13 | 28/10/2026 | Tarea 10 fusionada. Tarea 11 activa: nombre «Asier». |
