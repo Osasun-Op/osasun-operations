@@ -54,9 +54,13 @@ export function referencias(datos: Pick<DatosHoja, "productos" | "categorias">) 
  * Comprueba la lista contra el catálogo leído ahora y las tiendas válidas para
  * el tipo. Las cantidades 0 se ignoran (contador sin tocar); las repetidas se
  * suman. Devuelve las líneas con los nombres exactos de la hoja, ordenadas por
- * tienda (orden de `destinos`) y por el orden de la hoja.
+ * tienda (orden de `destinos`) y por el orden de la hoja. `permitirVacia`: un
+ * reparto que solo lleva pedidos de cliente (Tarea 14).
  */
-export function validarLineas(lineas: unknown, entradas: EntradaCatalogo[], destinos: Destino[]): Validacion {
+export function validarLineas(
+  lineas: unknown, entradas: EntradaCatalogo[], destinos: Destino[], permitirVacia = false,
+): Validacion {
+  if (permitirVacia && (lineas === undefined || lineas === null)) return { ok: true, lineas: [] };
   if (!Array.isArray(lineas)) {
     return { ok: false, codigo: "DATOS_NO_VALIDOS", mensaje: "Añade al menos un producto.", detalle: {} };
   }
@@ -95,7 +99,7 @@ export function validarLineas(lineas: unknown, entradas: EntradaCatalogo[], dest
              mensaje: `Ya no está en la hoja: ${nombres}. Quítalo de la lista o vuelve a cargarla.`,
              detalle: { referencias: noExisten } };
   }
-  if (suma.size === 0) {
+  if (suma.size === 0 && !permitirVacia) {
     return { ok: false, codigo: "DATOS_NO_VALIDOS", mensaje: "Añade al menos un producto.", detalle: {} };
   }
   const ordenadas = [...suma.values()].sort((a, b) =>
@@ -177,10 +181,12 @@ export function prepararReparto(op: {
   entradas: EntradaCatalogo[];
   apartadoReparto?: { producto: string; formato: string; pedido: number }[];
   peticiones?: Peticion[];
+  permitirVacio?: boolean;
 }): { texto: string; r: ResultadoR1 } {
   const texto = textoWhatsapp(op.tipo, op.hoy, op.sale, op.lineas, op.destinos, op.peticiones ?? []);
   const r = analizarReparto(texto, op.entradas, op.destinos, {
     tipo: op.tipo, hoy: op.hoy, sale: op.sale, confirmarFecha: true, apartadoReparto: op.apartadoReparto ?? [],
+    permitirVacio: op.permitirVacio ?? false,
   });
   return { texto, r };
 }

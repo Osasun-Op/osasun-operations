@@ -105,6 +105,8 @@ export interface OpcionesR1 {
    * cajas pedidas en el reparto aceptado hoy, que se apartan antes de calcular.
    */
   apartadoReparto?: { producto: string; formato: string; pedido: number }[];
+  /** Un reparto sin productos vale si lleva pedidos de cliente para recoger en tienda (Tarea 14). */
+  permitirVacio?: boolean;
 }
 
 export function analizarReparto(
@@ -192,7 +194,7 @@ export function analizarReparto(
   if (op.tipo === "reparto" && sales.size > 1 && !op.sale) {
     errores.push(conError({ num: 0, texto: "", clase: "sale" }, "SALE_CONTRADICTORIA"));
   }
-  if (productos === 0) errores.push(conError({ num: 0, texto: "", clase: "vacia" }, "REPARTO_VACIO"));
+  if (productos === 0 && !op.permitirVacio) errores.push(conError({ num: 0, texto: "", clase: "vacia" }, "REPARTO_VACIO"));
 
   const saleTexto = op.tipo === "envio" ? null : sales.size === 1 ? [...sales][0] : sales.size > 1 ? "contradictoria" : null;
   const sale = op.tipo === "envio" ? null : (op.sale ?? (sales.size === 1 ? [...sales][0] : null));

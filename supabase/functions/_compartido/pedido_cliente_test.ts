@@ -27,6 +27,7 @@ function falso(o: { prep?: Record<string, unknown>; lectura?: ResultadoLectura }
         servidor_preparar_pedido: o.prep ?? PREP,
         servidor_guardar_lectura: "lectura-1",
         servidor_guardar_pedido_cliente: { pedido: { id: "pedido-1" }, tarea: null, tarea_activa: null },
+        servidor_asignar_pedidos: { pedidos: [{ id: "pedido-1", estado: "por_preparar" }] },
       };
       return Promise.resolve(r[nombre] as T);
     },
@@ -101,4 +102,19 @@ Deno.test("guardar_pedido_cliente: repetir con el mismo id_cliente devuelve lo g
   const f = falso({ prep: { previo: { id: "pedido-1", estado: "esperando_reparto" } } });
   const r = await guardarPedidoClienteDe(f.d, "p", tienda()) as Record<string, unknown>;
   assertEquals([r.ya_guardado, (r.aviso as { codigo: string }).codigo, f.lecturas()], [true, "PEDIDO_YA_GUARDADO", 0]);
+});
+
+Deno.test("guardar_pedido_cliente: recoger en tienda con el reparto de hoy ya guardado (bolsas sin terminar) entra en él al momento", async () => {
+  const f = falso({ prep: { ...PREP, jornada_id: null, reparto_id: "reparto-hoy" } });
+  const r = await guardarPedidoClienteDe(f.d, "p", tienda()) as Record<string, unknown>;
+  const a = f.args("servidor_asignar_pedidos")!;
+  assertEquals([a.p_reparto, (a.p_pedidos as { pedido_id: string }[])[0].pedido_id], ["reparto-hoy", "pedido-1"]);
+  assertEquals((a.p_pedidos as { elementos: { producto: string; orden: number }[] }[])[0].elementos.map((e) => e.producto), ["V2"]);
+  assertEquals(r.pedido, { id: "pedido-1", estado: "por_preparar" });
+  const sin = falso();
+  await guardarPedidoClienteDe(sin.d, "p", tienda());
+  assertEquals(sin.args("servidor_asignar_pedidos"), undefined);
+  const nacex2 = falso({ prep: { ...PREP, reparto_id: "reparto-hoy" } });
+  await guardarPedidoClienteDe(nacex2.d, "p", nacex());
+  assertEquals(nacex2.args("servidor_asignar_pedidos"), undefined);
 });

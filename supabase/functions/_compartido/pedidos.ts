@@ -1,4 +1,4 @@
-// Pedidos de cliente (ESTADO_DEL_SISTEMA.md v1.24, §5 R1b y R1c). Código puro.
+// Pedidos de cliente (ESTADO_DEL_SISTEMA.md v1.27, §5 R1b y R1c). Código puro.
 // La lista del pedido y lo comprometido ese día. El «coge / haz» de cada
 // referencia lo calcula la base de datos al salir la tarea de prepararlo
 // (motor.calcular_pedido, REGLAS_CALCULO.md §2.10).
@@ -18,16 +18,17 @@ export interface ElementoPedido extends Cajas {
 }
 
 /**
- * Lo comprometido hoy que la hoja aún cuenta en el almacén (motor.comprometido).
- * `en_camino`: lo que ya ha salido hacia las tiendas y el recuento ya ha quitado
- * del almacén (para R3).
+ * Lo comprometido hoy que aún no ha salido del almacén (motor.comprometido_en):
+ * reparto (hasta las bolsas listas), envío (hasta prepararlo) y pedidos.
+ * `en_camino`: lo que va hacia cada tienda (R1c): el reparto hasta las 23:30 y
+ * el envío hasta las 11:59 del día siguiente.
  */
 export interface Comprometido {
   reparto: Cajas[];
   pedidos_tienda: Cajas[];
   envio: Cajas[];
   pedidos_nacex: Cajas[];
-  en_camino: Cajas[];
+  en_camino: (Cajas & { destino_id?: string })[];
 }
 
 export const SIN_COMPROMISOS: Comprometido = { reparto: [], pedidos_tienda: [], envio: [], pedidos_nacex: [], en_camino: [] };

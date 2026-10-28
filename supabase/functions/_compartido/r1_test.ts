@@ -185,3 +185,9 @@ Deno.test("R1-29 «Además:» sin tienda antes o vacío: línea no reconocida", 
   assertEquals(errores(r1(["SALE: ALMACÉN", "Además: rollos", "BILBAO", "2x V2 4g", "Además:   "])),
                ["2:LINEA_NO_RECONOCIDA", "5:LINEA_NO_RECONOCIDA"]);
 });
+
+Deno.test("R1-30 un reparto sin productos vale solo si lleva pedidos de cliente (Tarea 14)", () => {
+  assertEquals(errores(r1(["SALE: ALMACÉN"])), ["0:REPARTO_VACIO"]);
+  const r = r1(["SALE: ALMACÉN"], { permitirVacio: true });
+  assertEquals([r.estado, r.produccion, r.bolsas], ["aceptado", [], []]);
+});

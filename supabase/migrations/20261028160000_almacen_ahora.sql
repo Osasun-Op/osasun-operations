@@ -137,18 +137,21 @@ returns jsonb language sql stable set search_path = '' as $$
   select motor.comprometido_en(p_jornada, now())
 $$;
 
-comment on function motor.hoja_sin_reparto(uuid, timestamptz) is
-  'Obsoleta desde la Tarea 14 (R1c rehecha): ya no la usa nadie.';
+-- La señal anterior («la hoja ya no cuenta el reparto»): sustituida por los
+-- movimientos desde el recuento. Una sola fuente.
+drop function motor.hoja_sin_reparto(uuid, timestamptz);
 
--- Cajas por referencia: [{ producto, formato, cantidad }] sumadas.
+-- Cajas por referencia: [{ producto, formato, cantidad }] sumadas; con p_solo_tarea,
+-- solo las de esa tarea (ninguna si no la hay).
 create or replace function motor.cajas_movimiento(p_operario uuid, p_desde timestamptz, p_hasta timestamptz,
-                                                  p_movimiento text, p_tarea uuid default null)
+                                                  p_movimiento text, p_solo_tarea boolean default false,
+                                                  p_tarea uuid default null)
 returns jsonb language sql stable set search_path = '' as $$
   select coalesce(jsonb_agg(jsonb_build_object('producto', m.producto, 'formato', m.formato, 'cantidad', m.c)
                             order by m.producto, m.formato), '[]'::jsonb)
     from (select x.producto, x.formato, sum(x.cantidad)::int as c
             from motor.movimientos_almacen(p_operario, p_desde, p_hasta) x
-           where x.movimiento = p_movimiento and (p_tarea is null or x.tarea_id = p_tarea)
+           where x.movimiento = p_movimiento and (not p_solo_tarea or x.tarea_id = p_tarea)
            group by 1, 2 having sum(x.cantidad) <> 0) m
 $$;
 
@@ -358,9 +361,9 @@ begin
     'almacen', jsonb_build_object(
       'recuento_en', v_recuento,
       'producido', motor.cajas_movimiento(v_operario, v_desde, p_ahora, 'producido'),
-      'producido_reparto', motor.cajas_movimiento(v_operario, v_desde, p_ahora, 'producido',
+      'producido_reparto', motor.cajas_movimiento(v_operario, v_desde, p_ahora, 'producido', true,
                              (select id from public.tareas where jornada_id = v_jornada and clave = 'produccion_reparto')),
-      'producido_envio', motor.cajas_movimiento(v_operario, v_desde, p_ahora, 'producido',
+      'producido_envio', motor.cajas_movimiento(v_operario, v_desde, p_ahora, 'producido', true,
                            (select id from public.tareas where jornada_id = v_jornada
                                and clave in ('preparar_envio', 'preparar_envio_viernes') order by clave limit 1)),
       'salido', motor.cajas_movimiento(v_operario, v_desde, p_ahora, 'salido')),

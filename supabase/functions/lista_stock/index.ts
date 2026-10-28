@@ -4,7 +4,8 @@
 // sin guardar nada.
 
 import { leerStock, type Pestanas } from "../_compartido/google.ts";
-import { calcularStock, type ConfigR3 } from "../_compartido/r3.ts";
+import { ajustesStock, calcularStock, type ConfigR3 } from "../_compartido/r3.ts";
+import type { Cajas } from "../_compartido/pedidos.ts";
 import { CORS, error, quienLlama, responder, rpc } from "../_compartido/servidor.ts";
 
 interface Contexto {
@@ -19,8 +20,10 @@ interface Contexto {
     stock_excluidos: ConfigR3["excluidos"];
   };
   stock: Record<string, unknown> | null;
-  /** R1c: lo que ha salido hoy hacia las tiendas y el recuento ya ha quitado del almacén. */
-  comprometido?: { en_camino: { producto: string; formato: string; cantidad: number }[] };
+  /** R1c: lo que va en camino a las tiendas (reparto hasta las 23:30, envío hasta las 11:59 del día siguiente). */
+  comprometido?: { en_camino: Cajas[] };
+  /** R1c: lo producido y lo salido del almacén desde el último recuento. */
+  almacen?: { producido: Cajas[]; salido: Cajas[] };
 }
 
 Deno.serve(async (req) => {
@@ -52,7 +55,7 @@ Deno.serve(async (req) => {
     const r = calcularStock(lectura.datos, {
       porcentaje: Number(ctx.config.stock_objetivo_pct ?? 35),
       excluidos: ctx.config.stock_excluidos ?? [],
-    }, ctx.comprometido?.en_camino ?? []);
+    }, ajustesStock(ctx.almacen ?? { producido: [], salido: [] }, ctx.comprometido?.en_camino ?? []));
     const leidoEn = new Date().toISOString();
 
     if (ctx.rol !== "operario") {
