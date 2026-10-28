@@ -23,6 +23,14 @@ export interface LineaLista {
   cantidad: number;
 }
 
+/** Petición especial de una tienda (R1d): texto libre que va en su bolsa. */
+export interface Peticion {
+  destino_id: string;
+  texto: string;
+}
+
+export const MAX_PETICION = 120;
+
 export type Validacion =
   | { ok: true; lineas: LineaLista[] }
   | { ok: false; codigo: "REFERENCIA_NO_EXISTE" | "DATOS_NO_VALIDOS"; mensaje: string; detalle: Record<string, unknown> };
@@ -99,26 +107,62 @@ export function validarLineas(lineas: unknown, entradas: EntradaCatalogo[], dest
   };
 }
 
+/**
+ * Peticiones especiales (R1d): una por línea y tienda, texto libre de 120
+ * letras como máximo. Las vacías se ignoran y las repetidas en la misma tienda
+ * cuentan una vez. Sin peticiones (`undefined` o `null`), lista vacía.
+ */
+export function validarPeticiones(
+  peticiones: unknown, destinos: Destino[],
+): { ok: true; peticiones: Peticion[] } | { ok: false; mensaje: string; detalle: Record<string, unknown> } {
+  if (peticiones === undefined || peticiones === null) return { ok: true, peticiones: [] };
+  if (!Array.isArray(peticiones)) return { ok: false, mensaje: "Las peticiones especiales no son válidas.", detalle: {} };
+  const posDestino = new Map(destinos.map((d, i) => [d.id, i]));
+  const vistas = new Set<string>();
+  const lista: (Peticion & { n: number })[] = [];
+  for (const [n, p] of (peticiones as Record<string, unknown>[]).entries()) {
+    const texto = typeof p?.texto === "string" ? p.texto.replace(/\s+/g, " ").trim() : "";
+    const destino = typeof p?.destino_id === "string" ? p.destino_id : "";
+    if (texto === "") continue;
+    if (!posDestino.has(destino)) {
+      return { ok: false, mensaje: "Esa tienda no es válida para este reparto.", detalle: { destino_id: destino } };
+    }
+    if (texto.length > MAX_PETICION) {
+      return { ok: false, mensaje: `Cada petición especial, ${MAX_PETICION} letras como máximo.`, detalle: { texto } };
+    }
+    const k = `${destino}|${texto.toUpperCase()}`;
+    if (vistas.has(k)) continue;
+    vistas.add(k);
+    lista.push({ destino_id: destino, texto, n });
+  }
+  lista.sort((a, b) => posDestino.get(a.destino_id)! - posDestino.get(b.destino_id)! || a.n - b.n);
+  return { ok: true, peticiones: lista.map(({ destino_id, texto }) => ({ destino_id, texto })) };
+}
+
 const dosCifras = (n: number) => String(n).padStart(2, "0");
 
-/** Texto para WhatsApp, con el formato de siempre (R1). */
+/**
+ * Texto para WhatsApp, con el formato de siempre (R1). Cada tienda con
+ * peticiones especiales lleva después de sus productos una línea «Además: …»
+ * (R1d), con las peticiones separadas por «; ».
+ */
 export function textoWhatsapp(
   tipo: "reparto" | "envio",
   hoy: { dia: number; mes: number },
   sale: "operario" | "administracion" | null,
   lineas: LineaLista[],
   destinos: Destino[],
+  peticiones: Peticion[] = [],
 ): string {
   const t: string[] = [`${tipo === "reparto" ? "REPARTO" : "ENVÍO"} ${dosCifras(hoy.dia)}/${dosCifras(hoy.mes)}`];
   if (tipo === "reparto") t.push(`SALE: ${sale === "operario" ? "ALMACÉN" : "YO"}`);
-  let actual = "";
-  for (const l of lineas) {
-    if (l.destino_id !== actual) {
-      actual = l.destino_id;
-      const d = destinos.find((x) => x.id === actual)!;
-      t.push("", d.alias[0] ?? d.nombre.toUpperCase());
-    }
-    t.push(`${l.cantidad}x ${l.producto}${l.formato ? " " + l.formato : ""}`);
+  for (const d of destinos) {
+    const suyas = lineas.filter((l) => l.destino_id === d.id);
+    const ademas = peticiones.filter((p) => p.destino_id === d.id).map((p) => p.texto);
+    if (suyas.length === 0 && ademas.length === 0) continue;
+    t.push("", d.alias[0] ?? d.nombre.toUpperCase());
+    for (const l of suyas) t.push(`${l.cantidad}x ${l.producto}${l.formato ? " " + l.formato : ""}`);
+    if (ademas.length > 0) t.push(`Además: ${ademas.join("; ")}`);
   }
   return t.join("\n");
 }
@@ -132,8 +176,9 @@ export function prepararReparto(op: {
   destinos: Destino[];
   entradas: EntradaCatalogo[];
   apartadoReparto?: { producto: string; formato: string; pedido: number }[];
+  peticiones?: Peticion[];
 }): { texto: string; r: ResultadoR1 } {
-  const texto = textoWhatsapp(op.tipo, op.hoy, op.sale, op.lineas, op.destinos);
+  const texto = textoWhatsapp(op.tipo, op.hoy, op.sale, op.lineas, op.destinos, op.peticiones ?? []);
   const r = analizarReparto(texto, op.entradas, op.destinos, {
     tipo: op.tipo, hoy: op.hoy, sale: op.sale, confirmarFecha: true, apartadoReparto: op.apartadoReparto ?? [],
   });

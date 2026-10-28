@@ -4,7 +4,7 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import type { DatosHoja, Producto } from "./hoja.ts";
 import type { Destino } from "./r1.ts";
-import { type LineaLista, prepararReparto, referencias, textoWhatsapp, validarLineas } from "./lista.ts";
+import { type LineaLista, prepararReparto, referencias, textoWhatsapp, validarLineas, validarPeticiones } from "./lista.ts";
 
 // PRINCIPAL del 28/10/2026 a las 08:47 (cajas en el almacén; granel en los productos sin formato).
 const P = (nombre: string, formatos: [string, string][], orden: number, granel = ""): Producto =>
@@ -102,6 +102,17 @@ Deno.test("L-06 texto para WhatsApp con el formato de siempre", () => {
   assertEquals(textoWhatsapp("envio", { dia: 3, mes: 11 }, null, [L("gipuzkoa", "V2", "4g", 4)],
     [{ id: "gipuzkoa", nombre: "Gipuzkoa (envío a Rentería)", alias: ["GIPUZKOA"] }]),
     "ENVÍO 03/11\n\nGIPUZKOA\n4x V2 4g");
+});
+
+Deno.test("L-10 peticiones especiales: «Además: …» tras los productos de su tienda; vacías fuera y repetidas una vez (R1d)", () => {
+  const pv = validarPeticiones([{ destino_id: "portu", texto: "Rollos de TPV" }, { destino_id: "bilbao", texto: " muestras\n de V2 " },
+                                { destino_id: "bilbao", texto: "   " }, { destino_id: "bilbao", texto: "MUESTRAS DE V2" }], TIENDAS);
+  assertEquals(pv, { ok: true, peticiones: [{ destino_id: "bilbao", texto: "muestras de V2" }, { destino_id: "portu", texto: "Rollos de TPV" }] });
+  assertEquals(textoWhatsapp("reparto", { dia: 3, mes: 11 }, "operario", [L("bilbao", "MINI", "10g", 6)], TIENDAS, pv.ok ? pv.peticiones : []),
+    "REPARTO 03/11\nSALE: ALMACÉN\n\nBILBAO\n6x MINI 10g\nAdemás: muestras de V2\n\nPORTU\nAdemás: Rollos de TPV");
+  assertEquals(validarPeticiones(undefined, TIENDAS), { ok: true, peticiones: [] });
+  assertEquals(validarPeticiones("rollos", TIENDAS).ok, false);
+  assertEquals(validarPeticiones([{ destino_id: "donosti", texto: "x" }], TIENDAS).ok, false);
 });
 
 Deno.test("L-07 el reparto real del 28/10 con la lista: se reconoce entero; producción y bolsas coherentes", () => {
