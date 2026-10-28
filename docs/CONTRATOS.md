@@ -375,6 +375,7 @@ Para el panel de Administración y, si se quiere, para el operario.
 ### 3.18 `aplazar_pedido_nacex(pedido_id, motivo?)` ✅ (Tarea 12)
 Botón en la tarea «Prepara el pedido de cliente (Nacex)»: si por la producción el pedido no llega a salir ese día, pasa al siguiente día de trabajo (decidido por el propietario, 28/10).
 - **Quién:** el operario (sus pedidos) o Administración.
+- `motivo`: opcional (decidido por el propietario, 28/10).
 - **Efecto:** la tarea de ese día queda «arrastrada» con el motivo «Pasa al 25/11: [motivo]»; el siguiente día de trabajo tiene su tarea de Nacex (por la tarde; el viernes, por la mañana) con la misma lista, y **Nacex activado** ese día. El «coge / haz» se vuelve a calcular al salir la tarea.
 - **Salida:** `{ pedido: (objeto pedido, §3.17, con la nueva fecha), tarea_activa: (solo al operario) }`.
 - **Errores:** `NO_ENCONTRADO` (no existe o no es suyo), `DATOS_NO_VALIDOS` (no es de Nacex), `ESTADO_NO_VALIDO` (ya preparado o cancelado), `SIN_JORNADA`, `NO_AUTORIZADO`.
