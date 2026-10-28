@@ -4,10 +4,11 @@
 -- reparto de hoy o en el siguiente, bolsa aparte, tarea después de la
 -- producción, se mantiene al modificar el reparto), Nacex (tarea por la tarde o
 -- el viernes por la mañana, Nacex activado una sola vez aunque haya envío),
--- lo comprometido y las cajas en camino (mismo día y día siguiente), lo que pasa
--- al día siguiente, idempotencia, pedidos abiertos y permisos. El «coge / haz»
--- y la lectura de la hoja están en _compartido/pedidos_test.ts y
--- pedido_cliente_test.ts. Semana del 23/11/2026. Transacción deshecha al final.
+-- lo comprometido y las cajas en camino (salida = bolsas listas; mismo día y día
+-- siguiente), «coge / haz» al salir la tarea con la última lectura de la hoja,
+-- pasar un pedido de Nacex al día siguiente (a mano o sin terminar),
+-- idempotencia, pedidos abiertos y permisos. La lectura de la hoja está en
+-- _compartido/pedido_cliente_test.ts. Semana del 23/11/2026. Transacción deshecha al final.
 
 begin;
 -- Aísla la prueba de las jornadas reales del operario de pruebas. Se deshace al final.
@@ -76,6 +77,15 @@ create function pg_temp.elementos(p_coge integer, p_haz integer) returns jsonb l
                                               'motivo', case when p_haz = 0 then 'Coge ' || p_coge || ' del almacén'
                                                              when p_coge = 0 then 'Haz ' || p_haz
                                                              else 'Coge ' || p_coge || ' del almacén y haz ' || p_haz end)) $$;
+-- Una lectura de la hoja con V2 4g en el almacén (el resto de la hoja no hace falta).
+create function pg_temp.lectura(p_v2 text, p_cuando timestamptz) returns uuid language sql as $$
+  insert into public.lecturas_sheets (leido_en, motivo, correcto, datos)
+  values (p_cuando, 'stock', true, jsonb_build_object('productos', jsonb_build_array(
+    jsonb_build_object('nombre', 'V2', 'granel', '500', 'conTiendas', false, 'orden', 65,
+                       'formatos', jsonb_build_array(jsonb_build_object('formato', '4g', 'almacen', p_v2))))))
+  returning id $$;
+create function pg_temp.motivo(p_tarea uuid) returns text language sql as $$
+  select string_agg(motivo, ' / ' order by orden_sugerido) from public.tarea_elementos where tarea_id = p_tarea $$;
 create function pg_temp.lineas(p_cajas integer) returns jsonb language sql as $$
   select jsonb_build_array(jsonb_build_object('producto', 'V2', 'formato', '4g', 'cantidad', p_cajas)) $$;
 create function pg_temp.pedido(p_persona uuid, p_id uuid, p_cliente text, p_entrega text, p_destino uuid, p_cajas integer,
@@ -120,7 +130,16 @@ declare
   v_limite timestamptz;
 begin
   -- ===== Martes 24/11: recoger en tienda =====
+  -- P-03 y P-05: frases y celdas del almacén (vacía, negativa o con decimales, como en R1).
+  perform pg_temp.comprobar('Frases «coge / haz» y almacén vacío, negativo o con decimales (P-03, P-05)',
+    motor.texto_coge_haz(2, 0) = 'Coge 2 del almacén' and motor.texto_coge_haz(0, 3) = 'Haz 3'
+    and motor.texto_coge_haz(1, 1) = 'Coge 1 del almacén y haz 1'
+    and motor.cajas_hoja('') = 0 and motor.cajas_hoja(null) = 0 and motor.cajas_hoja('-3') = 0
+    and motor.cajas_hoja('2,5') = 2 and motor.cajas_hoja(' 7 ') = 7 and motor.cajas_hoja('abc') = 0
+    and motor.clave_ref('v2 ', '4 g') = 'V24G');
+
   mar := motor.generar_jornada(op, '2026-11-24');
+  perform pg_temp.lectura('30', '2026-11-24 08:30+01');
   r := pg_temp.pedido(adm, c_a, 'Ane', 'tienda', pg_temp.d('BILBAO'), 3, '2026-11-24 08:00+01');
   v_a := (r -> 'pedido' ->> 'id')::uuid;
   perform pg_temp.comprobar('Tienda, antes del reparto de hoy: espera al reparto de hoy, sin tarea todavía',
@@ -154,8 +173,8 @@ begin
     and t.titulo = 'Hay un pedido de cliente para dejar en Bilbao · Ane' and t.requiere_clave = 'produccion_reparto'
     and t.hora_limite = (select hora_limite from public.tareas where id = v_bolsas) and t.obligatoria
     and (select reparto_id = v_rep and tarea_id = t.id from public.pedidos_cliente where id = v_a), r::text);
-  perform pg_temp.comprobar('Su lista dice «coge / haz» y la producción del reparto es solo la oficial',
-    (select motivo = 'Haz 3' and cantidad = 3 from public.tarea_elementos where tarea_id = t.id)
+  perform pg_temp.comprobar('Su lista (el «coge / haz» aún no: se calcula al salir la tarea) y la producción del reparto es solo la oficial',
+    (select motivo is null and cantidad = 3 from public.tarea_elementos where tarea_id = t.id)
     and (select sum(cantidad) from public.tarea_elementos e join public.tareas p on p.id = e.tarea_id
           where p.jornada_id = mar and p.clave = 'produccion_reparto') = 5);
   r := motor.tarea_json(v_bolsas);
@@ -170,8 +189,10 @@ begin
   perform pg_temp.comprobar('Con la producción del reparto pendiente, toca la producción (no el pedido)',
     motor.tarea_activa_de(op, '2026-11-24 09:00+01') -> 'tarea' ->> 'clave' = 'produccion_reparto');
   perform pg_temp.hecha(mar, array['produccion_reparto']);
-  perform pg_temp.comprobar('Terminada la producción, toca el pedido de cliente (antes que las bolsas)',
-    motor.tarea_activa_de(op, '2026-11-24 09:05+01') -> 'tarea' ->> 'clave' = t.clave);
+  r := motor.tarea_activa_de(op, '2026-11-24 09:05+01');
+  perform pg_temp.comprobar('Terminada la producción, sale el pedido de cliente (antes que las bolsas) con su «coge / haz»: hoja 30 − reparto 20 → coge 3',
+    r -> 'tarea' ->> 'clave' = t.clave and r -> 'tarea' -> 'elementos' -> 0 ->> 'motivo' = 'Coge 3 del almacén'
+    and (select (calculo ->> 'en_almacen')::int = 10 from public.tarea_elementos where tarea_id = t.id), r::text);
 
   -- Un pedido que llega con el reparto de hoy ya calculado va en el siguiente.
   r := pg_temp.pedido(op, c_b, 'Jon', 'tienda', pg_temp.d('PORTU'), 2, '2026-11-24 09:10+01');
@@ -190,10 +211,10 @@ begin
   r := pg_temp.guardar(mar, 'reparto', 24, 9, '2026-11-24 09:30+01');
   perform public.servidor_asignar_pedidos(adm, (r ->> 'reparto_id')::uuid,
          jsonb_build_array(jsonb_build_object('pedido_id', v_a, 'elementos', pg_temp.elementos(1, 2))), '2026-11-24 09:30+01');
-  perform pg_temp.comprobar('Al modificar el reparto el pedido se mantiene: la misma tarea, lo hecho y una sola bolsa',
+  perform pg_temp.comprobar('Al modificar el reparto el pedido se mantiene: la misma tarea, lo hecho, su «coge / haz» y una sola bolsa',
     (r ->> 'sustituye_a')::uuid = v_rep
     and (select count(*) from public.tareas where jornada_id = mar and clave like 'pedido_tienda:%') = 1
-    and (select cantidad_hecha = 1 and motivo = 'Coge 1 del almacén y haz 2' from public.tarea_elementos where tarea_id = t.id)
+    and (select cantidad_hecha = 1 and motivo = 'Coge 3 del almacén' from public.tarea_elementos where tarea_id = t.id)
     and (select count(*) from public.tarea_elementos where tarea_id = v_bolsas and lote = 'pedido:' || v_a) = 1
     and (select reparto_id from public.pedidos_cliente where id = v_a) = (r ->> 'reparto_id')::uuid, r::text);
 
@@ -212,7 +233,7 @@ begin
     and t.titulo = 'Prepara el pedido de cliente (Nacex) · Miren'
     and t.porque = E'Datos de envío:\nNombre Apellido\nCalle Mayor 1, 48001 Bilbao\n600 000 000'
     and t.disponible_desde = '2026-11-24 15:30+01' and t.hora_limite = '2026-11-24 18:10+01'
-    and (select motivo from public.tarea_elementos where tarea_id = t.id) = 'Coge 1 del almacén y haz 3'
+    and pg_temp.motivo(t.id) is null
     and r -> 'tarea' ->> 'id' = t.id::text and r -> 'tarea_activa' is not null, r::text);
   perform pg_temp.comprobar('Nacex activado ese día: recuento a las 17:55 y salida a las 18:10 (sin el cierre de 18:15)',
     (select hay_envio from public.jornadas where id = mar)
@@ -231,21 +252,40 @@ begin
     r -> 'reparto' = pg_temp.lineas(24) and r -> 'pedidos_tienda' = pg_temp.lineas(3)
     and r -> 'pedidos_nacex' = pg_temp.lineas(4) || pg_temp.lineas(1) and r -> 'envio' = '[]'::jsonb
     and r -> 'en_camino' = '[]'::jsonb, r::text);
-  perform pg_temp.hecha(mar, array['recuento_manana']);
+  update public.tareas set estado = 'hecha', terminada_en = '2026-11-24 12:50+01' where jornada_id = mar and clave = 'recuento_manana';
+  r := public.servidor_preparar(adm, '2026-11-24 12:55+01') -> 'comprometido';
+  perform pg_temp.comprobar('Recuento hecho pero bolsas sin terminar (no ha salido): el reparto y el pedido de tienda siguen en el almacén',
+    r -> 'reparto' = pg_temp.lineas(24) and r -> 'pedidos_tienda' = pg_temp.lineas(3) and r -> 'en_camino' = '[]'::jsonb, r::text);
+  update public.tareas set estado = 'hecha', terminada_en = '2026-11-24 12:58+01' where jornada_id = mar and clave = 'bolsas';
+  perform pg_temp.comprobar('Bolsas listas después del recuento: ha salido, pero la hoja aún lo cuenta en el almacén (sigue comprometido)',
+    public.servidor_preparar(adm, '2026-11-24 12:59+01') -> 'comprometido' -> 'reparto' = pg_temp.lineas(24));
+  update public.tareas set terminada_en = '2026-11-24 10:40+01' where jornada_id = mar and clave = 'bolsas';
   r := public.servidor_preparar(adm, '2026-11-24 13:00+01') -> 'comprometido';
-  perform pg_temp.comprobar('Después del recuento: el reparto y el pedido de tienda van en camino; Nacex (sale a las 18:10) sigue en el almacén',
+  perform pg_temp.comprobar('Bolsas listas (10:40) y recuento después (12:50): el reparto y el pedido de tienda van en camino; Nacex (sale a las 18:10) sigue en el almacén',
     r -> 'reparto' = '[]'::jsonb and r -> 'pedidos_tienda' = '[]'::jsonb
     and r -> 'en_camino' = pg_temp.lineas(24) || pg_temp.lineas(3)
     and r -> 'pedidos_nacex' = pg_temp.lineas(4) || pg_temp.lineas(1), r::text);
 
   -- Por la tarde, primero la revisión del envío y después el pedido de Nacex.
-  perform pg_temp.hecha(mar, array['produccion_reparto', 'bolsas', 'salida_reparto', 'efectivo_reporte']);
+  perform pg_temp.hecha(mar, array['produccion_reparto', 'salida_reparto', 'efectivo_reporte']);
   update public.tareas set estado = 'hecha' where jornada_id = mar and clave like 'pedido_tienda:%';
   perform pg_temp.comprobar('A las 15:31 toca la revisión del envío',
     motor.tarea_activa_de(op, '2026-11-24 15:31+01') -> 'tarea' ->> 'clave' = 'revisar_envio');
   perform pg_temp.hecha(mar, array['revisar_envio']);
-  perform pg_temp.comprobar('… y después, un pedido de Nacex',
-    motor.tarea_activa_de(op, '2026-11-24 15:40+01') -> 'tarea' ->> 'clave' like 'pedido_nacex:%');
+  -- «Coge / haz» de Nacex con la hoja de las 08:30 (aún contaba el reparto 24 y el pedido de Ane 3): 30 − 27 = 3.
+  perform motor.calcular_pedido(t.id, '2026-11-24 13:00+01');
+  perform pg_temp.comprobar('Nacex con la hoja de antes del recuento: 30 − reparto 24 − pedido de tienda 3 → coge 3 y haz 1',
+    pg_temp.motivo(t.id) = 'Coge 3 del almacén y haz 1', pg_temp.motivo(t.id));
+  -- Con la hoja de después del recuento (V2 4g 3) sale lo mismo: lo que salió ya no está ni se aparta.
+  perform pg_temp.lectura('3', '2026-11-24 13:30+01');
+  update public.tarea_elementos set calculo = '{}', motivo = null where tarea_id = t.id;
+  r := motor.tarea_activa_de(op, '2026-11-24 15:40+01');
+  perform motor.calcular_pedido(x.id, '2026-11-24 15:40+01')
+     from public.tareas x where x.jornada_id = mar and x.clave like 'pedido_nacex:%';
+  perform pg_temp.comprobar('… y después sale un pedido de Nacex; con la hoja de después del recuento: Miren coge 3 y hace 1; Koldo (llegó después) hace 1',
+    r -> 'tarea' ->> 'clave' like 'pedido_nacex:%' and pg_temp.motivo(t.id) = 'Coge 3 del almacén y haz 1'
+    and pg_temp.motivo((select id from public.tareas where jornada_id = mar and clave like 'pedido_nacex:%' and id <> t.id)) = 'Haz 1',
+    r::text);
 
   -- Pedidos abiertos: el de tienda (preparado hoy), los de Nacex (por preparar) y el de mañana (esperando).
   r := motor.pedidos_cliente_abiertos_de(adm, '2026-11-24 16:00+01');
@@ -257,21 +297,37 @@ begin
         = 'Preparado: va en el reparto del 24/11', r::text);
 
   -- Nacex fuera de hora (martes 18:20): el siguiente día de trabajo, con su jornada preparada.
-  r := pg_temp.pedido(adm, c_n3, 'Itziar', 'nacex', null, 2, '2026-11-24 18:20+01');
+  r := pg_temp.pedido(adm, c_n3, 'Itziar', 'nacex', null, 2, '2026-11-24 18:05+01');
   mie := (select id from public.jornadas where persona_id = op and fecha = '2026-11-25');
-  perform pg_temp.comprobar('Nacex después de las 18:10: va al día siguiente, con Nacex activado ese día',
+  perform pg_temp.comprobar('Nacex después de las 18:00: va al día siguiente, con Nacex activado ese día',
     r -> 'pedido' ->> 'fecha' = '2026-11-25' and mie is not null
     and (select hay_envio from public.jornadas where id = mie)
     and exists (select 1 from public.tareas where jornada_id = mie and clave like 'pedido_nacex:%'), r::text);
 
   -- ===== Miércoles 25/11: lo que no se hizo pasa con su lista; nada en camino =====
-  update public.tareas set estado = 'hecha' where jornada_id = mar and clave = 'pedido_nacex:' || (
-    select id from public.pedidos_cliente where id_cliente = c_n2);
+  -- El operario pasa el pedido de Koldo al día siguiente (la producción ha llegado tarde).
+  r := motor.aplazar_pedido_nacex_de(op, (select id from public.pedidos_cliente where id_cliente = c_n2), 'Producción tarde',
+                                     '2026-11-24 17:30+01');
+  perform pg_temp.comprobar('Pasar un pedido de Nacex al día siguiente: su tarea pasa al miércoles (por la tarde, Nacex activado) con su lista',
+    r -> 'pedido' ->> 'fecha' = '2026-11-25' and r -> 'pedido' ->> 'estado' = 'por_preparar' and r -> 'tarea_activa' is not null
+    and exists (select 1 from public.tareas x join public.pedidos_cliente pc on pc.tarea_id = x.id
+                 where pc.id_cliente = c_n2 and x.jornada_id = mie and x.clave like 'pedido_nacex:%'
+                   and x.hora_limite = '2026-11-25 18:10+01' and x.disponible_desde = '2026-11-25 15:30+01'
+                   and (select count(*) from public.tarea_elementos where tarea_id = x.id) = 1)
+    and (select motivo_no_hecha = 'Pasa al 25/11: Producción tarde' and estado = 'arrastrada' from public.tareas
+          where jornada_id = mar and clave = 'pedido_nacex:' || (select id from public.pedidos_cliente where id_cliente = c_n2)), r::text);
+  perform pg_temp.comprobar('Pasar al día siguiente: solo pedidos de Nacex sin preparar',
+    motor.aplazar_pedido_nacex_de(op, v_a, null, '2026-11-24 17:31+01') -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS'
+    and motor.aplazar_pedido_nacex_de(op, gen_random_uuid(), null, '2026-11-24 17:31+01') -> 'error' ->> 'codigo' = 'NO_ENCONTRADO');
+
+  -- El de Miren queda sin hacer: al generar el miércoles pasa solo, como tarea de Nacex de ese día.
   mie := motor.generar_jornada(op, '2026-11-25');
   t := (select x from public.tareas x where x.jornada_id = mie and x.tarea_origen_id = t.id);
-  perform pg_temp.comprobar('El pedido de Nacex sin hacer pasa al día siguiente con su lista y el pedido le sigue',
-    t.id is not null and (select tarea_id from public.pedidos_cliente where id = v_n) = t.id
-    and (select count(*) = 1 and bool_and(motivo = 'Coge 1 del almacén y haz 3') from public.tarea_elementos where tarea_id = t.id)
+  perform pg_temp.comprobar('El pedido de Nacex sin hacer pasa al día siguiente como tarea de Nacex, con su lista (el «coge / haz» se recalcula al salir)',
+    t.id is not null and t.clave = 'pedido_nacex:' || v_n and t.hora_limite = '2026-11-25 18:10+01'
+    and (select tarea_id from public.pedidos_cliente where id = v_n) = t.id
+    and (select count(*) = 1 and bool_and(motivo is null and cantidad = 4) from public.tarea_elementos where tarea_id = t.id)
+    and (select hay_envio from public.jornadas where id = mie)
     and motor.pedido_json(v_n) ->> 'fecha' = '2026-11-25');
   r := public.servidor_preparar(adm, '2026-11-25 08:40+01');
   perform pg_temp.comprobar('Al día siguiente: nada en camino y el pedido de tienda de Jon espera a este reparto',
@@ -289,7 +345,7 @@ begin
     and (select hay_envio from public.jornadas where id = vie)
     and exists (select 1 from public.tareas where jornada_id = vie and clave = 'nacex_viernes' and estado = 'pendiente'), r::text);
   perform pg_temp.guardar(vie, 'envio', 6, 0, '2026-11-27 09:10+01');
-  perform pg_temp.hecha(vie, array['recuento_manana']);
+  perform pg_temp.hecha(vie, array['preparar_envio_viernes', 'recuento_manana']);
   r := public.servidor_preparar(adm, '2026-11-27 13:00+01') -> 'comprometido';
   perform pg_temp.comprobar('Viernes después del recuento: el envío y el pedido de Nacex (salieron por la mañana) van en camino',
     r -> 'envio' = '[]'::jsonb and r -> 'pedidos_nacex' = '[]'::jsonb
@@ -343,7 +399,8 @@ declare
   r jsonb := public.pedidos_cliente_abiertos();
 begin
   perform pg_temp.comprobar('Usuario sin ficha: NO_AUTORIZADO y no ve ningún pedido',
-    r -> 'error' ->> 'codigo' = 'NO_AUTORIZADO' and (select count(*) from public.pedidos_cliente) = 0, r::text);
+    r -> 'error' ->> 'codigo' = 'NO_AUTORIZADO' and (select count(*) from public.pedidos_cliente) = 0
+    and public.aplazar_pedido_nacex(gen_random_uuid()) -> 'error' ->> 'codigo' = 'NO_AUTORIZADO', r::text);
 end;
 $$;
 reset role;
@@ -354,7 +411,8 @@ begin
   perform pg_temp.comprobar('Sin sesión no se ven los pedidos ni se usan las funciones del servidor',
     pg_temp.rechazada($q$select public.pedidos_cliente_abiertos()$q$)
     and pg_temp.rechazada($q$select count(*) from public.pedidos_cliente$q$)
-    and pg_temp.rechazada($q$select public.servidor_preparar_pedido(gen_random_uuid(), gen_random_uuid(), 'tienda', null)$q$));
+    and pg_temp.rechazada($q$select public.servidor_preparar_pedido(gen_random_uuid(), gen_random_uuid(), 'tienda', null)$q$)
+    and pg_temp.rechazada($q$select public.aplazar_pedido_nacex(gen_random_uuid())$q$));
 end;
 $$;
 reset role;

@@ -6,7 +6,7 @@
 import type { Pestanas, ResultadoLectura } from "./google.ts";
 import type { Destino } from "./r1.ts";
 import { prepararReparto, referencias, validarLineas } from "./lista.ts";
-import { type Cajas, type Comprometido, planPedidosTienda, SIN_COMPROMISOS } from "./pedidos.ts";
+import { type Cajas, type Comprometido, listaPedido, SIN_COMPROMISOS } from "./pedidos.ts";
 
 export interface Dependencias {
   rpc: <T = unknown>(nombre: string, args: Record<string, unknown>) => Promise<T>;
@@ -140,19 +140,17 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   });
   if (guardado.error) return guardado;
 
-  // Pedidos de cliente para recoger en tienda (R1b): van en este reparto, cada
-  // uno con su «coge / haz» después de lo oficial. También si el reparto no
-  // cambia, para no perder un pedido si la llamada anterior se cortó.
+  // Pedidos de cliente para recoger en tienda (R1b): van en este reparto, con su
+  // tarea y su bolsa aparte («coge / haz» al salir la tarea). También si el
+  // reparto no cambia, para no perder un pedido si la llamada anterior se cortó.
   let pedidosCliente: unknown[] = [];
   if (tipo === "reparto") {
     const enLista = new Set(destinos.map((x) => x.id));
     const pedidos = (ctx.pedidos_tienda ?? []).filter((p) => enLista.has(p.destino_id));
     if (pedidos.length > 0) {
-      const oficial = [...c.envio, ...c.pedidos_nacex,
-                       ...r.produccion.map((x) => ({ producto: x.producto, formato: x.formato, cantidad: x.pedido }))];
       const asignados = await d.rpc<{ pedidos: unknown[] }>("servidor_asignar_pedidos", {
         p_persona: persona, p_reparto: guardado.reparto_id,
-        p_pedidos: planPedidosTienda(pedidos, entradas, oficial, lectura.datos.categorias),
+        p_pedidos: pedidos.map((p) => ({ pedido_id: p.id, elementos: listaPedido(p.lineas, entradas, lectura.datos.categorias) })),
       });
       pedidosCliente = asignados.pedidos ?? [];
     }

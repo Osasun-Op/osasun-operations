@@ -144,7 +144,7 @@ Deno.test("guardar_reparto: el envío aparta también los pedidos de tienda que 
   assertEquals(f.args("servidor_asignar_pedidos"), undefined);
 });
 
-Deno.test("guardar_reparto: los pedidos de tienda van en el reparto con «coge / haz», sin tocar la producción oficial", async () => {
+Deno.test("guardar_reparto: los pedidos de tienda van en el reparto con su lista, sin tocar la producción oficial", async () => {
   const pedidos = [
     { id: "pedido-1", cliente: "Ane", destino_id: "bilbao", lineas: [{ producto: "V2", formato: "4g", cantidad: 3 }] },
     { id: "pedido-2", cliente: "Jon", destino_id: "portu", lineas: [{ producto: "V2", formato: "4g", cantidad: 4 }, { producto: "MINI", formato: "10g", cantidad: 2 }] },
@@ -156,11 +156,11 @@ Deno.test("guardar_reparto: los pedidos de tienda van en el reparto con «coge /
   // La producción del reparto es solo la oficial: 25 pedidas, 30 en el almacén, faltan 0.
   const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { pedido: number; faltan: number }[])[0];
   assertEquals([prod.pedido, prod.faltan], [25, 0]);
-  // Quedan 5 V2 4g: Ane coge 3; Jon coge 2 y hace 2. MINI 10g: 30 en el almacén, coge 2. Donosti no es del reparto.
-  const plan = f.args("servidor_asignar_pedidos")!.p_pedidos as { pedido_id: string; elementos: { producto: string; motivo: string }[] }[];
-  assertEquals(plan.map((p) => [p.pedido_id, p.elementos.map((e) => `${e.producto}: ${e.motivo}`)]), [
-    ["pedido-1", ["V2: Coge 3 del almacén"]],
-    ["pedido-2", ["V2: Coge 2 del almacén y haz 2", "MINI: Coge 2 del almacén"]],
+  // Los pedidos de Bilbao y Portu, con su lista en el orden de la hoja; Donosti no es del reparto.
+  const plan = f.args("servidor_asignar_pedidos")!.p_pedidos as { pedido_id: string; elementos: { producto: string; cantidad: number }[] }[];
+  assertEquals(plan.map((p) => [p.pedido_id, p.elementos.map((e) => `${e.cantidad} ${e.producto}`)]), [
+    ["pedido-1", ["3 V2"]],
+    ["pedido-2", ["4 V2", "2 MINI"]],
   ]);
   assertEquals(f.args("servidor_asignar_pedidos")!.p_reparto, "reparto-1");
   assertEquals(r.pedidos_cliente, [{ id: "pedido-1", estado: "por_preparar" }]);

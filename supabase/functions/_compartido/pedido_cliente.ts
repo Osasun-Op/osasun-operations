@@ -3,7 +3,7 @@
 // sin red (pedido_cliente_test.ts). El index.ts solo la conecta.
 
 import { referencias, validarLineas } from "./lista.ts";
-import { type Comprometido, cogeHaz, SIN_COMPROMISOS } from "./pedidos.ts";
+import { listaPedido } from "./pedidos.ts";
 import type { Dependencias } from "./reparto_lista.ts";
 import type { Pestanas, ResultadoLectura } from "./google.ts";
 
@@ -15,7 +15,6 @@ interface Preparado {
   fecha: string;
   jornada_id: string | null;
   config: { sheets_documento_id: string; sheets_pestanas: Pestanas };
-  comprometido?: Comprometido;
 }
 
 const error = (codigo: string, mensaje: string, extra: Record<string, unknown> = {}): Respuesta =>
@@ -77,12 +76,10 @@ export async function guardarPedidoClienteDe(d: Dependencias, persona: string, c
   }
   const cajas = v.lineas.map(({ producto, formato, cantidad }) => ({ producto, formato, cantidad }));
 
-  // Nacex: «coge / haz» ahora, después de todo lo comprometido ese día (R1c).
-  // Recoger en tienda: se calcula al guardar el reparto que lo lleva.
-  const c = prep.comprometido ?? SIN_COMPROMISOS;
-  const elementos = entrega === "nacex"
-    ? cogeHaz(cajas, entradas, [...c.reparto, ...c.pedidos_tienda, ...c.envio, ...c.pedidos_nacex], lectura.datos.categorias)
-    : null;
+  // Nacex: su tarea, con la lista en el orden de la hoja. Recoger en tienda: la
+  // tarea se crea al guardar el reparto que lo lleva. El «coge / haz» se calcula
+  // al salir la tarea.
+  const elementos = entrega === "nacex" ? listaPedido(cajas, entradas, lectura.datos.categorias) : null;
 
   return await d.rpc<Respuesta>("servidor_guardar_pedido_cliente", {
     p_persona: persona, p_id_cliente: idCliente, p_cliente: cliente, p_entrega: entrega,

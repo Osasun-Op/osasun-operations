@@ -1,6 +1,6 @@
 // Función del servidor `guardar_pedido_cliente` con la hoja y la base de datos
 // simuladas: datos obligatorios, permisos, hoja no disponible, referencia que ya
-// no está, reintento por id_cliente y «coge / haz» de Nacex con lo comprometido.
+// no está, reintento por id_cliente y la lista de Nacex.
 import { assertEquals } from "jsr:@std/assert@1";
 import type { ResultadoLectura } from "./google.ts";
 import type { DatosHoja } from "./hoja.ts";
@@ -56,17 +56,15 @@ Deno.test("guardar_pedido_cliente: recoger en tienda se guarda sin «coge / haz�
   assertEquals(f.args("servidor_guardar_lectura")!.p_motivo, "pedido");
 });
 
-Deno.test("guardar_pedido_cliente: Nacex calcula «coge / haz» después de lo comprometido ese día (R1c)", async () => {
-  const f = falso({ prep: { ...PREP, comprometido: { ...SIN, reparto: [{ producto: "V2", formato: "4g", cantidad: 25 }],
-                                                     envio: [{ producto: "BZ1", formato: "4g", cantidad: 10 }] } } });
+Deno.test("guardar_pedido_cliente: Nacex guarda la lista en el orden de la hoja (el «coge / haz», al salir la tarea)", async () => {
+  const f = falso();
   await guardarPedidoClienteDe(f.d, "p", nacex());
   const g = f.args("servidor_guardar_pedido_cliente")!;
   assertEquals([g.p_entrega, g.p_destino, g.p_jornada, g.p_datos_envio],
                ["nacex", null, "jornada-eder", "Jon Aguirre\nCalle Mayor 1, 48001 Bilbao\n600 000 000"]);
-  // V2 4g: 30 − 25 = 5 → coge 5, haz 3. BZ1 4g: 16 − 10 = 6 → coge 1.
-  const e = g.p_elementos as { producto: string; motivo: string; categoria?: string }[];
-  assertEquals(e.map((x) => `${x.producto}: ${x.motivo}`), ["BZ1: Coge 1 del almacén", "V2: Coge 5 del almacén y haz 3"]);
-  assertEquals(e[0].categoria, "HIGH TECH");
+  const e = g.p_elementos as { producto: string; orden: number; categoria?: string; motivo?: string }[];
+  assertEquals(e.map((x) => [x.producto, x.categoria, x.motivo]), [["BZ1", "HIGH TECH", undefined], ["V2", "HIGH TECH", undefined]]);
+  assertEquals(e[0].orden < e[1].orden, true);
 });
 
 Deno.test("guardar_pedido_cliente: datos obligatorios", async () => {
