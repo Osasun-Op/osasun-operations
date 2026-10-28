@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.26 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.27 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -156,11 +156,17 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
   - El «coge / haz» se calcula **cuando le toca la tarea del pedido**, con la última lectura de la hoja.
   - Un pedido de tienda que no se hace el día de su reparto pasa al día siguiente como tarea, pero no vuelve a entrar solo en el siguiente reparto.
 
-**R1c. Cajas en camino** (decisión del propietario, 28/10/2026). La hoja no refleja en el momento lo que sale del almacén. El almacén baja con el recuento de cada turno, y cada tienda solo lo refleja cuando rellena su «FIN DE DÍA» (normalmente a las 20:30; alguna, a mediodía). Para no contar cajas que ya no están ni perder cajas que van de camino, **la app lo corrige en sus cálculos, sin escribir en la hoja**:
-- lo que sale en el reparto (salida hecha) o en un envío **se resta del almacén y se suma a la tienda de destino como «en camino»** hasta la mañana siguiente;
-- con esa corrección se calcula lo que queda en el almacén para los pedidos y el envío del mismo día, y la lista del +35 %;
-- se acepta que, si una tienda rellena su «FIN DE DÍA» a mediodía, por la tarde esas cajas cuenten dos veces (la lista del +35 % podría pedir un poco menos de lo justo). Se corrige solo al día siguiente;
-- **Etapa 2:** con el panel de tienda, la tienda confirmará «bolsa recibida» y las cajas dejarán de estar en camino en ese momento (ver E2-2).
+**R1c. Cuenta del almacén y cajas en camino** (decisiones del propietario, 28/10/2026; sustituye a la versión anterior). La hoja solo cambia con los recuentos y con el «FIN DE DÍA» de cada tienda. Por eso la app lleva su propia cuenta entre medias, **solo en sus cálculos y sin escribir nunca en la hoja**:
+- **Almacén ahora** = el último recuento (de la hoja) + lo que el operario ha producido y marcado desde ese recuento − lo que ha salido desde ese recuento (bolsas listas, envíos preparados, pedidos).
+- **Cada recuento de fin de turno** (12:45; 17:55 o 18:15) pone al día **solo el almacén**: al marcarlo hecho, la app vuelve a leer la hoja y pone a cero lo producido y lo salido.
+- **Cajas en camino** (se suman a su tienda, porque la tienda aún no las ha apuntado):
+  - **reparto en coche a Bizkaia** (incluidos los pedidos para recoger en tienda): desde que las bolsas están listas **hasta las 23:30 de ese día**;
+  - **envío por Nacex a Gipuzkoa o Durango:** desde que está preparado **hasta las 11:59 del día siguiente**.
+  - El recuento no las borra.
+- **Pedidos de cliente por Nacex:** las cajas se restan del almacén y **salen del stock** (no se suman a ninguna tienda).
+- **El reparto de primera hora** se calcula solo con STOCK OSASUN (lo que dice el almacén). A esa hora no hay nada en camino a Bizkaia, y lo que vaya a Gipuzkoa o Durango no le afecta.
+- Se usa en: modificar el reparto durante el día, el envío, el «coge / haz» de los pedidos y la lista del +35 % (cajas de todas partes = hoja + lo producido desde el último recuento + lo que va de camino − los pedidos de Nacex).
+- **Etapa 2:** cuando la tienda confirme en su pantalla «bolsa recibida», las cajas dejarán de estar en camino en ese momento (ver E2-2).
 
 
 **Principio (propietario, 28/10/2026): la lista de productos con − y + es la pieza central para el personal.** Se construye una sola vez y se reutiliza: reparto, envío, pedidos de cliente y, en las siguientes etapas, reposiciones y ventas en las tiendas.
@@ -494,3 +500,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.24 | 28/10/2026 | Orden de los pedidos (primero lo oficial; «coge / haz»). R1c: cajas en camino del almacén a las tiendas hasta la mañana siguiente, solo en los cálculos de la app. |
 | 1.25 | 28/10/2026 | Detalles de los pedidos de cliente decididos en la Tarea 12 (salida = bolsas listas, Nacex hasta las 18:00, pasar a mañana, «coge / haz» al salir la tarea). |
 | 1.26 | 28/10/2026 | Peticiones especiales en el reparto y el envío (R1d). Histórico por día en el panel de Administración. |
+| 1.27 | 28/10/2026 | R1c rehecha: cuenta del almacén entre recuentos (lo producido suma), el recuento pone al día solo el almacén y las cajas en camino tienen hora fija (reparto hasta las 23:30, Nacex hasta las 11:59 del día siguiente); los pedidos por Nacex salen del stock. |

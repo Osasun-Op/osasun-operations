@@ -62,11 +62,32 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 13** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.26**: §5 R1d y §8 «Histórico».
+**Tarea 14** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.27, §5 R1c** (rehecha).
 
 ---
 
-## 7. TAREA 13 (activa): peticiones especiales e histórico, en pruebas
+## 7. TAREA 14 (activa): cuenta del almacén entre recuentos y cajas en camino con hora, en pruebas
+
+Sustituye a la versión anterior de R1c, la de «en camino hasta la mañana siguiente», que construiste en la Tarea 12.
+
+1. **Almacén ahora** = la última lectura de la hoja tomada en un recuento + lo producido y marcado desde ese recuento (elementos de producción del reparto, del envío, de los pedidos y de la lista del +35 %) − lo que ha salido desde ese recuento (bolsas listas, envíos preparados, pedidos de Nacex preparados).
+2. **Al marcar como hecha una tarea de recuento** (`contenido = recuento`), la app vuelve a leer la hoja (o la marca para leerla en el siguiente cálculo) y pone a cero lo producido y lo salido de ese almacén.
+3. **Cajas en camino**, sumadas a su tienda solo en los cálculos: reparto en coche (y pedidos para recoger en tienda) desde «bolsas listas» **hasta las 23:30 de ese día**; envío por Nacex a Gipuzkoa o Durango desde que está preparado **hasta las 11:59 del día siguiente**. El recuento no las borra. Las horas, en `configuracion`.
+4. **Pedidos de cliente por Nacex:** salen del stock (se restan del almacén y no se suman a ninguna tienda).
+5. **El reparto de primera hora** sigue calculándose solo con lo que dice el almacén en la hoja (como ahora).
+6. Úsalo en: modificar el reparto durante el día, el envío, el «coge / haz» de los pedidos y `lista_stock` (R3: el contador suma lo producido desde el recuento y lo que va en camino, y resta los pedidos de Nacex).
+7. Que el panel pueda enseñarlo: añade a `estado_actual` un bloque `almacen_ahora` con el último recuento leído (hora) y, por referencia con movimiento hoy, `hoja`, `producido`, `salido` y `ahora`. Es solo informativo.
+8. Escribe la regla en `REGLAS_CALCULO.md` con los ejemplos del propietario como casos de prueba:
+   - 12:45: almacén 5 y tienda 3 en la hoja, más 3 de reparto en camino → **11**;
+   - 17:55: almacén 8 y Gipuzkoa 4 en la hoja, más 4 en la caja de Nacex → **16**;
+   - y el del hueco: a las 09:30 se producen 6 de BZ1 4g con 4 en la hoja; a las 11:00 se modifica el reparto pidiendo 5 más → **no hay que hacer ninguna**.
+9. Todas las pruebas en verde; `CONTRATOS.md` a la 1.3, con su nota de cambios.
+
+**Entrega:** Pull Request **«Tarea 14 — Cuenta del almacén y cajas en camino»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.
+
+---
+
+## 7.0 TAREA 13 (fusionada en el PR #12): peticiones especiales e histórico
 
 **A. Peticiones especiales (R1d):**
 1. `guardar_reparto` acepta `peticiones: [{ destino_id, texto }]`, una línea por petición (texto libre, de 120 caracteres como máximo). Se guardan con el reparto o el envío y se conservan al modificarlo, como las líneas. Las vacías se ignoran.
@@ -362,3 +383,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.14 | 28/10/2026 | La Tarea 11 (sin empezar) se integra en la Tarea 12: nombre «Asier» y pedidos de cliente con la lista. |
 | 1.15 | 28/10/2026 | Tarea 12 fusionada. Sin tarea activa. |
 | 1.16 | 28/10/2026 | Tarea 13 activa: peticiones especiales e histórico. |
+| 1.17 | 28/10/2026 | Tarea 13 fusionada. Tarea 14 activa: cuenta del almacén y cajas en camino con hora. |

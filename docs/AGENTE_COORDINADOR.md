@@ -109,3 +109,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - PR #11 (Tarea 12) fusionado. **Tarea 5 de Lovable** (pedidos de cliente con la lista, bolsa aparte en el Pixel, tareas del pedido) enviada (`umsg_01m6161rjrfte8kn9nsyrwsyey`); aviso a los 3 min.
 - Tarea 5 de Lovable terminada: `ListaProductos.tsx` compartida, pedidos con tienda o Nacex, bloque de pedidos en el panel, «coge / haz», copiar datos, pasar a mañana y bolsas separadas en el Pixel. 42 pruebas; sin escrituras directas. Pendiente: prueba real.
 - v1.26: peticiones especiales (R1d) e histórico. **Tarea 13 de BD** encargada. Después, Lovable: casilla de peticiones por tienda, «Además, mete:» en las bolsas e «Histórico» con calendario en el panel.
+- PR #12 (Tarea 13) fusionado; Tarea 6 de Lovable (peticiones e histórico) enviada. R1c rehecha (v1.27): **Tarea 14 de BD** encargada (cuenta del almacén entre recuentos y cajas en camino con hora).
