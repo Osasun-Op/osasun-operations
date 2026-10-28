@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.27 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.28 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -164,7 +164,13 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
   - **envío por Nacex a Gipuzkoa o Durango:** desde que está preparado **hasta las 11:59 del día siguiente**.
   - El recuento no las borra.
 - **Pedidos de cliente por Nacex:** las cajas se restan del almacén y **salen del stock** (no se suman a ninguna tienda).
-- **El reparto de primera hora** se calcula solo con STOCK OSASUN (lo que dice el almacén). A esa hora no hay nada en camino a Bizkaia, y lo que vaya a Gipuzkoa o Durango no le afecta.
+- **El reparto de primera hora** usa también «almacén ahora», que a esa hora coincide con lo que dice STOCK OSASUN (decisión del propietario en la Tarea 14). A esa hora no hay nada en camino a Bizkaia, y lo que vaya a Gipuzkoa o Durango no le afecta.
+- **Un pedido para recoger en tienda activa el reparto** (decisión del propietario en la Tarea 14):
+  - entra en el reparto de hoy mientras las bolsas no estén listas; si el reparto ya está guardado, entra al momento;
+  - «Prepara el reparto» no se puede cerrar sin reparto si hay un pedido esperando;
+  - se puede guardar un reparto que solo lleve pedidos;
+  - en «Preparar reparto», los pedidos salen marcados y fijos en su tienda;
+  - si «Prepara el reparto» ya se cerró sin reparto (sin pedidos esperando entonces), un pedido apuntado después va al siguiente día de trabajo.
 - Se usa en: modificar el reparto durante el día, el envío, el «coge / haz» de los pedidos y la lista del +35 % (cajas de todas partes = hoja + lo producido desde el último recuento + lo que va de camino − los pedidos de Nacex).
 - **Etapa 2:** cuando la tienda confirme en su pantalla «bolsa recibida», las cajas dejarán de estar en camino en ese momento (ver E2-2).
 
@@ -501,3 +507,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.25 | 28/10/2026 | Detalles de los pedidos de cliente decididos en la Tarea 12 (salida = bolsas listas, Nacex hasta las 18:00, pasar a mañana, «coge / haz» al salir la tarea). |
 | 1.26 | 28/10/2026 | Peticiones especiales en el reparto y el envío (R1d). Histórico por día en el panel de Administración. |
 | 1.27 | 28/10/2026 | R1c rehecha: cuenta del almacén entre recuentos (lo producido suma), el recuento pone al día solo el almacén y las cajas en camino tienen hora fija (reparto hasta las 23:30, Nacex hasta las 11:59 del día siguiente); los pedidos por Nacex salen del stock. |
+| 1.28 | 28/10/2026 | Decisiones del propietario en la Tarea 14: el pedido de tienda activa el reparto de hoy; el reparto de primera hora usa «almacén ahora». |
