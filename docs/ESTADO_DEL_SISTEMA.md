@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.24 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.25 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -147,6 +147,12 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
   - **Recoger en tienda:** primero «Producción del reparto», solo con las cajas del reparto oficial. Al terminarla, «Pedido de cliente para [tienda] · [cliente]».
   - **Nacex:** por la tarde, primero la revisión y la preparación del envío a Gipuzkoa (si se decide). Después, «Prepara el pedido de cliente (Nacex)».
   - En las dos, la tarea del pedido dice para cada referencia **«Coge N del almacén»** (si quedan cajas hechas después de apartar las del reparto o el envío) o **«Haz N»**.
+
+- **Detalles decididos por el propietario en la Tarea 12 (28/10/2026):**
+  - El reparto **«ha salido»** cuando el almacén termina las bolsas (el viernes, también el envío preparado).
+  - Los pedidos de Nacex entran en el viaje del día si se apuntan **hasta las 18:00** de lunes a jueves (el viernes, hasta las 10:45); si no, van al siguiente día de trabajo. Si por la producción no llega, el operario puede **pasarlo a mañana** (con un motivo opcional), y lo que queda sin hacer pasa solo.
+  - El «coge / haz» se calcula **cuando le toca la tarea del pedido**, con la última lectura de la hoja.
+  - Un pedido de tienda que no se hace el día de su reparto pasa al día siguiente como tarea, pero no vuelve a entrar solo en el siguiente reparto.
 
 **R1c. Cajas en camino** (decisión del propietario, 28/10/2026). La hoja no refleja en el momento lo que sale del almacén. El almacén baja con el recuento de cada turno, y cada tienda solo lo refleja cuando rellena su «FIN DE DÍA» (normalmente a las 20:30; alguna, a mediodía). Para no contar cajas que ya no están ni perder cajas que van de camino, **la app lo corrige en sus cálculos, sin escribir en la hoja**:
 - lo que sale en el reparto (salida hecha) o en un envío **se resta del almacén y se suma a la tienda de destino como «en camino»** hasta la mañana siguiente;
@@ -483,3 +489,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.22 | 28/10/2026 | Destinos del reparto y del envío fijados (Tarea 10). |
 | 1.23 | 28/10/2026 | Pedidos de cliente con la lista (recoger en tienda en bolsa aparte con su tarea, o envío por Nacex). La lista con − y + es la pieza central reutilizable. |
 | 1.24 | 28/10/2026 | Orden de los pedidos (primero lo oficial; «coge / haz»). R1c: cajas en camino del almacén a las tiendas hasta la mañana siguiente, solo en los cálculos de la app. |
+| 1.25 | 28/10/2026 | Detalles de los pedidos de cliente decididos en la Tarea 12 (salida = bolsas listas, Nacex hasta las 18:00, pasar a mañana, «coge / haz» al salir la tarea). |
