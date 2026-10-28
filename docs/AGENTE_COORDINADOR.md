@@ -49,7 +49,7 @@ Tu trabajo no es hacer el software más sofisticado, sino **el sistema más senc
 5. La respuesta de un agente no es verdad por defecto: la verificas contra el sistema real cuando importa.
 
 ### Avisar sin que lo pida el propietario (petición del propietario, 28/10/2026)
-- Después de encargar algo a Lovable (`send_message`), programa con `send_later` un aviso a esta sesión a los 8–10 minutos, para comprobar con `get_project` (`agentFinished`) y `get_message`. Si ha terminado, revisa y escribe al propietario el resultado. Si no, vuelve a programar otro aviso.
+- Después de encargar algo a Lovable (`send_message`), programa con `send_later` un aviso a esta sesión **a los 3 minutos** (petición del propietario), para comprobar con `get_project` (`agentFinished`) y `get_message`. Si ha terminado, revisa y escribe al propietario el resultado. Si no, vuelve a programar otro aviso.
 - Con el agente de base de datos: cuando el propietario lo arranque, programa un aviso a los 15–20 minutos para comprobar si hay un PR nuevo y revisarlo.
 - **Nunca** le pidas al propietario que diga «revisa»: avísale tú.
 
@@ -105,3 +105,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 **28/10/2026 · Prueba en el almacén:** al pegar el reparto real, 36 de 52 líneas no se reconocían por abreviaturas. El propietario decide preparar el reparto **con una lista y contadores − y +** (R1 rediseñada, `ESTADO_DEL_SISTEMA.md` v1.21). **Tarea 10 de BD** encargada (`catalogo`, `guardar_reparto`, `reparto_de_hoy_detalle`). Cuando se fusione, **Tarea 4 de Lovable**: pantalla «Preparar reparto» (quién sale, tienda, lista por categorías con buscador y − y +, resumen por tienda, Calcular, Copiar para WhatsApp) en el panel y en el operario, sustituyendo a «Pegar reparto».
 - PR #10 fusionado (reparto con lista). Tarea 11 de BD (nombre «Asier») encargada. Tarea 4 de Lovable («Preparar reparto» con lista) enviada.
 - Tarea 4 de Lovable terminada («Preparar reparto» con lista; 31 pruebas; capturas con datos simulados). Pendiente: prueba real con la hoja.
+- Pedidos de cliente rediseñados con la lista (v1.23). **Tarea 12 de BD** (incluye «Asier»). Después, la Tarea 5 de Lovable: pantalla «Pedido de cliente» con la lista, entrega (tienda o Nacex) y datos de envío; en el Pixel, la bolsa aparte de pedido; y la nueva tarea en el Chromebook.

@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.22 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.23 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -136,6 +136,15 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
 - **Destinos** (decisión del propietario, 28/10/2026): **reparto** a BILBAO, ALGORTA, BARAKALDO, BASAURI y PORTU; **envío** a GIPUZKOA y DURANGO. Donosti y Rentería no van en el reparto: les llega por el envío a Gipuzkoa. El orden es el de las pestañas de STOCK OSASUN. Están en la configuración (`destinos_reparto`).
 - **Envío a Gipuzkoa/Durango:** el mismo camino, con tipo «envío». Lo propone el operario, Administración lo aprueba y el operario lo prepara en la app. Un solo bloque GIPUZKOA (pestaña GIPUZKOA de la hoja) va entero a Rentería por Nacex, y allí la persona de Rentería lo reparte entre Donosti y Rentería. Donosti y Rentería son las únicas tiendas en franquicia. Durango, cuando abra, irá como bloque propio. Si el envío se prepara antes del recuento de la mañana del mismo día que un reparto, primero se apartan las cajas del reparto.
 - **Ya no aplica:** pegar texto, la línea `SALE:` obligatoria y la normalización de nombres escritos.
+
+**R1b. Pedidos de cliente** (decisión del propietario, 28/10/2026). Quien recibe el pedido (Administración u operario) pulsa **«Pedido de cliente»**, apunta las cajas con **la misma lista** (− y +) y elige **cómo se entrega**:
+- **Recoger en tienda** (elige la tienda): el pedido se añade **al siguiente reparto de esa tienda**. Si el de hoy aún no está calculado, entra en él; si ya está calculado o ha salido, en el siguiente. Las cajas que falten van a la producción.
+  - Va en una **bolsa aparte**: en el Pixel, la tienda tiene su «Bolsa de reposición» y además «Pedido de cliente · [nombre]».
+  - Para que no se olvide, el operario tiene **una tarea propia, «Hay un pedido de cliente para dejar en [tienda]»**, que aparece **en cuanto termina la producción del reparto oficial** y se hace entonces, no al preparar las bolsas antes de salir.
+- **Envío por Nacex** (se pegan los datos de envío tal cual: nombre, dirección, teléfono…): al operario le entra **«Prepara el pedido de cliente»**, con la lista y los datos de envío bien escritos, y se activa **«Llevar a Nacex»** ese día. De lunes a jueves, recuento a las 17:55 y salida a las 18:10; el viernes, antes de las 10:45, y lo deja quien sale de reparto. Si ese día ya hay envío a Gipuzkoa o a Durango, va en el mismo viaje.
+- Los datos del cliente solo se guardan en la base de datos de la app (los ve el personal con cuenta). Nunca en el repositorio.
+
+**Principio (propietario, 28/10/2026): la lista de productos con − y + es la pieza central para el personal.** Se construye una sola vez y se reutiliza: reparto, envío, pedidos de cliente y, en las siguientes etapas, reposiciones y ventas en las tiendas.
 
 **R2. Stock negativo en una tienda** = encargo de cliente pendiente. Hay que llevar esas cajas además de la reposición normal. Es información de contexto para el operario: la app no modifica las cantidades del reparto.
 
@@ -461,3 +470,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.20 | 27/10/2026 | Desplegable «¿Quién sale?» al pegar el reparto (manda sobre `SALE:`). Se adelanta el panel de Administración para poder probar el sistema completo. |
 | 1.21 | 28/10/2026 | Prueba real en el almacén: el texto del WhatsApp no coincide con los nombres de PRINCIPAL (36 de 52 líneas). **R1 rediseñada:** el reparto se prepara en la app con una lista de productos de PRINCIPAL y contadores − y +; se quita pegar texto; «Copiar para WhatsApp». |
 | 1.22 | 28/10/2026 | Destinos del reparto y del envío fijados (Tarea 10). |
+| 1.23 | 28/10/2026 | Pedidos de cliente con la lista (recoger en tienda en bolsa aparte con su tarea, o envío por Nacex). La lista con − y + es la pieza central reutilizable. |

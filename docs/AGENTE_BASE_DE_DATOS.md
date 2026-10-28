@@ -62,17 +62,24 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 11** (sección 7).
+**Tarea 12** (sección 7). Incluye lo que era la Tarea 11. Lee antes `ESTADO_DEL_SISTEMA.md` **v1.23**, §5 R1b.
 
 ---
 
-## 7. TAREA 11 (activa): el nombre del propietario, en pruebas
+## 7. TAREA 12 (activa): nombre del propietario y pedidos de cliente con la lista, en pruebas
 
-1. El propietario quiere aparecer como **«Asier»**, no como «Administración»: en `quien_sale_opciones`, en `pegado_por_nombre` y en el resto de la app. Cambia el nombre de su ficha (`personas.nombre`) y el de su entrada en `cuentas_autorizadas` de pruebas, para que un alta nueva no lo deshaga. Son datos del entorno: **no van en el repositorio** (ni en una migración ni en el seed).
-2. Si alguna frase de la base de datos pone «Administración» cuando se refiere a la persona (por ejemplo, «Reparto preparado por Administración»), que use el nombre de la ficha. Las que hablan del rol («Avisa a Administración») se quedan igual.
-3. Pruebas en verde.
+**A. Nombre (era la Tarea 11):** el propietario aparece como **«Asier»**: en su ficha (`personas.nombre`) y en su entrada de `cuentas_autorizadas` de pruebas, para que un alta nueva no lo deshaga. Son datos del entorno: no van al repositorio. Las frases que se refieren a la persona usan su nombre («Reparto preparado por Asier»); las que hablan del rol («Avisa a Administración») se quedan igual.
 
-**Entrega:** Pull Request **«Tarea 11 — Nombre del propietario»** si cambia algo del repositorio. Si solo cambian datos de pruebas, déjalo anotado en el PR o en un comentario del PR #10.
+**B. Pedidos de cliente (§5 R1b):**
+1. **`guardar_pedido_cliente(id_cliente, lineas: [{ producto, formato, cantidad }], entrega: "tienda"|"nacex", destino_id?, cliente, datos_envio?)`** (función del servidor; operario y Administración). Valida las referencias contra `catalogo` como `guardar_reparto`. `cliente`: nombre corto, obligatorio. `destino_id`: obligatorio si es `tienda` (una de `catalogo().tiendas.reparto`). `datos_envio`: texto libre, obligatorio si es `nacex`.
+2. **Recoger en tienda:** el pedido queda pendiente para esa tienda y **se suma al siguiente reparto calculado** (el de hoy si aún no está calculado; si no, el del siguiente día de trabajo): suma a la producción y crea una **bolsa aparte** «Pedido de cliente · [cliente]» en esa tienda, además de la bolsa de reposición. Crea también la tarea **«Hay un pedido de cliente para dejar en [tienda]»**, con su lista, **que aparece en cuanto termina la producción del reparto** (no antes) y se hace entonces. Al recalcular o modificar el reparto, los pedidos pendientes se mantienen.
+3. **Envío por Nacex:** crea **«Prepara el pedido de cliente»**, con la lista y los `datos_envio` en su porqué o detalle, bien legibles, y **activa Nacex ese día** igual que `hay_envio`: lunes a jueves, recuento a las 17:55 y «Salida a Nacex» a las 18:10; el viernes, antes de las 10:45, y lo lleva quien sale de reparto. Si ya hay envío, es el mismo viaje (sin duplicar tareas). Si las cajas no están, suman a la producción de ese día.
+4. **`pedidos_cliente_abiertos()`** para el panel (y, si te sirve, para el operario): cliente, entrega, tienda o Nacex, estado y fecha. Los datos de envío solo para el personal (RLS).
+5. La incidencia «Pedido de cliente» (`crear_incidencia`, opción `pedido_cliente`) y `registrar_evento('pedido_cliente')` quedan **obsoletas para las pantallas**: el pedido se registra con esta función. No borres nada.
+6. Pruebas: los dos tipos de entrega; el pedido de tienda entra en el reparto de hoy o en el siguiente; bolsa aparte; la tarea aparece tras la producción; Nacex se activa una sola vez aunque haya envío; idempotencia; permisos; referencias inexistentes.
+7. `CONTRATOS.md` a la 1.1, con su nota de cambios. Todo en verde y pruebas coincidiendo con el repositorio.
+
+**Entrega:** Pull Request **«Tarea 12 — Pedidos de cliente con la lista»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.
 
 ---
 
@@ -332,3 +339,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.11 | 27/10/2026 | Tarea 9 fusionada. Sin tarea activa. |
 | 1.12 | 28/10/2026 | Tarea 10 activa: reparto con lista (R1 rediseñada tras la prueba real). |
 | 1.13 | 28/10/2026 | Tarea 10 fusionada. Tarea 11 activa: nombre «Asier». |
+| 1.14 | 28/10/2026 | La Tarea 11 (sin empezar) se integra en la Tarea 12: nombre «Asier» y pedidos de cliente con la lista. |
