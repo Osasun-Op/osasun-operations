@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.6 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 7).
+**Versión:** 0.7 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 10).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -164,7 +164,9 @@ Referencias de producción y cajas de cada bolsa.
 ### 3.8 `repartos` y `reparto_lineas` ✅
 Texto pegado y su interpretación (R1), para el reparto y para el envío.
 
-`repartos`: jornada_id · tipo (`reparto` · `envio`) · texto_original · huella (hash del texto) · fecha_en_texto · sale · estado (`con_errores` · `aceptado` · `sustituido`) · sustituye_a (FK) · lectura_id · resultado (jsonb) · pegado_por · pegado_en. **Un solo aceptado por jornada y tipo**; pegar el mismo texto otra vez devuelve el resultado guardado (huella igual).
+`repartos`: jornada_id · tipo (`reparto` · `envio`) · texto_original · huella (hash del texto) · fecha_en_texto · sale · estado (`con_errores` · `aceptado` · `sustituido`) · sustituye_a (FK) · lectura_id · resultado (jsonb) · pegado_por · pegado_en · id_cliente (único, Tarea 10). **Un solo aceptado por jornada y tipo**; pegar el mismo texto otra vez devuelve el resultado guardado (huella igual).
+
+Tarea 10 (reparto con lista): `texto_original` es el texto de WhatsApp generado con la lista (el que devuelve `guardar_reparto` como `texto_whatsapp`); `id_cliente` es el de la petición de `guardar_reparto` que lo guardó, para que un reintento devuelva lo mismo sin recalcular.
 
 **Reparto corregido** (decisión del propietario, §5 R1): la versión nueva pasa a `aceptado` y la anterior a `sustituido`. Se recalcula lo que falta producir **sin perder las cajas ya hechas**; las bolsas de tiendas sin cambios se conservan y las que cambian se vuelven a comprobar caja a caja.
 

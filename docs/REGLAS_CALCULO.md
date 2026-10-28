@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1 y R3 (especificación V1)
 
-**Versión:** 0.5 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27).
+**Versión:** 0.6 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-08).
 
 > Especificación exacta de las dos reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto) y **R3** (stock del almacén +35 %).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -145,6 +145,24 @@ Destinos: BILBAO, ALGORTA, DURANGO (alias `DURANGO`, `LAUDIO`), GIPUZKOA. Hoy = 
 | R1-25 | `SALE: ALMACÉN` · `BILBAO` · `1x V2 4g` con desplegable `administracion` | Aceptado. Sale Administración (manda el desplegable); el texto decía el operario y queda anotado. |
 | R1-26 | `SALE: ALMACÉN` · `SALE: YO` · `BILBAO` · `1x V2 4g` con desplegable `operario` | Aceptado, sin `SALE_CONTRADICTORIA`. Sale el operario. |
 | R1-27 | `BILBAO` · `1x V2 4g` sin desplegable; y `SALE: YO` · … sin desplegable | `FALTA_SALE`; y aceptado con Administración (manda el texto). |
+
+### 2.9 Reparto con lista (Tarea 10, `ESTADO_DEL_SISTEMA.md` v1.21)
+El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 no cambia; la lista se convierte en el texto de siempre y se calcula con R1.
+1. **Catálogo:** una referencia por producto y formato de PRINCIPAL (y los productos sin formato), en el orden de la hoja. Clave estable `producto|formato`. Categoría: el grupo de la pestaña ALMACEN; si no está, «Otros».
+2. **Validación** contra la hoja leída al guardar: referencia que ya no está → `REFERENCIA_NO_EXISTE` (dice cuáles); tienda que no vale para el tipo (reparto: tiendas activas; envío: GIPUZKOA), cantidad no entera o negativa, o lista vacía → `DATOS_NO_VALIDOS`. Cantidad 0 se ignora; la misma referencia en la misma tienda se suma.
+3. **Texto:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN|YO` (solo reparto), y por tienda una línea en blanco, su código y `Nx PRODUCTO FORMATO` con los nombres exactos de la hoja. Tiendas por código; productos en el orden de la hoja.
+4. **Cálculo:** R1 sobre ese texto, con la fecha de hoy y el desplegable «¿Quién sale?» (§2.3). Mismo cálculo (§2.5), misma sustitución (§2.6) y mismo apartado del envío antes del recuento.
+
+| # | Entrada | Resultado esperado |
+| --- | --- | --- |
+| L-01 | Catálogo del extracto de PRINCIPAL | Una referencia por producto y formato, en el orden de la hoja, con su categoría. |
+| L-02 | Producto que no está en ALMACEN | Categoría «Otros». |
+| L-03 | Línea con `GELATO 4g` (no está en la hoja) | `REFERENCIA_NO_EXISTE` con `GELATO 4g`. |
+| L-04 | Tienda de otro tipo, cantidad −1 o lista vacía | `DATOS_NO_VALIDOS`. |
+| L-05 | Contadores a 0, la misma referencia dos veces, tiendas desordenadas | Los 0 no cuentan, las repetidas se suman y queda ordenado por tienda y por la hoja. |
+| L-06 | Reparto del 03/11 con `sale = operario`: Bilbao 6 MINI 10g y 3 20% FS (sin formato), Portu 2 BZ1 4g; y envío de 4 V2 4g | `REPARTO 03/11` · `SALE: ALMACÉN` · (vacía) · `BILBAO` · `6x MINI 10g` · `3x 20% FS` · (vacía) · `PORTU` · `2x BZ1 4g`; y `ENVÍO 03/11` · (vacía) · `GIPUZKOA` · `4x V2 4g`. |
+| L-07 | El reparto real del 28/10 (el que dio 36 de 52 `PRODUCTO_DESCONOCIDO` al pegarlo), rehecho con la lista y la hoja de ese día | Se reconoce entero. Faltan solo INDOOR PR RELAX 4g (2), INDOOR PR AFRU 4g (4), ROYAL BERRY 4g (3) y CBD DRY 4g (5); 20 referencias en producción; bolsas Bilbao 6 referencias / 21 cajas, Algorta 7 / 21, Barakaldo 6 / 16, Basauri 13 / 61, Portugalete 6 / 15. |
+| L-08 | Envío `GIPUZKOA 8x V2 4g` antes del recuento; hoy el reparto pidió 25 V2 4g | Se apartan las 25: faltan 3 (como R1-22). |
 
 ## 3. R3 — Stock del almacén (+35 %)
 

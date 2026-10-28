@@ -1,6 +1,13 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 0.9 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 9).
+**Versión:** 1.0 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 10).
+
+> **Cambios en 1.0 (Tarea 10) — para Lovable: el reparto se prepara con una lista, ya no se pega texto** (`ESTADO_DEL_SISTEMA.md` v1.21, §5 R1).
+> 1. **`catalogo()`** (función del servidor, §3.13): tiendas del reparto y del envío, y las referencias de PRINCIPAL (producto + formato) en el orden de la hoja, con su categoría. Para montar la lista.
+> 2. **`guardar_reparto(id_cliente, tipo, sale?, lineas)`** (función del servidor, §3.14): guarda el reparto o el envío preparado con la lista. Mismo cálculo y misma sustitución que antes; devuelve además `texto_whatsapp` para copiarlo al grupo.
+> 3. **`reparto_de_hoy_detalle(tipo)`** (base de datos, §3.15): las líneas del reparto (o envío) de hoy, para abrir «Modificar reparto» con la lista ya rellena, con su `texto_whatsapp` y quién sale.
+> 4. La tarea del operario se llama **«Prepara el reparto»** (la clave sigue siendo `pegar_reparto`) y se cierra sola al guardarse un reparto.
+> 5. **`pegar_reparto` queda obsoleta** (§3.8): sigue funcionando, pero las pantallas ya no la usan.
 
 > **Cambios en 0.9 (Tarea 9) — para Lovable:** `estado_actual` trae también `reparto_de_hoy` (el mismo objeto que `tarea_activa`: `{ reparto_id, aceptado_en, pegado_por, pegado_por_nombre }` o `null`), para que el panel de Administración muestre «Pegar reparto» o «Modificar reparto». Nada más cambia.
 
@@ -28,7 +35,7 @@
 
 - **Dos tipos de llamada:**
   - **Funciones de base de datos** (`supabase.rpc('nombre', {...})`): todo lo que no necesita Google Sheets.
-  - **Funciones del servidor** (`supabase.functions.invoke('nombre', {...})`): las que leen Sheets (`pegar_reparto` y `lista_stock`).
+  - **Funciones del servidor** (`supabase.functions.invoke('nombre', {...})`): las que leen Sheets (`catalogo`, `guardar_reparto` y `lista_stock`; `pegar_reparto`, obsoleta).
 - Los **nombres de los parámetros** son los de este documento (ej. `supabase.rpc('iniciar_tarea', { tarea_id })`).
 - Las pantallas usan **solo la clave pública** y la sesión del usuario. El rol se comprueba dentro de cada función; esconder un botón no da ni quita permisos.
 - **Hora:** la decide el servidor. Las pantallas nunca envían «ahora».
@@ -54,7 +61,10 @@
 | `tarea_activa` | BD | ✔ | — | ✅ Tarea 2 |
 | `iniciar_tarea` · `terminar_tarea` · `anotar_motivo` | BD | ✔ | — | ✅ Tarea 2 |
 | `iniciar_elemento` · `terminar_elemento` · `marcar_cajas` | BD | ✔ | — | ✅ Tarea 3 |
-| `pegar_reparto` · `lista_stock` | Servidor | ✔ | ✔ (`pegar_reparto` desde la Tarea 7; `lista_stock`, consulta) | ✅ Tarea 3 y 7 |
+| `catalogo` · `guardar_reparto` | Servidor | ✔ | ✔ | ✅ Tarea 10 |
+| `reparto_de_hoy_detalle` | BD | ✔ | ✔ | ✅ Tarea 10 |
+| `lista_stock` | Servidor | ✔ | ✔ (consulta) | ✅ Tarea 3 |
+| `pegar_reparto` (**obsoleta**, la sustituye `guardar_reparto`) | Servidor | ✔ | ✔ | ✅ Tarea 3 y 7 |
 | `retrasar_salida` | BD | ✔ | — | ✅ Tarea 4 |
 | `cambiar_quien_sale` | BD | ✔ | ✔ | ✅ Tarea 8 |
 | `registrar_evento` | BD | ✔ | ✔ (solo `pedido_cliente`) | ✅ Tarea 4 |
@@ -98,7 +108,7 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 ```
 - `jornada` es `null` si hoy no trabaja; `tarea` es `null` solo fuera del turno (antes de empezar o entre turnos).
 - **Nunca sin tarea** (v1.17): si dentro del turno no queda nada disponible, se adelantan las tareas fijas de la tarde de ese día (minis el lunes, resinas el martes, control de materiales el jueves) y después «Orden y limpieza», que **no se gasta** (al terminarla vuelve a salir). Lo ligado a su hora (recuento, revisión del envío, Nacex, salida) espera a su hora.
-- `reparto_de_hoy`: el reparto aceptado hoy (`null` si no hay). Con él, el botón de arriba dice «Modificar reparto»; sin él, «Pegar reparto».
+- `reparto_de_hoy`: el reparto aceptado hoy (`null` si no hay). Con él, el botón de arriba dice «Modificar reparto» (abre la lista con `reparto_de_hoy_detalle`); sin él, «Preparar reparto».
 - **Al recargar** la pantalla recupera de aquí todo lo abierto: `incidencias_abiertas` (número para «Cerrar incidencias»), `incidencia_en_curso` (la que tiene su tarea en curso, con `minutos`; `null` si no hay) y `problemas_abiertos` (con la tarea bloqueada; el siguiente paso es `problema_llamada` o `resolver_problema`).
 - `siguiente`: una línea con lo que viene después. Si antes llega una tarea con hora, se anuncia esa con su hora.
 - `pregunta`: reservado; hoy siempre `null`. La pregunta «¿Quién sale hoy?» la devuelve `pegar_reparto` (`FALTA_SALE`).
@@ -114,7 +124,7 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
   - Repetirla no es error: devuelve la tarea con su primer final.
   - `ESTADO_NO_VALIDO` si no está en curso.
   - Si la tarea tiene elementos sin terminar: `ELEMENTOS_PENDIENTES` (con `pendientes`), salvo que se mande `motivo`. ✅
-  - «Pega el reparto» se cierra sola al aceptarse un reparto (lo pegue quien lo pegue). Terminarla sin reparto aceptado exige `motivo`: si no, `MOTIVO_OBLIGATORIO`. ✅ Tarea 7
+  - «Prepara el reparto» se cierra sola al guardarse un reparto (lo prepare quien lo prepare). Terminarla sin reparto exige `motivo`: si no, `MOTIVO_OBLIGATORIO`. ✅ Tarea 7 y 10
   - Una tarea con lista se cierra sola cuando se termina su último elemento; no hace falta pulsar «Terminada».
 - **Salida (ambas):** `{ "tarea": {...}, "tarea_activa": {...} }` (la nueva respuesta de `tarea_activa`).
 
@@ -143,13 +153,15 @@ Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas 
 - **Errores:** `DATOS_NO_VALIDOS`, `NO_AUTORIZADO` (Administración con otro tipo), `SIN_JORNADA`.
 - Desde la Tarea 7 la pantalla del operario usa `crear_incidencia` (llega mercancía y pedido de cliente crean esta misma tarea por dentro). `registrar_evento` sigue funcionando igual (lo usa Administración para un pedido de cliente).
 
-### 3.8 `pegar_reparto` (función del servidor) ✅
+### 3.8 `pegar_reparto` (función del servidor) ✅ — **obsoleta desde la Tarea 10**
+> Sigue publicada y funcionando, pero las pantallas ya no la usan: el reparto se prepara con la lista (`catalogo` + `guardar_reparto`, §3.13 y §3.14). Se quitará cuando lo decida el coordinador.
+
 - **Entrada:** `{ texto, tipo: "reparto"|"envio", sale?: "operario"|"administracion", confirmar_fecha?: true }`
 - **`sale` = desplegable «¿Quién sale?»** ✅ Tarea 8: si llega, **manda sobre la línea `SALE:`** del texto (que pasa a ser opcional). Si el texto dice otra cosa, o trae dos `SALE:` distintas, no es un error: se acepta con lo del desplegable y queda anotado en el registro (`sale_distinto_del_texto`). Sin `sale` y sin `SALE:` → `FALTA_SALE`. Sin desplegable, dos `SALE:` distintas siguen siendo `REPARTO_CON_ERRORES` (`SALE_CONTRADICTORIA`).
 - Si el mismo texto ya estaba pegado, responde `REPARTO_YA_PEGADO` y **no cambia quién sale**: para eso, `cambiar_quien_sale` (§3.12).
 - **Proceso:** lee Sheets, interpreta el texto según `REGLAS_CALCULO.md` §2 y, si no hay errores, crea o actualiza las tareas «Producción del reparto» y «Bolsas» con sus elementos. Si ya había un reparto aceptado hoy, lo sustituye conservando lo hecho (§5 R1).
 - **Quién:** el operario o **Administración** (Tarea 7). Si lo pega Administración, va a la jornada del operario por defecto, con el mismo cálculo y la misma sustitución; la respuesta no trae `tarea_activa`. Sin jornada del operario ese día: `SIN_JORNADA`.
-- Al aceptarse un reparto, la tarea «Pega el reparto» queda hecha («Reparto pegado» o «Reparto pegado por Administración»).
+- Al aceptarse un reparto, la tarea «Prepara el reparto» queda hecha («Reparto pegado» o «Reparto pegado por Administración»).
 - **Salida correcta:**
 ```json
 {
@@ -232,6 +244,87 @@ Cambia quién sale hoy sin volver a pegar el reparto. Para el operario (su jorna
 - **Salida:** `{ sale, antes, cambiado, tareas: [{ clave, titulo, estado }] (salida y efectivo), tarea_activa (solo al operario) }`.
 - **Errores:** `DATOS_NO_VALIDOS` (valor no válido), `SIN_JORNADA`, `ESTADO_NO_VALIDO` (la salida ya ha empezado o está hecha).
 
+### 3.13 `catalogo` (función del servidor) ✅ (Tarea 10)
+Lo que se puede elegir al preparar el reparto o el envío. Solo lee (la hoja y la base de datos); no guarda nada.
+- **Quién:** el operario y Administración.
+- **Entrada:** ninguna.
+- **Salida:**
+```json
+{
+  "tiendas": {
+    "reparto": [ { "id": "...", "codigo": "ALGORTA", "nombre": "Algorta" }, { "id": "...", "codigo": "PORTU", "nombre": "Portugalete" } ],
+    "envio":   [ { "id": "...", "codigo": "GIPUZKOA", "nombre": "Gipuzkoa (envío a Rentería)" } ]
+  },
+  "productos": [
+    { "clave": "V2|4g", "producto": "V2", "formato": "4g", "categoria": "INVERNADERO", "orden": 2300 },
+    { "clave": "SUGAR|CBD", "producto": "SUGAR", "formato": "CBD", "categoria": "Otros", "orden": 5100 }
+  ],
+  "datos_leidos_en": "2026-11-03T07:47:12.000Z"
+}
+```
+- `tiendas.reparto`: las tiendas activas (Durango no, mientras esté cerrada). `tiendas.envio`: el destino del envío. Ordenadas por nombre de código.
+- `productos`: una referencia por producto y formato de PRINCIPAL (y los productos sin formato, con `formato: ""`), **en el orden de la hoja**. `clave` (`producto|formato`) es estable mientras no cambie el nombre en la hoja: sirve para la lista y para los contadores. `categoria`: el grupo de la pestaña ALMACEN; si el producto no está allí, `"Otros"`.
+- **Errores:** `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` (los mismos de siempre), `CATALOGO_AMBIGUO`, `NO_AUTORIZADO`.
+
+### 3.14 `guardar_reparto` (función del servidor) ✅ (Tarea 10)
+Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_reparto`** para las pantallas.
+- **Quién:** el operario o Administración (va a la jornada del operario por defecto, como antes).
+- **Entrada:**
+```json
+{
+  "id_cliente": "<uuid>",
+  "tipo": "reparto",
+  "sale": "operario",
+  "lineas": [ { "destino_id": "<id de catalogo().tiendas>", "producto": "V2", "formato": "4g", "cantidad": 5 } ]
+}
+```
+- `tipo`: `"reparto"` (por defecto) o `"envio"`. `sale` (`"operario"` | `"administracion"`) **es obligatorio en el reparto** (desplegable «¿Quién sale?»); en el envío no se usa.
+- `lineas`: `producto` y `formato` tal como los da `catalogo`; `destino_id`, una tienda de `catalogo().tiendas.reparto` (reparto) o `.envio` (envío). `cantidad`: entero; **0 se ignora** (contador sin tocar); la misma referencia repetida en la misma tienda se suma.
+- **Proceso:** vuelve a leer la hoja y **comprueba cada referencia** contra lo leído en ese momento. Con la lista escribe el texto de WhatsApp de siempre y lo calcula con R1 (`REGLAS_CALCULO.md` §2): **el mismo cálculo y la misma sustitución que al pegarlo** (si ya había reparto hoy, lo sustituye conservando lo hecho; el envío antes del recuento aparta las cajas del reparto). Crea o actualiza «Producción del reparto» y «Bolsas», y «Prepara el reparto» queda hecha.
+- **Salida correcta:** la misma que `pegar_reparto` (§3.8) más `texto_whatsapp`:
+```json
+{
+  "reparto_id": "...", "estado": "aceptado", "tipo": "reparto", "sale": "operario", "sustituye_a": null,
+  "produccion": [ { "producto": "V2", "formato": "4g", "pedido": 12, "en_almacen": 9, "faltan": 3, "aviso": null } ],
+  "bolsas": [ { "destino": "Bilbao", "cajas": 14, "cambia": false } ],
+  "datos_leidos_en": "...",
+  "tarea_activa": { "...": "solo si lo guarda el operario" },
+  "texto_whatsapp": "REPARTO 03/11\nSALE: ALMACÉN\n\nBILBAO\n12x V2 4g\n\nPORTU\n2x V2 4g"
+}
+```
+- **`texto_whatsapp`:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN` / `SALE: YO` (solo reparto), y por cada tienda una línea en blanco, su código en mayúsculas y `Nx PRODUCTO FORMATO`, con los nombres exactos de la hoja. Tiendas en el orden de `catalogo` y productos en el de la hoja.
+- **Reintentos:** repetir con el mismo `id_cliente` devuelve lo ya guardado (con su `texto_whatsapp`), sin volver a leer la hoja ni calcular, con `ya_guardado: true` y `aviso: { codigo: "REPARTO_YA_GUARDADO" }`. Cada vez que se pulsa «Guardar» en una lista nueva o modificada, `id_cliente` nuevo.
+- **Avisos (no son errores):** `REPARTO_YA_GUARDADO` (reintento) y `REPARTO_SIN_CAMBIOS` («El reparto de hoy ya era este: no cambia nada»; devuelve lo de antes con `ya_pegado: true`). Para cambiar solo quién sale, `cambiar_quien_sale` (§3.12).
+- **Errores** (no se guarda nada):
+
+| Código | Significado |
+| --- | --- |
+| `REFERENCIA_NO_EXISTE` | Alguna referencia ya no está en la hoja. Dice cuáles en el mensaje y en `referencias: [{ producto, formato }]`. La pantalla vuelve a pedir `catalogo` y deja quitarla. |
+| `FALTA_SALE` | Reparto sin `sale`. Con el desplegable siempre relleno no aparece. |
+| `DATOS_NO_VALIDOS` | Sin `id_cliente` o `tipo` no válido, cantidad no entera o negativa, tienda que no vale para ese tipo, o lista vacía. |
+| `SIN_JORNADA` | Hoy no hay jornada del operario. |
+| `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` · `CATALOGO_AMBIGUO` | Como siempre. No se calcula nada. |
+| `REPARTO_NO_CALCULADO` | No debería pasar: la lista era válida pero R1 no la acepta. Avisar a Administración. |
+| `NO_AUTORIZADO` · `ERROR_INTERNO` | Como siempre. |
+
+### 3.15 `reparto_de_hoy_detalle(tipo)` ✅ (Tarea 10)
+Las líneas del reparto (o del envío) de hoy, para abrir «Modificar reparto» con la lista rellena y para volver a copiar el texto de WhatsApp.
+- **Quién:** el operario (su jornada) y Administración (la jornada de hoy del operario por defecto).
+- **Entrada:** `tipo`: `"reparto"` (por defecto) o `"envio"`.
+- **Salida:** `{ "reparto": null }` si hoy no hay; si no:
+```json
+{
+  "reparto": {
+    "reparto_id": "...", "tipo": "reparto", "sale": "operario",
+    "aceptado_en": "...", "pegado_por": "<persona_id>", "pegado_por_nombre": "Administración",
+    "texto_whatsapp": "REPARTO 03/11\nSALE: ALMACÉN\n\nBILBAO\n12x V2 4g",
+    "lineas": [ { "destino_id": "...", "destino": "Bilbao", "producto": "V2", "formato": "4g", "cantidad": 12 } ]
+  }
+}
+```
+- `sale` es quién sale **ahora** (si se cambió con `cambiar_quien_sale`, el texto también lo dice). En el envío, `sale` es `null`.
+- **Errores:** `DATOS_NO_VALIDOS` (tipo no válido), `SIN_JORNADA`, `NO_AUTORIZADO`.
+
 ## 4. Administración ✅ (Tarea 4)
 
 ### 4.1 `crear_tarea_admin` ✅
@@ -264,7 +357,7 @@ Cambia quién sale hoy sin volver a pegar el reparto. Para el operario (su jorna
 Pasa la tarea a `cancelada` con su motivo (obligatorio) y retira la llamada pendiente si tenía un problema abierto. **Salida:** `{ tarea }`. Ya cancelada: `aviso: YA_CANCELADA`. **Errores:** `DATOS_NO_VALIDOS`, `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya hecha o arrastrada).
 
 ### 4.3 `estado_actual()` ✅
-Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, operario, jornada: { id, sale, hay_envio, estado }, en_curso: tarea con sus elementos, reparto_de_hoy, problemas_abiertos: [...], incidencia_en_curso, incidencias_abiertas: [objeto incidencia, §3.11], arrastradas: [...], hoy: [{ id, titulo, estado, origen, obligatoria, urgente, hora, motivo }], retrasos_salida: [{ a_las, minutos, nueva_hora, sale, aviso }], correos_no_enviados: [{ tipo, asunto, estado: "fallido"|"dudoso", intentos, error, creado_en }], lectura_sheets: { ultima_correcta, ultimo_error } }`. `correos_no_enviados` = cierres o avisos de los últimos 7 días que no se han podido enviar (mostrarlos como aviso). `reparto_de_hoy` ✅ Tarea 9: el reparto aceptado hoy en la jornada del operario por defecto, el mismo objeto que en `tarea_activa` (`null` → «Pegar reparto»; si no, «Modificar reparto»).
+Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, operario, jornada: { id, sale, hay_envio, estado }, en_curso: tarea con sus elementos, reparto_de_hoy, problemas_abiertos: [...], incidencia_en_curso, incidencias_abiertas: [objeto incidencia, §3.11], arrastradas: [...], hoy: [{ id, titulo, estado, origen, obligatoria, urgente, hora, motivo }], retrasos_salida: [{ a_las, minutos, nueva_hora, sale, aviso }], correos_no_enviados: [{ tipo, asunto, estado: "fallido"|"dudoso", intentos, error, creado_en }], lectura_sheets: { ultima_correcta, ultimo_error } }`. `correos_no_enviados` = cierres o avisos de los últimos 7 días que no se han podido enviar (mostrarlos como aviso). `reparto_de_hoy` ✅ Tarea 9: el reparto aceptado hoy en la jornada del operario por defecto, el mismo objeto que en `tarea_activa` (`null` → «Preparar reparto»; si no, «Modificar reparto»).
 
 ### 4.4 `cierre(cierre_id)` · `cierres_recientes(limite)` ✅
 Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según el horario), generado solo y enviado **por correo**, una sola vez.
@@ -284,21 +377,21 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 | `motor.tras_crear_usuario` (disparador en `auth.users`) ✅ | Al crearse el usuario | Da de alta su persona con el rol, el centro y el horario de la lista. Nunca impide el alta. |
 | `prueba.fijar_condicion(jornada, condicion, valor)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Simula `SALE:`, envío y eventos hasta que tengan su función real. Nadie tiene permiso para usarla. |
 | `prueba.invocar(funcion, persona, cuerpo)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Llama a una función del servidor desde la base de datos con una solicitud interna. |
-| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_respuesta` (y `servidor_correo_resultado`, de la Tarea 4) ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
+| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_reparto_por_id_cliente` · `servidor_reparto_anotar_id_cliente` (Tarea 10) · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_respuesta` (y `servidor_correo_resultado`, de la Tarea 4) ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
 
 ## 6. Trazabilidad con las pantallas de §8
 
 | Pantalla (§8) | Funciones |
 | --- | --- |
 | Chromebook: una tarea, su porqué, abajo Empezar/Terminada e Incidencia, «lo que viene después» | `tarea_activa`, `iniciar_tarea`, `terminar_tarea`, `crear_incidencia` |
-| Chromebook, arriba: «Pegar reparto» / «Modificar reparto» y «Cerrar incidencias» (con el número) | `tarea_activa` (`reparto_de_hoy`, `incidencias_abiertas`), `pegar_reparto`, `incidencias_abiertas`, `cerrar_incidencia` |
+| Chromebook, arriba: «Preparar reparto» / «Modificar reparto» y «Cerrar incidencias» (con el número) | `tarea_activa` (`reparto_de_hoy`, `incidencias_abiertas`), `incidencias_abiertas`, `cerrar_incidencia` |
 | Listas de producción (él elige el orden) | `tarea_activa` (elementos), `iniciar_elemento`, `terminar_elemento`, `lista_stock` |
 | Bolsas en el Pixel (una tienda por pantalla, toca cada caja; retrasar 15/30 min) | `tarea_activa`, `marcar_cajas`, `retrasar_salida` |
 | Incidencia: llega mercancía, pedido de cliente, pedir o comprar, recogida en Nacex, corregir | `crear_incidencia` |
 | Administración registra un pedido de cliente | `registrar_evento` |
 | Incidencia → Estoy bloqueado (llamar, no contestan, solución) | `crear_incidencia` (`bloqueado`) o `abrir_problema`, `problema_llamada`, `resolver_problema` |
-| Pegar el reparto (operario o Administración), con el desplegable «¿Quién sale?» | `mi_perfil` (`quien_sale_opciones`), `pegar_reparto` (`sale`), `cambiar_quien_sale` |
-| Inicio de Administración (móvil), con «Pegar reparto» / «Modificar reparto» | `estado_actual` (`reparto_de_hoy`), `pegar_reparto` |
+| Preparar o modificar el reparto o el envío con la lista (operario o Administración), con el desplegable «¿Quién sale?» y el texto para WhatsApp | `catalogo`, `reparto_de_hoy_detalle`, `guardar_reparto`, `mi_perfil` (`quien_sale_opciones`), `cambiar_quien_sale` |
+| Inicio de Administración (móvil), con «Preparar reparto» / «Modificar reparto» | `estado_actual` (`reparto_de_hoy`), `catalogo`, `reparto_de_hoy_detalle`, `guardar_reparto` |
 | Nueva tarea (qué, para quién, cuándo, duración, urgente, por qué) | `crear_tarea_admin` |
 | Cierre | `cierre` (y correo) |
 
@@ -330,11 +423,11 @@ await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo:
 
 ### 7.3 Llamar a las funciones
 - **Base de datos:** `const { data, error } = await supabase.rpc('nombre', { parametros })`, con los nombres de parámetro de este documento. Ej.: `supabase.rpc('terminar_tarea', { tarea_id, resultado: 'Hecho' })`.
-- **Servidor** (`pegar_reparto`, `lista_stock`): `const { data, error } = await supabase.functions.invoke('pegar_reparto', { body: { texto, tipo: 'reparto' } })`. La sesión va sola.
+- **Servidor** (`catalogo`, `guardar_reparto`, `lista_stock`): `const { data, error } = await supabase.functions.invoke('guardar_reparto', { body: { id_cliente, tipo: 'reparto', sale, lineas } })`. La sesión va sola.
 - **Cómo leer la respuesta:**
   1. `error` (de Supabase): sin conexión o fallo del servidor → «No hay conexión. Vuelve a intentarlo.» y permitir reintentar. Si la sesión ha caducado (`error.code` `42501` o HTTP 401), volver a «Entrar con Google».
   2. `data.error`: respuesta de negocio → mostrar **`data.error.mensaje` tal cual** (§7.5).
-  3. `data.aviso`: no es un error (ej. «Este reparto ya estaba pegado») → mostrarlo como información.
+  3. `data.aviso`: no es un error (ej. «Este reparto ya estaba guardado») → mostrarlo como información.
   4. Si no, `data` es el resultado (casi siempre trae la nueva `tarea_activa`: pintarla directamente).
 - **`id_cliente`:** las que crean algo lo piden. Generarlo con `crypto.randomUUID()` al pulsar el botón y **reutilizar el mismo** si se reintenta esa misma acción; así nunca se duplica.
 - **Horas:** los campos con fecha y hora (`*_en`, `hora_programada`, `hora_limite`…) llegan en ISO (UTC); se muestran en hora de Madrid: `new Date(v).toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' })`. Los que ya son texto «HH:MM» (`hora`, `a_las`, `nueva_hora`, `nueva_hora_salida`, `vence`, `siguiente`) se muestran tal cual.
@@ -359,12 +452,13 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 | --- | --- |
 | `NO_AUTENTICADO` | Volver a «Entrar con Google». |
 | `NO_AUTORIZADO` | Mostrar el mensaje; si viene de `mi_perfil`, botón «Salir». |
-| `FALTA_SALE` | Preguntar «¿Quién sale hoy?» (`opciones`) y repetir `pegar_reparto` con `sale`. Con el desplegable siempre relleno no aparece. |
-| `FECHA_NO_ES_HOY` | Pedir confirmación y repetir con `confirmar_fecha: true`. |
-| `REPARTO_CON_ERRORES` | Mostrar `lineas` (número de línea y mensaje) para corregir el texto. |
+| `FALTA_SALE` | Preguntar «¿Quién sale hoy?» (`opciones`) y repetir `guardar_reparto` con `sale`. Con el desplegable siempre relleno no aparece. |
+| `REFERENCIA_NO_EXISTE` | Volver a pedir `catalogo`, marcar las referencias de `error.referencias` y dejar quitarlas antes de guardar. |
+| `REPARTO_NO_CALCULADO` | Mostrar el mensaje (avisar a Administración). |
+| `FECHA_NO_ES_HOY` · `REPARTO_CON_ERRORES` | Solo `pegar_reparto` (obsoleta). |
 | `CONFLICTO` | Mostrar `conflicto.obligatorias_en_riesgo` y los minutos que faltan; Administración elige qué cede (o no crear) y se repite `crear_tarea_admin` con `decision_conflicto` y `confirmar: true`. |
 | `PROBLEMA_YA_ABIERTO` · `INCIDENCIA_YA_ABIERTA` | Mostrar el abierto en vez de crear otro: `error.problema` (objeto problema) / `error.incidencia_id` y `error.incidencia` (§3.10). |
-| `MOTIVO_OBLIGATORIO` | «Pega el reparto» sin reparto: ofrecer «Pegar reparto» o escribir el motivo y repetir `terminar_tarea` con `motivo`. |
+| `MOTIVO_OBLIGATORIO` | «Prepara el reparto» sin reparto: ofrecer «Preparar reparto» o escribir el motivo y repetir `terminar_tarea` con `motivo`. |
 | `SIN_TAREA` | Mostrar el mensaje (ej. «Estoy bloqueado» sin ninguna tarea abierta). |
 | `SOLUCION_OBLIGATORIA` · `DATOS_NO_VALIDOS` · `CANTIDAD_FUERA_DE_RANGO` | Mostrar junto al campo y dejar corregir. |
 | `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` | Mostrar el mensaje; el resto de la app sigue funcionando. |
@@ -377,3 +471,6 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 3. **Tarea 7 · «Cuando pueda»:** la tarea va a la cola de tiempo libre como compras y aprovisionamientos (C), antes de «Orden y limpieza», para que no quede detrás de una tarea que no se gasta.
 4. **Tarea 7 · «Estoy bloqueado»:** no crea una incidencia aparte; es el problema de siempre (sale en `problemas_abiertos` y en PROBLEMAS del cierre), para no contarlo dos veces.
 5. **Tarea 7 · Nunca sin tarea:** solo dentro del turno; entre turnos (13:00–15:30) `tarea` es `null` y `siguiente` dice lo que viene.
+6. **Tarea 10 · Solo cambia quién sale:** si la lista no cambia y solo cambia el desplegable, la pantalla llama a `cambiar_quien_sale` (si llama a `guardar_reparto`, se recalcula y se sustituye el reparto con lo mismo, conservando lo hecho).
+7. **Tarea 10 · Orden de las tiendas:** por código (alfabético), igual en `catalogo` y en el texto de WhatsApp. Si se quiere el orden de la ruta, hace falta el dato.
+8. **Tarea 10 · `pegar_reparto`:** se deja publicada (obsoleta) hasta que el coordinador diga quitarla.
