@@ -1,6 +1,13 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.1 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 12).
+**Versión:** 1.2 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 13).
+
+> **Cambios en 1.2 (Tarea 13) — para Lovable: peticiones especiales e histórico** (`ESTADO_DEL_SISTEMA.md` v1.26, §5 R1d y §8).
+> 1. **Peticiones especiales en `guardar_reparto`** (§3.14): campo nuevo `peticiones: [{ destino_id, texto }]`, una por línea de la casilla «Peticiones especiales para [tienda]» (texto libre, 120 letras como máximo; las vacías se ignoran). Vale para el reparto y para el envío. La respuesta trae `peticiones` y el `texto_whatsapp` lleva «Además: …» tras los productos de cada tienda.
+> 2. **En las bolsas** (§3.2): cada petición es un elemento con `tipo: "peticion"`, `texto` y `cantidad` 1, en la bolsa de su tienda después de las cajas. Mostrarlas bajo **«Además, mete:»**, una por una para tocarlas; se marcan con **`marcar_cajas(elemento_id, 1)`** (o 0 para desmarcar). La bolsa no se termina hasta tocarlas todas.
+> 3. **`reparto_de_hoy_detalle`** (§3.15) devuelve también `peticiones`, para abrir «Modificar reparto» con las casillas rellenas.
+> 4. **Histórico** (§4.5, solo Administración): **`historico_dia(fecha)`** (reparto y envío con quién salió, tiendas, cajas, peticiones y texto para WhatsApp; pedidos de cliente; cierres; tareas hechas y no hechas) e **`historico_dias(desde, hasta)`** (qué días tienen algo, para marcar el calendario). Solo consulta.
+
 
 > **Cambios en 1.1 (Tarea 12) — para Lovable: pedidos de cliente con la lista** (`ESTADO_DEL_SISTEMA.md` v1.24, §5 R1b y R1c).
 > 1. **`guardar_pedido_cliente(id_cliente, lineas, entrega, destino_id?, cliente, datos_envio?)`** (función del servidor, §3.16; operario y Administración): botón **«Pedido de cliente»**, con **la misma lista** que el reparto (`catalogo`, sin tienda en cada línea) y cómo se entrega: **recoger en tienda** (una de `catalogo().tiendas.reparto`) o **envío por Nacex** (se pegan los datos de envío tal cual).
@@ -84,6 +91,7 @@
 | `pedidos_cliente_abiertos` · `aplazar_pedido_nacex` | BD | ✔ | ✔ | ✅ Tarea 12 |
 | `iniciar_incidencia` · `terminar_incidencia` (las de antes) | BD | ✔ | — | ✅ Tarea 4 |
 | `crear_tarea_admin` · `cancelar_tarea` · `estado_actual` | BD | — | ✔ | ✅ Tarea 4 |
+| `historico_dia` · `historico_dias` | BD | — | ✔ | ✅ Tarea 13 |
 | `cierre` · `cierres_recientes` | BD | — | ✔ | ✅ Tarea 4 |
 | `generar_jornada` · `generar_cierre` · `enviar_correo` | Internas | — | — | ✅ |
 
@@ -124,7 +132,7 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 - **Al recargar** la pantalla recupera de aquí todo lo abierto: `incidencias_abiertas` (número para «Cerrar incidencias»), `incidencia_en_curso` (la que tiene su tarea en curso, con `minutos`; `null` si no hay) y `problemas_abiertos` (con la tarea bloqueada; el siguiente paso es `problema_llamada` o `resolver_problema`).
 - `siguiente`: una línea con lo que viene después. Si antes llega una tarea con hora, se anuncia esa con su hora.
 - `pregunta`: reservado; hoy siempre `null`. La pregunta «¿Quién sale hoy?» la devuelve `pegar_reparto` (`FALTA_SALE`).
-- `elementos` ✅: `[ { id, tipo, producto, formato, categoria, destino, destino_id, bolsa, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla) y, dentro de la tienda, por `bolsa`: «Bolsa de reposición» y, si hay pedidos de cliente, «Pedido de cliente · [cliente]» (Tarea 12). En las listas de producción, `bolsa` es `null`; en los pedidos de cliente, `motivo` dice «Coge N del almacén» o «Haz N».
+- `elementos` ✅: `[ { id, tipo, producto, formato, texto, categoria, destino, destino_id, bolsa, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla) y, dentro de la tienda, por `bolsa`: «Bolsa de reposición» y, si hay pedidos de cliente, «Pedido de cliente · [cliente]» (Tarea 12). **Peticiones especiales** (Tarea 13): `tipo: "peticion"`, con su texto en `texto` (y en `producto`), `cantidad` 1 y `formato` vacío; van en la bolsa de su tienda después de las cajas, para mostrarlas bajo «Además, mete:». En los demás elementos, `texto` es `null`. En las listas de producción, `bolsa` es `null`; en los pedidos de cliente, `motivo` dice «Coge N del almacén» o «Haz N».
 - La elección sigue `PLAN_TECNICO.md` §2.3. **Nunca devuelve avisos de tiempo ni de presión** (§6.7): solo tareas.
 - Solo para el operario: Administración recibe `NO_AUTORIZADO`.
 
@@ -146,7 +154,7 @@ Para que una tarea que no se va a hacer conste en el cierre con su motivo. No ca
 ### 3.5 `iniciar_elemento(elemento_id)` · `terminar_elemento(elemento_id)` · `marcar_cajas(elemento_id, cantidad_hecha)` ✅
 - `iniciar_elemento`: el operario elige la referencia o la tienda (él decide el orden, §8). Inicia también la tarea si estaba pendiente.
 - `terminar_elemento`: **punto de encaje** (§6.4). En producción, al terminar cada referencia; **en bolsas, al terminar la tienda entera** (decidido). Si hay pendiente una tarea con hora ya vencida o una urgente, la tarea con lista vuelve a `pendiente` (conservando lo hecho) y la respuesta trae la nueva `tarea_activa`.
-- `marcar_cajas`: en las bolsas, fija cuántas cajas lleva metidas (valor absoluto, de 0 a `cantidad`).
+- `marcar_cajas`: en las bolsas, fija cuántas cajas lleva metidas (valor absoluto, de 0 a `cantidad`). Una petición especial (Tarea 13) se marca igual, con 1 (metida) o 0; la tienda no está completa, ni la bolsa terminada, hasta tocarlas todas.
 - `terminar_elemento` es para referencias de producción; en bolsas se usa `marcar_cajas` (si no: `DATOS_NO_VALIDOS`).
 - Repetir cualquiera de las tres no es error: devuelve el estado ya alcanzado.
 - **Salida:** `{ "elemento": { id, estado, cantidad, cantidad_hecha }, "tarea_activa": {...} }`.
@@ -289,11 +297,13 @@ Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_rep
   "id_cliente": "<uuid>",
   "tipo": "reparto",
   "sale": "operario",
-  "lineas": [ { "destino_id": "<id de catalogo().tiendas>", "producto": "V2", "formato": "4g", "cantidad": 5 } ]
+  "lineas": [ { "destino_id": "<id de catalogo().tiendas>", "producto": "V2", "formato": "4g", "cantidad": 5 } ],
+  "peticiones": [ { "destino_id": "<id de catalogo().tiendas>", "texto": "Rollos de TPV" } ]
 }
 ```
 - `tipo`: `"reparto"` (por defecto) o `"envio"`. `sale` (`"operario"` | `"administracion"`) **es obligatorio en el reparto** (desplegable «¿Quién sale?»); en el envío no se usa.
 - `lineas`: `producto` y `formato` tal como los da `catalogo`; `destino_id`, una tienda de `catalogo().tiendas.reparto` (reparto) o `.envio` (envío). `cantidad`: entero; **0 se ignora** (contador sin tocar); la misma referencia repetida en la misma tienda se suma.
+- `peticiones` (opcional, Tarea 13, R1d): una por línea de la casilla «Peticiones especiales para [tienda]», con la misma tienda que las líneas (`catalogo().tiendas.reparto` o `.envio`). Texto libre de **120 letras como máximo**; los espacios de más se quitan, las vacías se ignoran y la misma petición repetida en la misma tienda cuenta una vez. Una tienda puede llevar solo peticiones, pero la lista necesita al menos un producto.
 - **Proceso:** vuelve a leer la hoja y **comprueba cada referencia** contra lo leído en ese momento. Con la lista escribe el texto de WhatsApp de siempre y lo calcula con R1 (`REGLAS_CALCULO.md` §2): **el mismo cálculo y la misma sustitución que al pegarlo** (si ya había reparto hoy, lo sustituye conservando lo hecho; el envío antes del recuento aparta las cajas del reparto). Crea o actualiza «Producción del reparto» y «Bolsas», y «Prepara el reparto» queda hecha.
 - **Salida correcta:** la misma que `pegar_reparto` (§3.8) más `texto_whatsapp`:
 ```json
@@ -304,12 +314,14 @@ Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_rep
   "datos_leidos_en": "...",
   "tarea_activa": { "...": "solo si lo guarda el operario" },
   "texto_whatsapp": "REPARTO 03/11\nSALE: ALMACÉN\n\nBILBAO\n12x V2 4g\n\nPORTU\n2x V2 4g",
-  "pedidos_cliente": [ { "...": "objeto pedido (§3.17) de los pedidos para recoger en tienda que van en este reparto" } ]
+  "pedidos_cliente": [ { "...": "objeto pedido (§3.17) de los pedidos para recoger en tienda que van en este reparto" } ],
+  "peticiones": [ { "destino_id": "...", "destino": "Bilbao", "texto": "Rollos de TPV" } ]
 }
 ```
+- **Peticiones especiales** (Tarea 13): se guardan con el reparto (o el envío) y van a la bolsa de su tienda (§3.2). **No van a producción ni cuentan como stock.** Al modificar, las que siguen igual conservan si ya estaban metidas, las quitadas desaparecen y una nueva vuelve a abrir la bolsa si ya estaba terminada. Vienen en `peticiones`, con el nombre de la tienda (lista vacía si no hay). Si algo no está en el almacén, el operario lo avisa con Incidencia → «Hay que pedir o comprar algo».
 - **Pedidos de cliente para recoger en tienda** (Tarea 12): los que esperan al reparto de hoy entran solos al guardarlo (también al modificarlo, sin duplicarse). No cambian la producción del reparto: cada uno tiene su tarea, después de la producción, con «coge / haz» calculado al salir la tarea (después de lo oficial), y su bolsa aparte en la tienda. Vienen en `pedidos_cliente` (lista vacía si no hay).
 - **Envío** (Tarea 12): mientras la hoja aún cuenta en el almacén lo que sale con el reparto (hasta el recuento de la mañana hecho después de terminar las bolsas), aparta también las cajas de los pedidos de tienda de hoy, no solo las del reparto (R1c).
-- **`texto_whatsapp`:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN` / `SALE: YO` (solo reparto), y por cada tienda una línea en blanco, su código en mayúsculas y `Nx PRODUCTO FORMATO`, con los nombres exactos de la hoja. Tiendas en el orden de `catalogo` y productos en el de la hoja. La pantalla lo copia **tal cual** con un botón para pegarlo en WhatsApp: no se abrevia nada.
+- **`texto_whatsapp`:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN` / `SALE: YO` (solo reparto), y por cada tienda una línea en blanco, su código en mayúsculas y `Nx PRODUCTO FORMATO`, con los nombres exactos de la hoja; si la tienda tiene peticiones especiales, después de sus productos una línea `Además: rollos de TPV; muestras de V2` (separadas por «; »). Tiendas en el orden de `catalogo` y productos en el de la hoja. La pantalla lo copia **tal cual** con un botón para pegarlo en WhatsApp: no se abrevia nada.
 - **Reintentos:** repetir con el mismo `id_cliente` devuelve lo ya guardado (con su `texto_whatsapp`), sin volver a leer la hoja ni calcular, con `ya_guardado: true` y `aviso: { codigo: "REPARTO_YA_GUARDADO" }`. Cada vez que se pulsa «Guardar» en una lista nueva o modificada, `id_cliente` nuevo.
 - **Avisos (no son errores):** `REPARTO_YA_GUARDADO` (reintento) y `REPARTO_SIN_CAMBIOS` («El reparto de hoy ya era este: no cambia nada»; devuelve lo de antes con `ya_pegado: true`). Para cambiar solo quién sale, `cambiar_quien_sale` (§3.12).
 - **Errores** (no se guarda nada):
@@ -318,7 +330,7 @@ Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_rep
 | --- | --- |
 | `REFERENCIA_NO_EXISTE` | Alguna referencia ya no está en la hoja. Dice cuáles en el mensaje y en `referencias: [{ producto, formato }]`. La pantalla vuelve a pedir `catalogo` y deja quitarla. |
 | `FALTA_SALE` | Reparto sin `sale`. Con el desplegable siempre relleno no aparece. |
-| `DATOS_NO_VALIDOS` | Sin `id_cliente` o `tipo` no válido, cantidad no entera o negativa, tienda que no vale para ese tipo, o lista vacía. |
+| `DATOS_NO_VALIDOS` | Sin `id_cliente` o `tipo` no válido, cantidad no entera o negativa, tienda que no vale para ese tipo, lista vacía, o petición especial de más de 120 letras o de una tienda que no vale. |
 | `SIN_JORNADA` | Hoy no hay jornada del operario. |
 | `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` · `CATALOGO_AMBIGUO` | Como siempre. No se calcula nada. |
 | `REPARTO_NO_CALCULADO` | No debería pasar: la lista era válida pero R1 no la acepta. Avisar a Administración. |
@@ -335,11 +347,13 @@ Las líneas del reparto (o del envío) de hoy, para abrir «Modificar reparto» 
     "reparto_id": "...", "tipo": "reparto", "sale": "operario",
     "aceptado_en": "...", "pegado_por": "<persona_id>", "pegado_por_nombre": "Administración",
     "texto_whatsapp": "REPARTO 03/11\nSALE: ALMACÉN\n\nBILBAO\n12x V2 4g",
-    "lineas": [ { "destino_id": "...", "destino": "Bilbao", "producto": "V2", "formato": "4g", "cantidad": 12 } ]
+    "lineas": [ { "destino_id": "...", "destino": "Bilbao", "producto": "V2", "formato": "4g", "cantidad": 12 } ],
+    "peticiones": [ { "destino_id": "...", "destino": "Bilbao", "texto": "Rollos de TPV" } ]
   }
 }
 ```
 - `sale` es quién sale **ahora** (si se cambió con `cambiar_quien_sale`, el texto también lo dice). En el envío, `sale` es `null`.
+- `peticiones` (Tarea 13): las peticiones especiales guardadas, para rellenar las casillas al modificar (lista vacía si no hay).
 - **Errores:** `DATOS_NO_VALIDOS` (tipo no válido), `SIN_JORNADA`, `NO_AUTORIZADO`.
 
 ### 3.16 `guardar_pedido_cliente` (función del servidor) ✅ (Tarea 12)
@@ -420,6 +434,18 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 - `cierres_recientes(limite = 10, máx. 50)` → `{ cierres: [{ id, fecha, turno, generado_en, enviado_en, hechas, sin_hacer, problemas, incidencias }] }`.
 - **Contenido** (`MODELO_DATOS.md` §3.12): `hecho` [{ titulo, resultado, hora }] · `no_hecho` [{ titulo, estado, motivo, pasa_a_manana }] (obligatorias y de Administración de ese turno; las de todo el día, en el último) · `problemas` [{ tarea, descripcion, abierto, minutos, mas_de_5_min, solucion, estado, llamadas }] · `incidencias` [objeto incidencia (§3.11) + { tarea, inicio, fin }] (las abiertas o cerradas en el turno y las que siguen abiertas de otros días) · `arrastrados` { llegaron (primer turno), pasan_a_manana (último turno) } · `retrasos_salida` y `cruce_retrasos` { cajas_reparto, cajas_a_producir, cajas_producidas, tiendas, incidencias_manana, minutos_incidencias_manana } (turno de mañana, si hubo retraso) · `siguiente` (lo que queda para la tarde, o lo que toca el próximo día de trabajo) · `calidad` solo el viernes y solo `{ "limpieza_viernes": true|false }`.
 
+### 4.5 `historico_dia(fecha)` · `historico_dias(desde, hasta)` ✅ (Tarea 13)
+Pantalla **Histórico** de Administración (`ESTADO_DEL_SISTEMA.md` §8): con un calendario, cualquier día. **Solo consulta**; siempre del operario por defecto.
+- **`historico_dia(fecha)`** → `{ fecha, jornada, reparto, envio, pedidos_cliente, cierres, tareas }`:
+  - `jornada`: `{ id, sale, hay_envio, estado }` o `null` si ese día no hubo jornada.
+  - `reparto` y `envio`: el mismo objeto que `reparto_de_hoy_detalle` (§3.15: quién salió, líneas por tienda, `peticiones` y `texto_whatsapp` para «Copiar para WhatsApp»), o `null`.
+  - `pedidos_cliente`: los de ese día (objeto pedido, §3.17; su `fecha` es la del reparto que los lleva o la de la salida a Nacex).
+  - `cierres`: los de ese día, como `cierre` (§4.4): `{ id, fecha, turno, generado_en, enviado_en, canal, contenido, texto }`.
+  - `tareas`: `{ hechas: [{ titulo, resultado, hora }], no_hechas: [{ titulo, estado, motivo, pasa_al_dia_siguiente }] }`.
+  - Un día sin jornada devuelve todo vacío (`null` y listas vacías), sin error.
+- **`historico_dias(desde, hasta)`** → `{ dias: [{ fecha, reparto, envio, pedidos_cliente, cierres, tareas_hechas }] }`: solo los días con algo (reparto, envío, pedidos, cierres o tareas hechas), para marcarlos en el calendario. Como mucho un año.
+- **Errores:** `NO_AUTORIZADO` (el operario no lo usa), `DATOS_NO_VALIDOS` (sin fecha; periodo al revés o de más de un año).
+
 ## 5. Internas (no las llaman las pantallas)
 
 | Función | Quién la llama | Qué hace |
@@ -432,7 +458,7 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 | `motor.tras_crear_usuario` (disparador en `auth.users`) ✅ | Al crearse el usuario | Da de alta su persona con el rol, el centro y el horario de la lista. Nunca impide el alta. |
 | `prueba.fijar_condicion(jornada, condicion, valor)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Simula `SALE:`, envío y eventos hasta que tengan su función real. Nadie tiene permiso para usarla. |
 | `prueba.invocar(funcion, persona, cuerpo)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Llama a una función del servidor desde la base de datos con una solicitud interna. |
-| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_reparto_por_id_cliente` · `servidor_reparto_anotar_id_cliente` (Tarea 10) · `servidor_preparar_pedido` · `servidor_guardar_pedido_cliente` · `servidor_asignar_pedidos` (Tarea 12) · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_respuesta` (y `servidor_correo_resultado`, de la Tarea 4) ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
+| `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_reparto_por_id_cliente` · `servidor_reparto_anotar_id_cliente` (Tarea 10) · `servidor_preparar_pedido` · `servidor_guardar_pedido_cliente` · `servidor_asignar_pedidos` (Tarea 12) · `servidor_guardar_peticiones` (Tarea 13) · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_respuesta` (y `servidor_correo_resultado`, de la Tarea 4) ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
 
 ## 6. Trazabilidad con las pantallas de §8
 
@@ -441,15 +467,16 @@ Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según 
 | Chromebook: una tarea, su porqué, abajo Empezar/Terminada e Incidencia, «lo que viene después» | `tarea_activa`, `iniciar_tarea`, `terminar_tarea`, `crear_incidencia` |
 | Chromebook, arriba: «Preparar reparto» / «Modificar reparto» y «Cerrar incidencias» (con el número) | `tarea_activa` (`reparto_de_hoy`, `incidencias_abiertas`), `incidencias_abiertas`, `cerrar_incidencia` |
 | Listas de producción (él elige el orden) | `tarea_activa` (elementos), `iniciar_elemento`, `terminar_elemento`, `lista_stock` |
-| Bolsas en el Pixel (una tienda por pantalla, con su bolsa de reposición y las de pedidos de cliente; toca cada caja; retrasar 15/30 min) | `tarea_activa` (elementos con `bolsa`), `marcar_cajas`, `retrasar_salida` |
+| Bolsas en el Pixel (una tienda por pantalla, con su bolsa de reposición, «Además, mete:» con las peticiones especiales y las bolsas de pedidos de cliente; toca cada caja y cada petición; retrasar 15/30 min) | `tarea_activa` (elementos con `bolsa`; peticiones con `tipo: "peticion"`), `marcar_cajas`, `retrasar_salida` |
 | Incidencia: llega mercancía, pedir o comprar, recogida en Nacex, corregir | `crear_incidencia` |
 | «Pedido de cliente» (operario o Administración): la lista, recoger en tienda o Nacex, y los pedidos abiertos | `catalogo`, `guardar_pedido_cliente`, `pedidos_cliente_abiertos` |
 | Tarea «Prepara el pedido de cliente (Nacex)»: «Pasar a mañana» | `aplazar_pedido_nacex` |
 | Incidencia → Estoy bloqueado (llamar, no contestan, solución) | `crear_incidencia` (`bloqueado`) o `abrir_problema`, `problema_llamada`, `resolver_problema` |
-| Preparar o modificar el reparto o el envío con la lista (operario o Administración), con el desplegable «¿Quién sale?» y el texto para WhatsApp | `catalogo`, `reparto_de_hoy_detalle`, `guardar_reparto`, `mi_perfil` (`quien_sale_opciones`), `cambiar_quien_sale` |
+| Preparar o modificar el reparto o el envío con la lista (operario o Administración), con el desplegable «¿Quién sale?», las casillas «Peticiones especiales para [tienda]» y el texto para WhatsApp | `catalogo`, `reparto_de_hoy_detalle`, `guardar_reparto`, `mi_perfil` (`quien_sale_opciones`), `cambiar_quien_sale` |
 | Inicio de Administración (móvil), con «Preparar reparto» / «Modificar reparto» | `estado_actual` (`reparto_de_hoy`), `catalogo`, `reparto_de_hoy_detalle`, `guardar_reparto` |
 | Nueva tarea (qué, para quién, cuándo, duración, urgente, por qué) | `crear_tarea_admin` |
 | Cierre | `cierre` (y correo) |
+| Histórico (Administración): calendario y un día (reparto y envío con «Copiar para WhatsApp», pedidos de cliente, cierres) | `historico_dias`, `historico_dia` |
 
 ## 7. Guía para las pantallas (Lovable) ✅
 
@@ -533,3 +560,6 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 8. **Tarea 10 · `pegar_reparto`:** se deja publicada (obsoleta) hasta que el coordinador diga quitarla.
 9. **Tarea 12 · Un pedido de tienda que no se hace el día de su reparto:** su tarea pasa al día siguiente con su lista, pero no vuelve a entrar sola en el reparto siguiente (la bolsa era del reparto de ese día).
 10. **Tarea 12 · Nacex:** los títulos de las tareas de Nacex dicen ahora «envío o pedido de cliente», porque Nacex también se activa solo por un pedido.
+11. **Tarea 13 · Varias peticiones de una tienda en el texto para WhatsApp:** van en una sola línea «Además: …», separadas por «; » (no por comas, porque una petición puede llevar comas: «Cajas vacías, 3»).
+12. **Tarea 13 · Peticiones repetidas:** la misma petición dos veces en la misma tienda (sin contar mayúsculas) cuenta una vez; para pedir más, se escribe en el texto («Rollos de TPV x2»).
+13. **Tarea 13 · Pedidos de cliente del histórico:** los del día del reparto que los lleva o de la salida a Nacex (no los del día en que se apuntaron).

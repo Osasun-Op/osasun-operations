@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1 y R3 (especificación V1)
 
-**Versión:** 0.7 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23).
+**Versión:** 0.8 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10).
 
 > Especificación exacta de las dos reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto) y **R3** (stock del almacén +35 %).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -145,6 +145,8 @@ Destinos: BILBAO, ALGORTA, DURANGO (alias `DURANGO`, `LAUDIO`), GIPUZKOA. Hoy = 
 | R1-25 | `SALE: ALMACÉN` · `BILBAO` · `1x V2 4g` con desplegable `administracion` | Aceptado. Sale Administración (manda el desplegable); el texto decía el operario y queda anotado. |
 | R1-26 | `SALE: ALMACÉN` · `SALE: YO` · `BILBAO` · `1x V2 4g` con desplegable `operario` | Aceptado, sin `SALE_CONTRADICTORIA`. Sale el operario. |
 | R1-27 | `BILBAO` · `1x V2 4g` sin desplegable; y `SALE: YO` · … sin desplegable | `FALTA_SALE`; y aceptado con Administración (manda el texto). |
+| R1-28 | `BILBAO` · `2x V2 4g` · `Además: rollos de TPV; muestras` · `ALGORTA` · `ademas: cajas vacías` | Aceptado. Las líneas «Además:» son peticiones de su tienda (clase `peticion`): no cuentan para producción ni bolsas. |
+| R1-29 | `Además: rollos` antes de ninguna tienda; `Además:` vacío | `LINEA_NO_RECONOCIDA` en las dos. |
 
 ### 2.9 Reparto con lista (Tarea 10, `ESTADO_DEL_SISTEMA.md` v1.21)
 El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 no cambia; la lista se convierte en el texto de siempre y se calcula con R1.
@@ -152,6 +154,7 @@ El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 n
 2. **Validación** contra la hoja leída al guardar: referencia que ya no está → `REFERENCIA_NO_EXISTE` (dice cuáles); tienda que no vale para el tipo (reparto: BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU; envío: GIPUZKOA, DURANGO; Donosti y Rentería son solo de consulta), cantidad no entera o negativa, o lista vacía → `DATOS_NO_VALIDOS`. Cantidad 0 se ignora; la misma referencia en la misma tienda se suma.
 3. **Texto:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN|YO` (solo reparto), y por tienda una línea en blanco, su código y `Nx PRODUCTO FORMATO` con los nombres exactos de la hoja. Tiendas en el orden de las hojas de tienda de STOCK OSASUN (configuración `destinos_reparto`); productos en el orden de la hoja. Se copia tal cual con un botón: no se abrevia.
 4. **Cálculo:** R1 sobre ese texto, con la fecha de hoy y el desplegable «¿Quién sale?» (§2.3). Mismo cálculo (§2.5), misma sustitución (§2.6) y mismo apartado del envío antes del recuento.
+5. **Peticiones especiales** (Tarea 13, `ESTADO_DEL_SISTEMA.md` v1.26, R1d): texto libre por tienda (rollos de TPV, muestras, cajas vacías…), una por línea, 120 letras como máximo; las vacías se ignoran y la misma en la misma tienda (sin contar mayúsculas) cuenta una vez. En el texto, tras los productos de su tienda, una línea `Además: …` con todas, separadas por «; ». R1 la reconoce y la ignora: **no cuentan como stock ni van a producción**. Van a la bolsa de su tienda, una a una para tocarlas.
 
 | # | Entrada | Resultado esperado |
 | --- | --- | --- |
@@ -164,6 +167,7 @@ El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 n
 | L-07 | El reparto real del 28/10 (el que dio 36 de 52 `PRODUCTO_DESCONOCIDO` al pegarlo), rehecho con la lista y la hoja de ese día | Se reconoce entero. Faltan solo INDOOR PR RELAX 4g (2), INDOOR PR AFRU 4g (4), ROYAL BERRY 4g (3) y CBD DRY 4g (5); 20 referencias en producción; bolsas Bilbao 6 referencias / 21 cajas, Algorta 7 / 21, Barakaldo 6 / 16, Basauri 13 / 61, Portugalete 6 / 15. |
 | L-08 | Envío `GIPUZKOA 8x V2 4g` antes del recuento; hoy el reparto pidió 25 V2 4g | Se apartan las 25: faltan 3 (como R1-22). |
 | L-09 | Envío a Durango y Gipuzkoa (`guardar_reparto`) | `ENVÍO dd/mm` · `GIPUZKOA` … · `DURANGO` …, en ese orden; Donosti, Rentería, Gipuzkoa o Durango en el reparto → `DATOS_NO_VALIDOS`. |
+| L-10 | Peticiones: Portu «Rollos de TPV»; Bilbao « muestras de V2 », «   » y «MUESTRAS DE V2»; Bilbao con 6 MINI 10g | `BILBAO` · `6x MINI 10g` · `Además: muestras de V2` · `PORTU` · `Además: Rollos de TPV` (Portu solo con peticiones). Más de 120 letras o tienda que no vale → `DATOS_NO_VALIDOS`. La producción y las bolsas son las mismas que sin peticiones. |
 
 ### 2.10 Pedidos de cliente y cajas en camino (Tarea 12, `ESTADO_DEL_SISTEMA.md` v1.24, R1b y R1c)
 **Coge / haz** (`motor.calcular_pedido`). Cada referencia de un pedido de cliente dice «Coge N del almacén» o «Haz N» (o las dos: «Coge 2 del almacén y haz 1»). **Se calcula al salir la tarea de prepararlo** (cuando le toca al operario; decidido por el propietario, 28/10/2026), no al guardar el pedido:

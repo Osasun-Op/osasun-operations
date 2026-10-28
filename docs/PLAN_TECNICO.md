@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 1.1 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7); «¿Quién sale?» (Tarea 8); reparto de hoy en el panel (Tarea 9); reparto con lista (Tarea 10); pedidos de cliente y cajas en camino (Tarea 12).
+**Versión:** 1.2 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7); «¿Quién sale?» (Tarea 8); reparto de hoy en el panel (Tarea 9); reparto con lista (Tarea 10); pedidos de cliente y cajas en camino (Tarea 12); peticiones especiales e histórico (Tarea 13).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -232,6 +232,7 @@ Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 | Problemas | §2.5 | ✅ 05, 09, 13 |
 | Incidencias (§6.6 v1.17) · Nunca sin tarea · Reparto desde Administración | §2.3, `CONTRATOS.md` §3.11 | ✅ 05, 13 |
 | Pedidos de cliente con la lista (§5 R1b v1.24): recoger en tienda en el siguiente reparto (bolsa aparte, tarea tras la producción) o Nacex (hasta las 18:00; tarea por la tarde o el viernes por la mañana, Nacex activado una vez; pasar a mañana); «coge / haz» al salir la tarea; cajas en camino (R1c, salida = bolsas listas) | `CONTRATOS.md` §3.14, §3.16, §3.17 y §3.18, `REGLAS_CALCULO.md` §2.10 y §3.9 | ✅ 17 (P-01 a P-08, C-01 a C-05), 13, 16; unitarias R3-21 a R3-23, `pedidos_test.ts`, `pedido_cliente_test.ts` y `reparto_lista_test.ts` |
+| Peticiones especiales en el reparto y el envío (§5 R1d v1.26): «Además: …» en el texto, en la bolsa de su tienda sin tocar producción ni stock, se marcan y se conservan al modificar. Histórico por día (§8): reparto y envío, pedidos, cierres y tareas; días con datos | `CONTRATOS.md` §3.2, §3.5, §3.14, §3.15 y §4.5, `REGLAS_CALCULO.md` §2.9 | ✅ 18, 16; unitarias R1-28, R1-29, L-10 y `reparto_lista_test.ts` |
 | Reparto con lista (§5 R1 v1.21): catálogo, guardar con el mismo cálculo, texto para WhatsApp, «Prepara el reparto» | `CONTRATOS.md` §3.13 a §3.15, `REGLAS_CALCULO.md` §2.9 | ✅ 16, 05; unitarias L-01 a L-09 y `reparto_lista_test.ts`; catálogo real de la hoja en el PR |
 | Quién sale (§5 R1 v1.20): desplegable, cambiar sin volver a pegar, orden bolsas → salida → efectivo | `CONTRATOS.md` §3.8 y §3.12 | ✅ 14; unitarias R1-25 a R1-27 |
 | Cierre | §2.5 bis, `cierres` + correo | ✅ 10; envío real en el PR de la Tarea 4 |
