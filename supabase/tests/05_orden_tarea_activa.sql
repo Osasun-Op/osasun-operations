@@ -51,7 +51,7 @@ begin
 
   r := pg_temp.toca('Escalón 4: tarea con hora ya vencida (revisión de las 08:30) antes que la cola', '08:31', 'revision_inicial');
   perform pg_temp.comprobar('«Lo que viene después» anuncia la siguiente tarea con hora',
-    r ->> 'siguiente' = 'Pega el reparto de hoy · 08:45', r ->> 'siguiente');
+    r ->> 'siguiente' = 'Prepara el reparto · 08:45', r ->> 'siguiente');
   perform pg_temp.toca('Escalón 4: con dos vencidas, primero la de hora más temprana', '08:50', 'revision_inicial');
 
   perform pg_temp.hecha(j, array['revision_inicial', 'pegar_reparto']);

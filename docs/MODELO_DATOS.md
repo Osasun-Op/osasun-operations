@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.6 · **Fecha:** 27/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 7).
+**Versión:** 0.7 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 10).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -164,7 +164,9 @@ Referencias de producción y cajas de cada bolsa.
 ### 3.8 `repartos` y `reparto_lineas` ✅
 Texto pegado y su interpretación (R1), para el reparto y para el envío.
 
-`repartos`: jornada_id · tipo (`reparto` · `envio`) · texto_original · huella (hash del texto) · fecha_en_texto · sale · estado (`con_errores` · `aceptado` · `sustituido`) · sustituye_a (FK) · lectura_id · resultado (jsonb) · pegado_por · pegado_en. **Un solo aceptado por jornada y tipo**; pegar el mismo texto otra vez devuelve el resultado guardado (huella igual).
+`repartos`: jornada_id · tipo (`reparto` · `envio`) · texto_original · huella (hash del texto) · fecha_en_texto · sale · estado (`con_errores` · `aceptado` · `sustituido`) · sustituye_a (FK) · lectura_id · resultado (jsonb) · pegado_por · pegado_en · id_cliente (único, Tarea 10). **Un solo aceptado por jornada y tipo**; pegar el mismo texto otra vez devuelve el resultado guardado (huella igual).
+
+Tarea 10 (reparto con lista): `texto_original` es el texto de WhatsApp generado con la lista (el que devuelve `guardar_reparto` como `texto_whatsapp`); `id_cliente` es el de la petición de `guardar_reparto` que lo guardó, para que un reintento devuelva lo mismo sin recalcular.
 
 **Reparto corregido** (decisión del propietario, §5 R1): la versión nueva pasa a `aceptado` y la anterior a `sustituido`. Se recalcula lo que falta producir **sin perder las cajas ya hechas**; las bolsas de tiendas sin cambios se conservan y las que cambian se vuelven a comprobar caja a caja.
 
@@ -190,7 +192,7 @@ Contenido: hecho y resultado; no hecho y motivo; problemas (tiempo y solución);
 ### 3.13 `configuracion` ✅
 clave · centro_id (nulo = general) · valor jsonb. Único (clave, centro) también con centro nulo.
 
-Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_min_por_caja` (1), `duracion_min_por_bolsa` (3). Tarea 4: `problema_minutos_reaparicion` (30), `correo_remitente`. Tarea 5: `correo_max_intentos` (3), `correo_minutos_reintento` (5); en pruebas, `cierres_sin_correo` (el operario ficticio desde el 03/11/2026). Solo en cada entorno, nunca en el repositorio: `entorno` ("pruebas"), `url_proyecto`, `correo_administracion` (destino de los cierres y avisos), `cuentas_autorizadas` (quién puede entrar, con su rol, centro y horario), `operario_por_defecto` y `telefono_administracion`. El resto (35 %, redondeo, minis, minutos de problemas, Sheets) llega con su tarea.
+Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_min_por_caja` (1), `duracion_min_por_bolsa` (3). Tarea 4: `problema_minutos_reaparicion` (30), `correo_remitente`. Tarea 5: `correo_max_intentos` (3), `correo_minutos_reintento` (5); en pruebas, `cierres_sin_correo` (el operario ficticio desde el 03/11/2026). Solo en cada entorno, nunca en el repositorio: `entorno` ("pruebas"), `url_proyecto`, `correo_administracion` (destino de los cierres y avisos), `cuentas_autorizadas` (quién puede entrar, con su rol, centro y horario), `operario_por_defecto` y `telefono_administracion`. El resto (35 %, redondeo, minis, minutos de problemas, Sheets) llega con su tarea. Tarea 10: `destinos_reparto` = `{ reparto: [BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU], envio: [GIPUZKOA, DURANGO] }` (qué tiendas se eligen al preparar el reparto o el envío y en qué orden, el de las hojas de STOCK OSASUN).
 
 ### 3.14 `registro_eventos` ✅
 Diario de todo lo que pasa (principio 7). Solo se añade. ocurrido_en · persona_id (nulo = sistema) · jornada_id · tarea_id · tipo · datos.
