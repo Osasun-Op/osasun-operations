@@ -1,6 +1,15 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.2 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 13).
+**Versión:** 1.3 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 14).
+
+> **Cambios en 1.3 (Tarea 14) — para Lovable: almacén ahora y pedidos de tienda que activan el reparto** (`ESTADO_DEL_SISTEMA.md` v1.27, §5 R1c; decisión del propietario del 28/10/2026).
+> 1. **`estado_actual`** (§4.3) trae un bloque nuevo, **`almacen_ahora`**, solo para mostrar: la hora del último recuento, la de la última lectura de la hoja, por referencia con movimiento desde el recuento `hoja`, `producido`, `salido` y `ahora`, y lo que va `en_camino` a cada tienda.
+> 2. **`catalogo`** (§3.13) trae **`pedidos_cliente`**: los pedidos para recoger en tienda que van en el reparto de hoy. En «Preparar reparto» se muestran **marcados y fijos** en su tienda, con su `texto` («Pedido de Ane a tienda de Bilbao») y sus cajas; no se pueden quitar.
+> 3. **`guardar_reparto`** (§3.14): si hay pedidos de tienda esperando, el reparto se puede guardar **sin productos** (solo con los pedidos). Sin pedidos, sigue haciendo falta al menos un producto.
+> 4. **`terminar_tarea`** (§3.3): «Prepara el reparto» con un pedido de tienda esperando **no se cierra sin reparto**, ni con motivo: error nuevo **`PEDIDO_ESPERANDO_REPARTO`** (mostrar el mensaje y llevar a «Preparar reparto»).
+> 5. **`guardar_pedido_cliente`** (§3.16): un pedido para recoger en tienda entra en el reparto de hoy mientras las bolsas no estén listas; si el reparto ya está guardado, entra al momento (sale con `estado: "por_preparar"` y su tarea aparece ya). La forma de la respuesta no cambia.
+> 6. Los cálculos del reparto, el envío, el «coge / haz» y la lista del +35 % usan el **almacén ahora** (hoja + lo producido − lo salido desde el recuento) y las cajas en camino con hora (reparto hasta las 23:30, envío hasta las 11:59 del día siguiente). Las respuestas no cambian de forma; en `lista_stock`, el `motivo` explica lo hecho desde el recuento y lo que va en camino.
+
 
 > **Cambios en 1.2 (Tarea 13) — para Lovable: peticiones especiales e histórico** (`ESTADO_DEL_SISTEMA.md` v1.26, §5 R1d y §8).
 > 1. **Peticiones especiales en `guardar_reparto`** (§3.14): campo nuevo `peticiones: [{ destino_id, texto }]`, una por línea de la casilla «Peticiones especiales para [tienda]» (texto libre, 120 letras como máximo; las vacías se ignoran). Vale para el reparto y para el envío. La respuesta trae `peticiones` y el `texto_whatsapp` lleva «Además: …» tras los productos de cada tienda.
@@ -145,6 +154,7 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
   - `ESTADO_NO_VALIDO` si no está en curso.
   - Si la tarea tiene elementos sin terminar: `ELEMENTOS_PENDIENTES` (con `pendientes`), salvo que se mande `motivo`. ✅
   - «Prepara el reparto» se cierra sola al guardarse un reparto (lo prepare quien lo prepare). Terminarla sin reparto exige `motivo`: si no, `MOTIVO_OBLIGATORIO`. ✅ Tarea 7 y 10
+  - Con un pedido para recoger en tienda esperando, no se puede terminar sin reparto, ni con motivo: `PEDIDO_ESPERANDO_REPARTO` («Hay un pedido de cliente para recoger en Bilbao (Ane). Prepara el reparto, aunque sea solo con el pedido.»), con el pedido en `error.pedido` (§3.17). ✅ Tarea 14
   - Una tarea con lista se cierra sola cuando se termina su último elemento; no hace falta pulsar «Terminada».
 - **Salida (ambas):** `{ "tarea": {...}, "tarea_activa": {...} }` (la nueva respuesta de `tarea_activa`).
 
@@ -209,7 +219,7 @@ Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas 
 Lista de producción para el stock del almacén (R3, cola A). Se calcula una vez por turno.
 - **Salida (operario):** `{ tarea, ya_calculado, lote, faltas, avisos, excluidos, datos_leidos_en }`. `faltas` = productos sin granel (se crea la tarea «Avisa a Administración: falta X»); `avisos` = datos que no se han podido calcular; `excluidos` = minis y vapers.
 - **Salida (Administración, consulta):** `{ lista, faltas, avisos, excluidos, datos_leidos_en }`, sin guardar nada.
-- **Cajas en camino** (R1c, Tarea 12): lo que ha salido hoy hacia las tiendas (reparto, pedidos de tienda y, el viernes, envío y pedidos de Nacex) se suma al contador hasta la mañana siguiente, desde que el recuento de la mañana ya no lo cuenta en el almacén: la salida es cuando el almacén termina las bolsas (el viernes, también el envío preparado) y el recuento se hace después. El elemento lo dice en `en_camino` y en el `motivo` («Tienes +25 (con 5 en camino a las tiendas)…»).
+- **Cajas de todas partes** (R1c, rehecha en la Tarea 14): el contador suma lo hecho desde el último recuento, resta lo que ha salido del almacén (los pedidos de Nacex salen del stock) y suma lo que va en camino a las tiendas (el reparto hasta las 23:30; el envío hasta las 11:59 del día siguiente). El elemento dice en `en_camino` las cajas en camino que la hoja aún no cuenta, y el `motivo` lo explica («Tienes +25 (con 6 hechas desde el recuento y 5 en camino a las tiendas)…»).
 - **Errores:** `SHEETS_NO_DISPONIBLE`, `ESTRUCTURA_SHEETS_CAMBIADA`, `SIN_TAREA`, `SIN_JORNADA`.
 
 **Quién llama a las funciones del servidor:** la sesión del usuario (cabecera `Authorization`, como hace `supabase.functions.invoke`) o una solicitud interna de un solo uso creada por la base de datos (cabecera `x-solicitud`). Las funciones comprueban la sesión ellas mismas.
@@ -281,9 +291,14 @@ Lo que se puede elegir al preparar el reparto o el envío. Solo lee (la hoja y l
     { "clave": "V2|4g", "producto": "V2", "formato": "4g", "categoria": "INVERNADERO", "orden": 2300 },
     { "clave": "SUGAR|CBD", "producto": "SUGAR", "formato": "CBD", "categoria": "HIGH TECH", "orden": 5100 }
   ],
+  "pedidos_cliente": [
+    { "id": "...", "cliente": "Ane", "destino_id": "...", "destino": "Bilbao", "texto": "Pedido de Ane a tienda de Bilbao",
+      "lineas": [ { "producto": "V2", "formato": "4g", "cantidad": 3 } ] }
+  ],
   "datos_leidos_en": "2026-11-03T07:47:12.000Z"
 }
 ```
+- `pedidos_cliente` (Tarea 14): los pedidos para recoger en tienda que van en el reparto de hoy (los que esperan y los que ya van en él). En «Preparar reparto» y «Modificar reparto» se muestran **marcados y fijos** en su tienda, con su `texto`; la pantalla no los manda en `lineas`: `guardar_reparto` los añade solo. Lista vacía si no hay.
 - `tiendas.reparto`: BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU. `tiendas.envio`: GIPUZKOA, DURANGO. **En el orden de las hojas de tienda de STOCK OSASUN** (decisión del propietario, 28/10). Donosti y Rentería no salen: sus hojas son solo de consulta. La lista y el orden están en la configuración (`destinos_reparto`), así que se pueden cambiar sin tocar las pantallas.
 - `productos`: una referencia por producto y formato de PRINCIPAL (y los productos sin formato, con `formato: ""`), **en el orden de la hoja**. `clave` (`producto|formato`) es estable mientras no cambie el nombre en la hoja: sirve para la lista y para los contadores. `categoria`: el grupo de la pestaña ALMACEN; si el producto no está allí, `"Otros"`.
 - **Errores:** `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` (los mismos de siempre), `CATALOGO_AMBIGUO`, `NO_AUTORIZADO`.
@@ -304,6 +319,7 @@ Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_rep
 - `tipo`: `"reparto"` (por defecto) o `"envio"`. `sale` (`"operario"` | `"administracion"`) **es obligatorio en el reparto** (desplegable «¿Quién sale?»); en el envío no se usa.
 - `lineas`: `producto` y `formato` tal como los da `catalogo`; `destino_id`, una tienda de `catalogo().tiendas.reparto` (reparto) o `.envio` (envío). `cantidad`: entero; **0 se ignora** (contador sin tocar); la misma referencia repetida en la misma tienda se suma.
 - `peticiones` (opcional, Tarea 13, R1d): una por línea de la casilla «Peticiones especiales para [tienda]», con la misma tienda que las líneas (`catalogo().tiendas.reparto` o `.envio`). Texto libre de **120 letras como máximo**; los espacios de más se quitan, las vacías se ignoran y la misma petición repetida en la misma tienda cuenta una vez. Una tienda puede llevar solo peticiones, pero la lista necesita al menos un producto.
+- **Reparto solo con pedidos** (Tarea 14): si hay pedidos de tienda esperando (`catalogo().pedidos_cliente`), `lineas` puede ir vacía: el reparto se guarda solo con los pedidos (sin producción) y sale como cualquier reparto (bolsas, salida, efectivo si sale el operario). Sin pedidos, hace falta al menos un producto.
 - **Proceso:** vuelve a leer la hoja y **comprueba cada referencia** contra lo leído en ese momento. Con la lista escribe el texto de WhatsApp de siempre y lo calcula con R1 (`REGLAS_CALCULO.md` §2): **el mismo cálculo y la misma sustitución que al pegarlo** (si ya había reparto hoy, lo sustituye conservando lo hecho; el envío antes del recuento aparta las cajas del reparto). Crea o actualiza «Producción del reparto» y «Bolsas», y «Prepara el reparto» queda hecha.
 - **Salida correcta:** la misma que `pegar_reparto` (§3.8) más `texto_whatsapp`:
 ```json
@@ -372,9 +388,9 @@ Botón **«Pedido de cliente»**: las cajas con la misma lista que el reparto y 
 ```
 - `cliente`: nombre corto, obligatorio (60 letras como máximo). `entrega`: `"tienda"` (recoger en tienda; `destino_id` obligatorio, una tienda del reparto) o `"nacex"` (envío por Nacex; `datos_envio` obligatorio: el texto pegado tal cual, con sus saltos de línea). `lineas`: como en `guardar_reparto` pero **sin tienda**; 0 se ignora, repetidas se suman.
 - **Proceso:** lee la hoja y comprueba cada referencia (como `guardar_reparto`).
-  - **Recoger en tienda:** el pedido espera al **siguiente reparto calculado**: el de hoy si aún no está calculado; si ya lo está (o ya ha salido), el del siguiente día de trabajo. Al guardar ese reparto entra solo (§3.14): tarea «Hay un pedido de cliente para dejar en [tienda] · [cliente]» (aparece **al terminar la producción del reparto**, antes de las bolsas, con la misma hora límite) y bolsa aparte «Pedido de cliente · [cliente]».
+  - **Recoger en tienda** (Tarea 14: el pedido activa el reparto): va en el reparto de hoy mientras **las bolsas no estén listas** (si aún no hay reparto, mientras «Prepara el reparto» siga abierta); si no, en el del siguiente día de trabajo. Si el reparto de hoy ya está guardado, **entra en él al momento**; si no, entra al guardarlo (§3.14), aunque sea solo con el pedido. En los dos casos: tarea «Hay un pedido de cliente para dejar en [tienda] · [cliente]» (aparece **al terminar la producción del reparto**, antes de las bolsas, con la misma hora límite) y bolsa aparte «Pedido de cliente · [cliente]».
   - **Nacex:** tarea «Prepara el pedido de cliente (Nacex) · [cliente]» con la lista y los datos de envío en `porque`. De lunes a jueves, por la tarde (después de la revisión y la preparación del envío), antes de las 18:10; el viernes, por la mañana, antes de las 10:45, y lo lleva quien sale de reparto. **Activa Nacex ese día** (recuento a las 17:55 y «Salida a Nacex» a las 18:10; el viernes, «Lleva en el reparto lo que va a Nacex…»). Si ya hay envío, es el mismo viaje. Los pedidos de Nacex **entran hasta las 18:00** de lunes a jueves (el viernes, hasta las 10:45) y mientras la salida a Nacex no esté hecha; si no, van al siguiente día de trabajo. Si por la producción no llega a salir ese día, el operario lo pasa al día siguiente (§3.18); si queda sin hacer, pasa solo, como tarea de Nacex de ese día y con Nacex activado.
-  - En las dos, **al salir la tarea** (cuando le toca al operario), cada referencia dice en `motivo` **«Coge N del almacén»** o **«Haz N»** (o las dos cosas: «Coge 2 del almacén y haz 1»). Se calcula en ese momento con la última lectura de la hoja: lo que había en el almacén menos lo comprometido ese día que la hoja aún contaba (reparto, envío y pedidos anteriores, R1c). Al guardar el pedido, `motivo` aún es `null`.
+  - En las dos, **al salir la tarea** (cuando le toca al operario), cada referencia dice en `motivo` **«Coge N del almacén»** o **«Haz N»** (o las dos cosas: «Coge 2 del almacén y haz 1»). Se calcula en ese momento con el **almacén ahora** (la última lectura de la hoja + lo producido − lo salido desde el recuento), menos lo que aún no ha salido y va antes (reparto, envío y pedidos anteriores, R1c). Al guardar el pedido, `motivo` aún es `null`.
 - **Salida:** `{ pedido: (objeto pedido, §3.17), tarea: (la de Nacex; null en tienda), tarea_activa: (solo al operario) }`.
 - **Reintentos:** repetir con el mismo `id_cliente` devuelve el mismo pedido, sin leer la hoja, con `ya_guardado: true` y `aviso: { codigo: "PEDIDO_YA_GUARDADO" }`.
 - **Errores:** `DATOS_NO_VALIDOS` (sin cliente, sin tienda o tienda que no es del reparto, sin datos de envío en Nacex, entrega no válida, cantidades no válidas o lista vacía), `REFERENCIA_NO_EXISTE` (con cuáles), `SIN_JORNADA`, `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` · `CATALOGO_AMBIGUO`, `NO_AUTORIZADO`.
@@ -427,6 +443,7 @@ Pasa la tarea a `cancelada` con su motivo (obligatorio) y retira la llamada pend
 
 ### 4.3 `estado_actual()` ✅
 Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, operario, jornada: { id, sale, hay_envio, estado }, en_curso: tarea con sus elementos, reparto_de_hoy, problemas_abiertos: [...], incidencia_en_curso, incidencias_abiertas: [objeto incidencia, §3.11], arrastradas: [...], hoy: [{ id, titulo, estado, origen, obligatoria, urgente, hora, motivo }], retrasos_salida: [{ a_las, minutos, nueva_hora, sale, aviso }], correos_no_enviados: [{ tipo, asunto, estado: "fallido"|"dudoso", intentos, error, creado_en }], lectura_sheets: { ultima_correcta, ultimo_error } }`. `correos_no_enviados` = cierres o avisos de los últimos 7 días que no se han podido enviar (mostrarlos como aviso). `reparto_de_hoy` ✅ Tarea 9: el reparto aceptado hoy en la jornada del operario por defecto, el mismo objeto que en `tarea_activa` (`null` → «Preparar reparto»; si no, «Modificar reparto»).
+- **`almacen_ahora`** ✅ Tarea 14 (solo para mostrar): `{ recuento_en, datos_leidos_en, referencias: [{ producto, formato, hoja, producido, salido, ahora }], en_camino: [{ destino_id, destino, producto, formato, cantidad }] }`. `recuento_en`: el último recuento que recoge la hoja leída (`datos_leidos_en`). `referencias`: las que han tenido movimiento desde ese recuento; `ahora = hoja + producido − salido`. `en_camino`: lo que va a cada tienda (el reparto hasta las 23:30; el envío hasta las 11:59 del día siguiente).
 
 ### 4.4 `cierre(cierre_id)` · `cierres_recientes(limite)` ✅
 Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según el horario), generado solo y enviado **por correo**, una sola vez.
@@ -543,6 +560,7 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 | `CONFLICTO` | Mostrar `conflicto.obligatorias_en_riesgo` y los minutos que faltan; Administración elige qué cede (o no crear) y se repite `crear_tarea_admin` con `decision_conflicto` y `confirmar: true`. |
 | `PROBLEMA_YA_ABIERTO` · `INCIDENCIA_YA_ABIERTA` | Mostrar el abierto en vez de crear otro: `error.problema` (objeto problema) / `error.incidencia_id` y `error.incidencia` (§3.10). |
 | `MOTIVO_OBLIGATORIO` | «Prepara el reparto» sin reparto: ofrecer «Preparar reparto» o escribir el motivo y repetir `terminar_tarea` con `motivo`. |
+| `PEDIDO_ESPERANDO_REPARTO` | «Prepara el reparto» con un pedido de tienda esperando: mostrar el mensaje y llevar a «Preparar reparto» (con el pedido ya marcado). No se puede cerrar con motivo. |
 | `SIN_TAREA` | Mostrar el mensaje (ej. «Estoy bloqueado» sin ninguna tarea abierta). |
 | `SOLUCION_OBLIGATORIA` · `DATOS_NO_VALIDOS` · `CANTIDAD_FUERA_DE_RANGO` | Mostrar junto al campo y dejar corregir. |
 | `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` | Mostrar el mensaje; el resto de la app sigue funcionando. |
@@ -563,3 +581,6 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 11. **Tarea 13 · Varias peticiones de una tienda en el texto para WhatsApp:** van en una sola línea «Además: …», separadas por «; » (no por comas, porque una petición puede llevar comas: «Cajas vacías, 3»).
 12. **Tarea 13 · Peticiones repetidas:** la misma petición dos veces en la misma tienda (sin contar mayúsculas) cuenta una vez; para pedir más, se escribe en el texto («Rollos de TPV x2»).
 13. **Tarea 13 · Pedidos de cliente del histórico:** los del día del reparto que los lleva o de la salida a Nacex (no los del día en que se apuntaron).
+14. **Tarea 13 · Solo peticiones, sin productos** (decidido por el propietario, 28/10): no se guarda un reparto ni un envío solo con peticiones especiales. Las peticiones van en el siguiente reparto que salga o en una visita. Más adelante, las tiendas tendrán un botón para cerrar sus peticiones especiales.
+15. **Tarea 14 · Un pedido de tienda activa el reparto** (decidido por el propietario, 28/10): si «Prepara el reparto» ya se cerró sin reparto (sin pedidos esperando entonces), un pedido apuntado después va al siguiente día de trabajo.
+16. **Tarea 14 · Primer reparto del día** (decidido por el propietario, 28/10): también con el almacén ahora; a primera hora da lo mismo que la hoja.

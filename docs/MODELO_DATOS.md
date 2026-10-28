@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.9 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 13).
+**Versión:** 1.0 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 14).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -199,7 +199,7 @@ Contenido: hecho y resultado; no hecho y motivo; problemas (tiempo y solución);
 ### 3.13 `configuracion` ✅
 clave · centro_id (nulo = general) · valor jsonb. Único (clave, centro) también con centro nulo.
 
-Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_min_por_caja` (1), `duracion_min_por_bolsa` (3). Tarea 4: `problema_minutos_reaparicion` (30), `correo_remitente`. Tarea 5: `correo_max_intentos` (3), `correo_minutos_reintento` (5); en pruebas, `cierres_sin_correo` (el operario ficticio desde el 03/11/2026). Solo en cada entorno, nunca en el repositorio: `entorno` ("pruebas"), `url_proyecto`, `correo_administracion` (destino de los cierres y avisos), `cuentas_autorizadas` (quién puede entrar, con su rol, centro y horario), `operario_por_defecto` y `telefono_administracion`. El resto (35 %, redondeo, minis, minutos de problemas, Sheets) llega con su tarea. Tarea 10: `destinos_reparto` = `{ reparto: [BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU], envio: [GIPUZKOA, DURANGO] }` (qué tiendas se eligen al preparar el reparto o el envío y en qué orden, el de las hojas de STOCK OSASUN).
+Claves cargadas en la Tarea 2: `hora_generacion_jornada` ("06:00"), `duracion_min_por_caja` (1), `duracion_min_por_bolsa` (3). Tarea 4: `problema_minutos_reaparicion` (30), `correo_remitente`. Tarea 5: `correo_max_intentos` (3), `correo_minutos_reintento` (5); en pruebas, `cierres_sin_correo` (el operario ficticio desde el 03/11/2026). Solo en cada entorno, nunca en el repositorio: `entorno` ("pruebas"), `url_proyecto`, `correo_administracion` (destino de los cierres y avisos), `cuentas_autorizadas` (quién puede entrar, con su rol, centro y horario), `operario_por_defecto` y `telefono_administracion`. El resto (35 %, redondeo, minis, minutos de problemas, Sheets) llega con su tarea. Tarea 10: `destinos_reparto` = `{ reparto: [BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU], envio: [GIPUZKOA, DURANGO] }` (qué tiendas se eligen al preparar el reparto o el envío y en qué orden, el de las hojas de STOCK OSASUN). Tarea 14: `en_camino_reparto_hasta` ("23:30") y `en_camino_envio_hasta` ("11:59", del día siguiente): hasta cuándo cuentan en camino a su tienda el reparto y el envío (R1c).
 
 ### 3.14 `registro_eventos` ✅
 Diario de todo lo que pasa (principio 7). Solo se añade. ocurrido_en · persona_id (nulo = sistema) · jornada_id · tarea_id · tipo · datos.
