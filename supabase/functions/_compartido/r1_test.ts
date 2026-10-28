@@ -174,3 +174,14 @@ Deno.test("R1-27 sin desplegable ni SALE: sigue FALTA_SALE; con SALE: y sin desp
   const r = r1(["SALE: YO", "BILBAO", "1x V2 4g"]);
   assertEquals([r.estado, r.sale, r.saleTexto], ["aceptado", "administracion", "administracion"]);
 });
+
+Deno.test("R1-28 «Además: …» tras los productos de una tienda: petición especial, no cuenta para producción ni bolsas (R1d)", () => {
+  const r = r1(["SALE: ALMACÉN", "BILBAO", "2x V2 4g", "Además: rollos de TPV; muestras", "ALGORTA", "ademas: cajas vacías"]);
+  assertEquals([r.estado, faltan(r), r.bolsas.map((b) => b.items.length)], ["aceptado", { "V2 4g": 0 }, [1]]);
+  assertEquals(r.lineas.filter((l) => l.clase === "peticion").map((l) => [l.num, l.destino_id]), [[4, "bilbao"], [6, "algorta"]]);
+});
+
+Deno.test("R1-29 «Además:» sin tienda antes o vacío: línea no reconocida", () => {
+  assertEquals(errores(r1(["SALE: ALMACÉN", "Además: rollos", "BILBAO", "2x V2 4g", "Además:   "])),
+               ["2:LINEA_NO_RECONOCIDA", "5:LINEA_NO_RECONOCIDA"]);
+});

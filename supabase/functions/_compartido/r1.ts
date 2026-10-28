@@ -16,7 +16,7 @@ export interface EntradaCatalogo {
   orden: number;
 }
 
-export type Clase = "cabecera" | "sale" | "tienda" | "producto" | "vacia" | "no_reconocida";
+export type Clase = "cabecera" | "sale" | "tienda" | "producto" | "peticion" | "vacia" | "no_reconocida";
 
 export interface Linea {
   num: number;
@@ -147,6 +147,14 @@ export function analizarReparto(
       if (v === "ALMACÉN" || v === "ALMACEN") l.sale = "operario";
       else if (v === "YO") l.sale = "administracion";
       if (l.sale) sales.add(l.sale);
+    } else if ((m = /^ADEM[AÁ]S\s*:(.*)$/i.exec(t))) {
+      // Peticiones especiales de la tienda (R1d): no cuentan como stock ni van a producción.
+      if (destino === null || m[1].trim() === "") {
+        errores.push(conError(l, "LINEA_NO_RECONOCIDA"));
+      } else {
+        l.clase = "peticion";
+        l.destino_id = destino.id;
+      }
     } else if ((m = /^(\d+)\s*[xX]\s*(.+)$/.exec(t))) {
       l.clase = "producto";
       productos++;

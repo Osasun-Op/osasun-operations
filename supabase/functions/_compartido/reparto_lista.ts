@@ -5,7 +5,7 @@
 
 import type { Pestanas, ResultadoLectura } from "./google.ts";
 import type { Destino } from "./r1.ts";
-import { prepararReparto, referencias, validarLineas } from "./lista.ts";
+import { prepararReparto, referencias, validarLineas, validarPeticiones } from "./lista.ts";
 import { type Cajas, type Comprometido, listaPedido, SIN_COMPROMISOS } from "./pedidos.ts";
 
 export interface Dependencias {
@@ -81,7 +81,7 @@ export async function catalogoDe(d: Dependencias, persona: string): Promise<Resp
   };
 }
 
-/** guardar_reparto(id_cliente, tipo, sale?, lineas): calcula y guarda el reparto o el envío. */
+/** guardar_reparto(id_cliente, tipo, sale?, lineas, peticiones?): calcula y guarda el reparto o el envío. */
 export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo: Record<string, unknown>): Promise<Respuesta> {
   const tipo = cuerpo.tipo === "envio" ? "envio" : cuerpo.tipo === "reparto" || cuerpo.tipo === undefined ? "reparto" : null;
   const idCliente = typeof cuerpo.id_cliente === "string" && UUID.test(cuerpo.id_cliente) ? cuerpo.id_cliente : null;
@@ -117,10 +117,12 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   const destinos = tiendasDe(ctx, tipo);
   const v = validarLineas(cuerpo.lineas, entradas, destinos);
   if (!v.ok) return error(v.codigo, v.mensaje, v.detalle);
+  const pv = validarPeticiones(cuerpo.peticiones, destinos);
+  if (!pv.ok) return error("DATOS_NO_VALIDOS", pv.mensaje, pv.detalle);
 
   const c = ctx.comprometido ?? SIN_COMPROMISOS;
   const { texto, r } = prepararReparto({
-    tipo, hoy: { dia: ctx.dia, mes: ctx.mes }, sale, lineas: v.lineas, destinos, entradas,
+    tipo, hoy: { dia: ctx.dia, mes: ctx.mes }, sale, lineas: v.lineas, destinos, entradas, peticiones: pv.peticiones,
     // Envío: primero se apartan las cajas que salen hoy con el reparto (reparto y
     // pedidos de tienda) mientras la hoja aún las cuenta, es decir, antes del
     // recuento de la mañana (v1.11 y R1c). Lo decide motor.comprometido.
@@ -140,6 +142,12 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   });
   if (guardado.error) return guardado;
 
+  // Peticiones especiales (R1d): en la bolsa de su tienda, sin tocar producción
+  // ni stock. También si el reparto no cambia, por si la llamada anterior se cortó.
+  const { peticiones } = await d.rpc<{ peticiones: unknown[] }>("servidor_guardar_peticiones", {
+    p_persona: persona, p_reparto: guardado.reparto_id, p_peticiones: pv.peticiones,
+  });
+
   // Pedidos de cliente para recoger en tienda (R1b): van en este reparto, con su
   // tarea y su bolsa aparte («coge / haz» al salir la tarea). También si el
   // reparto no cambia, para no perder un pedido si la llamada anterior se cortó.
@@ -157,8 +165,8 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   }
   await d.rpc("servidor_reparto_anotar_id_cliente", { p_reparto: guardado.reparto_id, p_id_cliente: idCliente });
   if (guardado.ya_pegado) {
-    return { ...guardado, texto_whatsapp: texto, pedidos_cliente: pedidosCliente,
+    return { ...guardado, texto_whatsapp: texto, peticiones, pedidos_cliente: pedidosCliente,
              aviso: { codigo: "REPARTO_SIN_CAMBIOS", mensaje: "El reparto de hoy ya era este: no cambia nada." } };
   }
-  return { ...guardado, texto_whatsapp: texto, pedidos_cliente: pedidosCliente };
+  return { ...guardado, texto_whatsapp: texto, peticiones, pedidos_cliente: pedidosCliente };
 }

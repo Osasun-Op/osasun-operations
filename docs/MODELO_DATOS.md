@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 0.8 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 12).
+**Versión:** 0.9 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 13).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -145,12 +145,12 @@ Restricciones: único (jornada, clave) · **una sola tarea `en_curso` por jornad
 `reparto_id` (FK a `repartos`): tareas creadas por el reparto o el envío (Tarea 3).
 
 ### 3.7 `tarea_elementos` ✅
-Referencias de producción y cajas de cada bolsa.
+Referencias de producción, cajas de cada bolsa y peticiones especiales (Tarea 13).
 
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | tarea_id | FK | |
-| tipo | `referencia_produccion` · `caja_bolsa` | |
+| tipo | `referencia_produccion` · `caja_bolsa` · `peticion` | `peticion` (Tarea 13, R1d): una petición especial en la bolsa de su tienda; el texto va en `producto`, `formato` vacío y `cantidad` 1. |
 | lote | text | Lista dentro de la tarea: `reparto`, `envio`, o el turno (`manana`/`tarde`) en la de stock. Único (tarea, tipo, lote, destino, producto, formato). |
 | producto, formato, categoria | text | Tal como en PRINCIPAL. |
 | destino_id | FK → centros_trabajo | Tienda o destino de la bolsa. |
@@ -164,13 +164,15 @@ Referencias de producción y cajas de cada bolsa.
 ### 3.8 `repartos` y `reparto_lineas` ✅
 Texto pegado y su interpretación (R1), para el reparto y para el envío.
 
-`repartos`: jornada_id · tipo (`reparto` · `envio`) · texto_original · huella (hash del texto) · fecha_en_texto · sale · estado (`con_errores` · `aceptado` · `sustituido`) · sustituye_a (FK) · lectura_id · resultado (jsonb) · pegado_por · pegado_en · id_cliente (único, Tarea 10). **Un solo aceptado por jornada y tipo**; pegar el mismo texto otra vez devuelve el resultado guardado (huella igual).
+`repartos`: jornada_id · tipo (`reparto` · `envio`) · texto_original · huella (hash del texto) · fecha_en_texto · sale · estado (`con_errores` · `aceptado` · `sustituido`) · sustituye_a (FK) · lectura_id · resultado (jsonb) · pegado_por · pegado_en · id_cliente (único, Tarea 10) · peticiones (jsonb: `[{ destino_id, texto }]`, Tarea 13). **Un solo aceptado por jornada y tipo**; pegar el mismo texto otra vez devuelve el resultado guardado (huella igual).
 
 Tarea 10 (reparto con lista): `texto_original` es el texto de WhatsApp generado con la lista (el que devuelve `guardar_reparto` como `texto_whatsapp`); `id_cliente` es el de la petición de `guardar_reparto` que lo guardó, para que un reintento devuelva lo mismo sin recalcular.
 
+Tarea 13 (peticiones especiales, R1d): `peticiones` guarda las de cada tienda tal como se pidieron; la línea «Además: …» del texto queda en `reparto_lineas` con clase `peticion`. En la tarea de bolsas (o la del envío) cada una es un elemento `peticion` (lote `reparto` o `envio`); al sustituir el reparto se conservan las que siguen igual (con lo ya marcado) y se quitan las que ya no están.
+
 **Reparto corregido** (decisión del propietario, §5 R1): la versión nueva pasa a `aceptado` y la anterior a `sustituido`. Se recalcula lo que falta producir **sin perder las cajas ya hechas**; las bolsas de tiendas sin cambios se conservan y las que cambian se vuelven a comprobar caja a caja.
 
-`reparto_lineas`: reparto_id · num_linea · texto · clase (`cabecera` · `sale` · `tienda` · `producto` · `vacia` · `no_reconocida`) · destino_id · cantidad · producto · formato · error.
+`reparto_lineas`: reparto_id · num_linea · texto · clase (`cabecera` · `sale` · `tienda` · `producto` · `peticion` · `vacia` · `no_reconocida`) · destino_id · cantidad · producto · formato · error.
 
 ### 3.9 `eventos_jornada` ✅ (Tarea 4, con `registrar_evento`)
 Lo que pasa «en cualquier momento» (§4): `llega_mercancia` · `pedido_cliente` · `no_quedan_vapers`. jornada_id · tipo · detalle · tarea_id (la tarea que creó) · registrado_por · registrado_en · id_cliente único. El **pedido de cliente** lo registra quien lo recibe: el operario con su botón o Administración como tarea nueva (§4). Desde la Tarea 12, el pedido de cliente va en `pedidos_cliente` (§3.9 bis); este tipo de evento queda solo por compatibilidad.

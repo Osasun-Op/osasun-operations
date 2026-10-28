@@ -38,6 +38,7 @@ function falso(o: { ctx?: Record<string, unknown>; previo?: unknown; lectura?: R
         servidor_guardar_reparto: o.guardado ?? { reparto_id: "reparto-1", estado: "aceptado", tarea_activa: null },
         servidor_reparto_anotar_id_cliente: null,
         servidor_asignar_pedidos: { pedidos: [{ id: "pedido-1", estado: "por_preparar" }] },
+        servidor_guardar_peticiones: { peticiones: args.p_peticiones },
       };
       return Promise.resolve(r[nombre] as T);
     },
@@ -174,4 +175,49 @@ Deno.test("guardar_reparto: sin cambios en el reparto, los pedidos que esperan s
                     guardado: { reparto_id: "reparto-0", estado: "aceptado", ya_pegado: true } });
   const r = await guardarRepartoDe(f.d, "p", cuerpo()) as Record<string, unknown>;
   assertEquals([(r.aviso as { codigo: string }).codigo, f.args("servidor_asignar_pedidos")!.p_reparto], ["REPARTO_SIN_CAMBIOS", "reparto-0"]);
+});
+
+Deno.test("guardar_reparto: peticiones especiales en el texto («Además: …» tras los productos de su tienda), sin tocar producción ni bolsas (R1d)", async () => {
+  const sin = falso();
+  await guardarRepartoDe(sin.d, "p", cuerpo());
+  const f = falso();
+  const r = await guardarRepartoDe(f.d, "p", cuerpo({ peticiones: [
+    { destino_id: "algorta", texto: "  rollos   de TPV " }, { destino_id: "bilbao", texto: "Muestras de V2" },
+    { destino_id: "bilbao", texto: "" }, { destino_id: "bilbao", texto: "muestras de v2" },
+    { destino_id: "bilbao", texto: "Cajas vacías, 3" },
+  ] })) as Record<string, unknown>;
+  const g = f.args("servidor_guardar_reparto")!;
+  const texto = (g.p_texto as string).split("\n");
+  const i = texto.indexOf("ALGORTA");
+  assertEquals(texto[i - 2], "Además: Muestras de V2; Cajas vacías, 3");
+  assertEquals(texto.filter((l) => l.startsWith("Además:")), ["Además: Muestras de V2; Cajas vacías, 3", "Además: rollos de TPV"]);
+  assertEquals((g.p_lineas as { clase: string; destino_id?: string }[]).filter((l) => l.clase === "peticion").map((l) => l.destino_id),
+               ["bilbao", "algorta"]);
+  const s0 = sin.args("servidor_guardar_reparto")!;
+  assertEquals([g.p_produccion, g.p_bolsas], [s0.p_produccion, s0.p_bolsas]);
+  const esperadas = [{ destino_id: "bilbao", texto: "Muestras de V2" }, { destino_id: "bilbao", texto: "Cajas vacías, 3" },
+                     { destino_id: "algorta", texto: "rollos de TPV" }];
+  assertEquals(f.args("servidor_guardar_peticiones"), { p_persona: "p", p_reparto: "reparto-1", p_peticiones: esperadas });
+  assertEquals([r.peticiones, r.texto_whatsapp], [esperadas, g.p_texto]);
+});
+
+Deno.test("guardar_reparto: una tienda solo con peticiones también sale en el texto; sin peticiones, lista vacía", async () => {
+  const f = falso();
+  await guardarRepartoDe(f.d, "p", cuerpo({ lineas: [{ destino_id: "bilbao", producto: "V2", formato: "4g", cantidad: 2 }],
+                                             peticiones: [{ destino_id: "portu", texto: "Rollos de TPV" }] }));
+  assertEquals((f.args("servidor_guardar_reparto")!.p_texto as string).split("\n"),
+               ["REPARTO 28/10", "SALE: YO", "", "BILBAO", "2x V2 4g", "", "PORTU", "Además: Rollos de TPV"]);
+  const v = falso();
+  await guardarRepartoDe(v.d, "p", cuerpo());
+  assertEquals(v.args("servidor_guardar_peticiones")!.p_peticiones, []);
+});
+
+Deno.test("guardar_reparto: petición de más de 120 letras o de una tienda que no es del reparto: DATOS_NO_VALIDOS", async () => {
+  const largo = await guardarRepartoDe(falso().d, "p", cuerpo({ peticiones: [{ destino_id: "bilbao", texto: "x".repeat(121) }] }));
+  assertEquals((largo as { error: { mensaje: string } }).error.mensaje, "Cada petición especial, 120 letras como máximo.");
+  const f = falso();
+  const tienda = await guardarRepartoDe(f.d, "p", cuerpo({ peticiones: [{ destino_id: "gipuzkoa", texto: "Rollos" }] }));
+  assertEquals([(tienda as { error: { codigo: string } }).error.codigo, f.args("servidor_guardar_reparto")], ["DATOS_NO_VALIDOS", undefined]);
+  const ok = await guardarRepartoDe(falso().d, "p", cuerpo({ peticiones: [{ destino_id: "bilbao", texto: "x".repeat(120) }] }));
+  assertEquals((ok as Record<string, unknown>).error, undefined);
 });
