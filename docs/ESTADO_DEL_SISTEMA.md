@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.21 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.22 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -133,7 +133,7 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
 6. Lo pueden preparar **Administración y el operario**. **Modificar** = abrir el de hoy, cambiar números y volver a calcular: sustituye al anterior y conserva lo ya hecho. La tarea «Prepara el reparto» se cierra sola al calcularse uno; si se pulsa «Terminada» sin reparto, la app pide el motivo.
 7. Se puede cambiar quién sale sin tocar el reparto. Si sale el operario, tras «Bolsas listas en la mesa de salida» (10:45) le aparece «Salida del reparto» y, a la vuelta, «Efectivo y reporte».
 
-- **Tiendas:** BILBAO, ALGORTA, DONOSTI, BARAKALDO, RENTERIA, BASAURI, PORTU, GIPUZKOA (el envío) y Durango (inactiva hasta que abra).
+- **Destinos** (decisión del propietario, 28/10/2026): **reparto** a BILBAO, ALGORTA, BARAKALDO, BASAURI y PORTU; **envío** a GIPUZKOA y DURANGO. Donosti y Rentería no van en el reparto: les llega por el envío a Gipuzkoa. El orden es el de las pestañas de STOCK OSASUN. Están en la configuración (`destinos_reparto`).
 - **Envío a Gipuzkoa/Durango:** el mismo camino, con tipo «envío». Lo propone el operario, Administración lo aprueba y el operario lo prepara en la app. Un solo bloque GIPUZKOA (pestaña GIPUZKOA de la hoja) va entero a Rentería por Nacex, y allí la persona de Rentería lo reparte entre Donosti y Rentería. Donosti y Rentería son las únicas tiendas en franquicia. Durango, cuando abra, irá como bloque propio. Si el envío se prepara antes del recuento de la mañana del mismo día que un reparto, primero se apartan las cajas del reparto.
 - **Ya no aplica:** pegar texto, la línea `SALE:` obligatoria y la normalización de nombres escritos.
 
@@ -460,3 +460,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.19 | 27/10/2026 | Marca de Osasun aplicada a las pantallas (logotipo, isotipo y tipografía); las formas de colores solo en la pantalla de entrada. Tarea 2 de Lovable terminada. |
 | 1.20 | 27/10/2026 | Desplegable «¿Quién sale?» al pegar el reparto (manda sobre `SALE:`). Se adelanta el panel de Administración para poder probar el sistema completo. |
 | 1.21 | 28/10/2026 | Prueba real en el almacén: el texto del WhatsApp no coincide con los nombres de PRINCIPAL (36 de 52 líneas). **R1 rediseñada:** el reparto se prepara en la app con una lista de productos de PRINCIPAL y contadores − y +; se quita pegar texto; «Copiar para WhatsApp». |
+| 1.22 | 28/10/2026 | Destinos del reparto y del envío fijados (Tarea 10). |
