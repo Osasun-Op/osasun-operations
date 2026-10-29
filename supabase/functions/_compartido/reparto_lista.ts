@@ -9,7 +9,7 @@ import { prepararReparto, referencias, validarLineas, validarPeticiones } from "
 import { type Cajas, type Comprometido, listaPedido, SIN_COMPROMISOS } from "./pedidos.ts";
 import { ajusteAlmacen, aplicarAjuste, type MovimientosAlmacen, SIN_MOVIMIENTOS } from "./almacen.ts";
 import { guardarCobertura } from "./r4.ts";
-import { marcarSinGranel } from "./sin_granel.ts";
+import { marcarSinGranel, sinGranelEnvio } from "./sin_granel.ts";
 
 export interface Dependencias {
   rpc: <T = unknown>(nombre: string, args: Record<string, unknown>) => Promise<T>;
@@ -161,6 +161,14 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   if (r.estado !== "aceptado") {
     return error("REPARTO_NO_CALCULADO", "No se ha podido calcular el reparto. Avisa a Administración.",
                  { estado: r.estado, lineas: r.errores.map((l) => ({ num: l.num, texto: l.texto, error: l.error })) });
+  }
+  // R1e en el envío: lo que hay que hacer sin granel no se guarda; la pantalla
+  // ofrece «Dejarlo en N» o «Quitarlo» y vuelve a calcular.
+  if (tipo === "envio") {
+    const sinGranel = sinGranelEnvio(r.produccion, r.bolsas, lectura.datos, destinos);
+    if (sinGranel.length > 0) {
+      return error("SIN_GRANEL", sinGranel.map((x) => x.mensaje).join("\n"), { referencias: sinGranel });
+    }
   }
 
   const guardado = await d.rpc<Respuesta>("servidor_guardar_reparto", {

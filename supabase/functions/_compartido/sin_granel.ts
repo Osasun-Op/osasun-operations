@@ -52,3 +52,39 @@ export function marcarSinGranel(
     return { ...e, sin_granel: true, para: para.filter((x) => x.faltan > 0), tiendas_con_stock };
   });
 }
+
+/** Una referencia del envío que no se puede mandar entera (R1e en el envío). */
+export interface SinGranelEnvio {
+  destino_id: string;
+  destino: string;
+  producto: string;
+  formato: string;
+  pedido: number;
+  hay: number;          // lo máximo que se puede mandar con las cajas que hay
+  mensaje: string;
+}
+
+const cajas = (n: number) => `${n} ${n === 1 ? "caja" : "cajas"}`;
+
+/**
+ * R1e en el envío (ESTADO v1.31): se comprueba al calcular, no en la producción,
+ * porque no hay ruta que pase por otra tienda. Con la misma cuenta que decide lo
+ * que falta (almacén ahora, apartado lo del reparto): lo que hay que hacer sin
+ * granel. Las cajas que hay se las llevan los primeros destinos, en su orden.
+ */
+export function sinGranelEnvio(
+  produccion: ElementoProduccion[], bolsas: Bolsa[], datos: Pick<DatosHoja, "productos">,
+  destinos: (Destino & { codigo?: string })[],
+): SinGranelEnvio[] {
+  return marcarSinGranel(produccion, bolsas, datos, destinos).flatMap((e) =>
+    (e.para ?? []).map((p) => {
+      const hay = p.pedido - p.faltan;
+      const ref = `${e.producto}${e.formato ? " " + e.formato : ""}`;
+      const mensaje = hay > 0
+        ? `${ref}: pides ${p.pedido}, en el almacén hay ${cajas(hay)} y no hay granel para hacer ${p.faltan === 1 ? "la otra" : `las otras ${p.faltan}`}.`
+        : `${ref}: pides ${p.pedido}, en el almacén no hay cajas y no hay granel para hacer${p.pedido === 1 ? "la" : "las"}.`;
+      return { destino_id: p.destino_id, destino: p.destino, producto: e.producto, formato: e.formato,
+               pedido: p.pedido, hay, mensaje };
+    })
+  );
+}
