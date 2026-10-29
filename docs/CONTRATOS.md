@@ -1,6 +1,15 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.4 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 15).
+**Versión:** 1.5 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 16).
+
+> **Cambios en 1.5 (Tarea 16) — para Lovable: producto sin granel en el reparto** (`ESTADO_DEL_SISTEMA.md` v1.30, §5 R1e). Solo se añaden campos y una función.
+> 1. **«Producción del reparto»** (`tarea_activa`, §3.2): una referencia que hay que hacer y no tiene granel trae `sin_granel: true`, `para` (las tiendas que la reciben y cuántas les faltan), `tiendas_con_stock` (las demás tiendas del reparto con cajas, según PRINCIPAL), `resuelto` y `decisiones`. Al elegirla, en vez de «Haz N», el aviso con dos opciones por tienda: **Quitarlo** o **Cogerlo de otra tienda** (elegir la tienda, viendo cuántas tiene cada una).
+> 2. **`resolver_sin_granel(elemento_id, decisiones)`** (nueva, §3.19, operario): guarda la decisión. La referencia queda hecha sin producir y la tarea sigue como siempre.
+> 3. **Bolsas** (§3.2 y §3.5): en la tienda que recibe de otra tienda, un elemento nuevo **`tipo: "llamada"`** con su `texto` («Llama a Algorta para que prepare 2 BZ1 4g para su retirada»). Se muestra y se marca como una petición especial (`marcar_cajas` con 1 o 0); la tienda no está completa sin él. Lo quitado o de otra tienda ya no va en la bolsa.
+> 4. **`reparto_de_hoy`** (en `tarea_activa` y en `estado_actual`) trae **`paradas: [{ origen, destino, producto, formato, cantidad, texto }]`** con «Recoge 2 BZ1 4g en Algorta y déjalas en Portugalete»: en «Salida del reparto» si sale el operario y en el panel si sale Administración. No es una tarea.
+> 5. **Texto para WhatsApp** (`guardar_reparto`, `reparto_de_hoy_detalle` e histórico): lo quitado ya no sale y lo de otra tienda dice «2x BZ1 4g (de Algorta)». Si ya se había copiado, hay que volver a copiarlo. En `reparto_de_hoy_detalle.lineas`, lo quitado ya no cuenta y lo de otra tienda trae `de: [{ origen_id, origen, cantidad }]`.
+> 6. «Hoy sales tú / Hoy sale [nombre]» en las tareas del reparto: ya está en `tarea_activa().jornada.sale`, con los nombres de `mi_perfil().quien_sale_opciones`. No hace falta nada nuevo.
+
 
 > **Cambios en 1.4 (Tarea 15) — para Lovable: Inicio de Administración tras la prueba en el almacén** (`ESTADO_DEL_SISTEMA.md` v1.29, §5 R3 y R4, §8). Solo se añaden campos; nada cambia de forma.
 > 1. **`estado_actual().hoy`** (§4.3): cada tarea trae también **`iniciada_en`**, **`terminada_en`** y **`minutos`** (de inicio a fin; hasta ahora si está en curso; `null` si no ha empezado). Para «Hoy» con hora de inicio, hora de fin y minutos.
@@ -95,6 +104,7 @@
 | `tarea_activa` | BD | ✔ | — | ✅ Tarea 2 |
 | `iniciar_tarea` · `terminar_tarea` · `anotar_motivo` | BD | ✔ | — | ✅ Tarea 2 |
 | `iniciar_elemento` · `terminar_elemento` · `marcar_cajas` | BD | ✔ | — | ✅ Tarea 3 |
+| `resolver_sin_granel` | BD | ✔ | — | ✅ Tarea 16 |
 | `catalogo` · `guardar_reparto` | Servidor | ✔ | ✔ | ✅ Tarea 10 |
 | `reparto_de_hoy_detalle` | BD | ✔ | ✔ | ✅ Tarea 10 |
 | `lista_stock` | Servidor | ✔ | ✔ (consulta) | ✅ Tarea 3 |
@@ -137,7 +147,7 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
     "elementos": []
   },
   "siguiente": "Salida del reparto · 10:45",
-  "reparto_de_hoy": { "reparto_id": "...", "aceptado_en": "2026-11-03T07:48:00+00:00", "pegado_por": "<persona_id>", "pegado_por_nombre": "Administración" },
+  "reparto_de_hoy": { "reparto_id": "...", "aceptado_en": "2026-11-03T07:48:00+00:00", "pegado_por": "<persona_id>", "pegado_por_nombre": "Administración", "paradas": [] },
   "incidencias_abiertas": 2,
   "incidencia_en_curso": { "id": "...", "opcion": "corregir", "descripcion": "...", "estado_texto": "En curso desde las 15:47", "minutos": 10, "...": "(objeto incidencia, §3.11)" },
   "problemas_abiertos": [ { "id": "...", "tarea_id": "...", "tarea": "Revisar el envío", "tipo": "no_encuentro", "descripcion": "...", "estado": "abierto|sin_respuesta", "llamadas": 0, "proxima_llamada_en": null } ]
@@ -146,10 +156,13 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 - `jornada` es `null` si hoy no trabaja; `tarea` es `null` solo fuera del turno (antes de empezar o entre turnos).
 - **Nunca sin tarea** (v1.17): si dentro del turno no queda nada disponible, se adelantan las tareas fijas de la tarde de ese día (minis el lunes, resinas el martes, control de materiales el jueves) y después «Orden y limpieza», que **no se gasta** (al terminarla vuelve a salir). Lo ligado a su hora (recuento, revisión del envío, Nacex, salida) espera a su hora.
 - `reparto_de_hoy`: el reparto aceptado hoy (`null` si no hay). Con él, el botón de arriba dice «Modificar reparto» (abre la lista con `reparto_de_hoy_detalle`); sin él, «Preparar reparto».
+- `reparto_de_hoy.paradas` ✅ Tarea 16 (R1e): `[{ origen_id, origen, destino_id, destino, producto, formato, cantidad, texto }]`, lo que quien hace la ruta recoge en una tienda para dejarlo en otra («Recoge 2 BZ1 4g en Algorta y déjalas en Portugalete»). Mostrarlo en «Salida del reparto» si sale el operario. Lista vacía si no hay. (También en `estado_actual().reparto_de_hoy`, para el panel si sale Administración.)
 - **Al recargar** la pantalla recupera de aquí todo lo abierto: `incidencias_abiertas` (número para «Cerrar incidencias»), `incidencia_en_curso` (la que tiene su tarea en curso, con `minutos`; `null` si no hay) y `problemas_abiertos` (con la tarea bloqueada; el siguiente paso es `problema_llamada` o `resolver_problema`).
 - `siguiente`: una línea con lo que viene después. Si antes llega una tarea con hora, se anuncia esa con su hora.
 - `pregunta`: reservado; hoy siempre `null`. La pregunta «¿Quién sale hoy?» la devuelve `pegar_reparto` (`FALTA_SALE`).
 - `elementos` ✅: `[ { id, tipo, producto, formato, texto, categoria, destino, destino_id, bolsa, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla) y, dentro de la tienda, por `bolsa`: «Bolsa de reposición» y, si hay pedidos de cliente, «Pedido de cliente · [cliente]» (Tarea 12). **Peticiones especiales** (Tarea 13): `tipo: "peticion"`, con su texto en `texto` (y en `producto`), `cantidad` 1 y `formato` vacío; van en la bolsa de su tienda después de las cajas, para mostrarlas bajo «Además, mete:». En los demás elementos, `texto` es `null`. En las listas de producción, `bolsa` es `null`; en los pedidos de cliente, `motivo` dice «Coge N del almacén» o «Haz N».
+  - **Aviso de llamada** (Tarea 16, R1e): `tipo: "llamada"`, en la bolsa de reposición de la tienda que recibe algo de otra tienda, con su `texto` («Llama a Algorta para que prepare 2 BZ1 4g para su retirada») y `cantidad` 1. Se muestra y se marca como una petición especial; la tienda no está completa sin él.
+  - **Referencia sin granel** (Tarea 16, R1e), solo en «Producción del reparto»: además trae `sin_granel: true`, `para: [{ destino_id, destino, pedido, faltan }]` (las tiendas que la reciben; lo que hay en el almacén se lo llevan las primeras del reparto), `tiendas_con_stock: [{ destino_id, destino, cajas }]` (las demás tiendas del reparto con cajas de esa referencia en PRINCIPAL), `resuelto` y `decisiones: [{ destino_id, destino, accion, origen_id, origen, cantidad }]`. Sin resolver, al elegirla sale el aviso «No hay granel» con las dos opciones por tienda (§3.19). Resuelta, queda `estado: "hecho"`, `cantidad` 0 y `motivo` «No se produce: 3 se quitan de Bilbao; 2 para Portugalete de Algorta.».
 - La elección sigue `PLAN_TECNICO.md` §2.3. **Nunca devuelve avisos de tiempo ni de presión** (§6.7): solo tareas.
 - Solo para el operario: Administración recibe `NO_AUTORIZADO`.
 
@@ -172,7 +185,7 @@ Para que una tarea que no se va a hacer conste en el cierre con su motivo. No ca
 ### 3.5 `iniciar_elemento(elemento_id)` · `terminar_elemento(elemento_id)` · `marcar_cajas(elemento_id, cantidad_hecha)` ✅
 - `iniciar_elemento`: el operario elige la referencia o la tienda (él decide el orden, §8). Inicia también la tarea si estaba pendiente.
 - `terminar_elemento`: **punto de encaje** (§6.4). En producción, al terminar cada referencia; **en bolsas, al terminar la tienda entera** (decidido). Si hay pendiente una tarea con hora ya vencida o una urgente, la tarea con lista vuelve a `pendiente` (conservando lo hecho) y la respuesta trae la nueva `tarea_activa`.
-- `marcar_cajas`: en las bolsas, fija cuántas cajas lleva metidas (valor absoluto, de 0 a `cantidad`). Una petición especial (Tarea 13) se marca igual, con 1 (metida) o 0; la tienda no está completa, ni la bolsa terminada, hasta tocarlas todas.
+- `marcar_cajas`: en las bolsas, fija cuántas cajas lleva metidas (valor absoluto, de 0 a `cantidad`). Una petición especial (Tarea 13) o un aviso de llamada (Tarea 16) se marca igual, con 1 (hecho) o 0; la tienda no está completa, ni la bolsa terminada, hasta tocarlos todos.
 - `terminar_elemento` es para referencias de producción; en bolsas se usa `marcar_cajas` (si no: `DATOS_NO_VALIDOS`).
 - Repetir cualquiera de las tres no es error: devuelve el estado ya alcanzado.
 - **Salida:** `{ "elemento": { id, estado, cantidad, cantidad_hecha }, "tarea_activa": {...} }`.
@@ -346,6 +359,7 @@ Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_rep
 - **Pedidos de cliente para recoger en tienda** (Tarea 12): los que esperan al reparto de hoy entran solos al guardarlo (también al modificarlo, sin duplicarse). No cambian la producción del reparto: cada uno tiene su tarea, después de la producción, con «coge / haz» calculado al salir la tarea (después de lo oficial), y su bolsa aparte en la tienda. Vienen en `pedidos_cliente` (lista vacía si no hay).
 - **Envío** (Tarea 12): mientras la hoja aún cuenta en el almacén lo que sale con el reparto (hasta el recuento de la mañana hecho después de terminar las bolsas), aparta también las cajas de los pedidos de tienda de hoy, no solo las del reparto (R1c).
 - **`texto_whatsapp`:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN` / `SALE: YO` (solo reparto), y por cada tienda una línea en blanco, su código en mayúsculas y `Nx PRODUCTO FORMATO`, con los nombres exactos de la hoja; si la tienda tiene peticiones especiales, después de sus productos una línea `Además: rollos de TPV; muestras de V2` (separadas por «; »). Tiendas en el orden de `catalogo` y productos en el de la hoja. La pantalla lo copia **tal cual** con un botón para pegarlo en WhatsApp: no se abrevia nada.
+- **Producto sin granel** (Tarea 16, R1e): las referencias del reparto que hay que hacer y no tienen granel van a la producción con `sin_granel` (§3.2). Lo que decida el operario (§3.19) se conserva al modificar el reparto: lo de otra tienda sigue mientras la tienda lo siga pidiendo (como mucho, lo que pide ahora); lo quitado ya está en la línea, porque «Modificar reparto» la abre con la cantidad nueva. Si lo decidido ya no cubre lo que falta, la referencia vuelve a salir sin resolver. `texto_whatsapp` lleva siempre lo decidido.
 - **Reintentos:** repetir con el mismo `id_cliente` devuelve lo ya guardado (con su `texto_whatsapp`), sin volver a leer la hoja ni calcular, con `ya_guardado: true` y `aviso: { codigo: "REPARTO_YA_GUARDADO" }`. Cada vez que se pulsa «Guardar» en una lista nueva o modificada, `id_cliente` nuevo.
 - **Avisos (no son errores):** `REPARTO_YA_GUARDADO` (reintento) y `REPARTO_SIN_CAMBIOS` («El reparto de hoy ya era este: no cambia nada»; devuelve lo de antes con `ya_pegado: true`). Para cambiar solo quién sale, `cambiar_quien_sale` (§3.12).
 - **Errores** (no se guarda nada):
@@ -376,6 +390,7 @@ Las líneas del reparto (o del envío) de hoy, para abrir «Modificar reparto» 
   }
 }
 ```
+- **Producto sin granel** (Tarea 16, R1e): en `lineas`, lo quitado ya no cuenta (la línea baja o desaparece) y lo que viene de otra tienda sigue en su línea con `de: [{ origen_id, origen, cantidad }]`. `texto_whatsapp` lo dice: «2x BZ1 4g (de Algorta)».
 - `sale` es quién sale **ahora** (si se cambió con `cambiar_quien_sale`, el texto también lo dice). En el envío, `sale` es `null`.
 - `peticiones` (Tarea 13): las peticiones especiales guardadas, para rellenar las casillas al modificar (lista vacía si no hay).
 - **Errores:** `DATOS_NO_VALIDOS` (tipo no válido), `SIN_JORNADA`, `NO_AUTORIZADO`.
@@ -417,6 +432,19 @@ Botón en la tarea «Prepara el pedido de cliente (Nacex)»: si por la producci�
 - **Efecto:** la tarea de ese día queda «arrastrada» con el motivo «Pasa al 25/11: [motivo]»; el siguiente día de trabajo tiene su tarea de Nacex (por la tarde; el viernes, por la mañana) con la misma lista, y **Nacex activado** ese día. El «coge / haz» se vuelve a calcular al salir la tarea.
 - **Salida:** `{ pedido: (objeto pedido, §3.17, con la nueva fecha), tarea_activa: (solo al operario) }`.
 - **Errores:** `NO_ENCONTRADO` (no existe o no es suyo), `DATOS_NO_VALIDOS` (no es de Nacex), `ESTADO_NO_VALIDO` (ya preparado o cancelado), `SIN_JORNADA`, `NO_AUTORIZADO`.
+
+### 3.19 `resolver_sin_granel(elemento_id, decisiones)` ✅ (Tarea 16)
+En «Producción del reparto», una referencia que hay que hacer y **no tiene granel** (`sin_granel: true`, §3.2): el operario decide, tienda por tienda, si se quita o se coge de otra tienda (`ESTADO_DEL_SISTEMA.md` §5 R1e).
+- **Quién:** el operario (su producción del reparto, abierta hoy).
+- **Entrada:** `decisiones: [{ destino_id, accion: "quitar" | "otra_tienda", origen_id?, cantidad }]`, **una por tienda** de `para`. `cantidad`: entero, de 1 a lo que pide esa tienda (`para[].pedido`). `origen_id`, solo en `otra_tienda`: otra tienda del reparto (lo normal, una de `tiendas_con_stock`). **Entre todas suman lo que falta** (`cantidad` de la referencia).
+- **Efecto:**
+  - la referencia queda hecha sin producir (`cantidad` 0) y la producción sigue como siempre; queda anotado quién y cuándo;
+  - **quitar:** la bolsa de esa tienda lleva menos (y la línea del reparto baja);
+  - **otra_tienda:** esas cajas no se producen ni van en la bolsa. En la bolsa de la tienda que recibe sale el aviso de llamada (`tipo: "llamada"`), en `reparto_de_hoy.paradas` la parada para quien hace la ruta y, en el texto para WhatsApp, «2x BZ1 4g (de Algorta)»;
+  - cuentas (R1c): lo quitado o de otra tienda no sale del almacén. Lo de otra tienda va en camino desde «bolsas listas» hasta las 23:30, como el reparto: −N en la que da y +N en la que recibe.
+- Repetir lo mismo no es un error (aunque la producción ya esté hecha). Una vez resuelta y cerrada la producción, otra decisión da `ESTADO_NO_VALIDO`.
+- **Salida:** `{ "elemento": { id, estado, cantidad, cantidad_hecha }, "tarea_activa": {...} }`, como `terminar_elemento`.
+- **Errores:** `DATOS_NO_VALIDOS` (no está sin granel; una tienda que no la recibe o repetida; acción, cantidad u origen no válidos; no suman lo que falta, con `faltan` y `suman`), `NO_ENCONTRADO`, `ESTADO_NO_VALIDO`, `OTRA_TAREA_EN_CURSO`, `NO_AUTORIZADO` (Administración).
 
 ## 4. Administración ✅ (Tarea 4)
 
@@ -495,7 +523,9 @@ Pantalla **Histórico** de Administración (`ESTADO_DEL_SISTEMA.md` §8): con un
 | Chromebook: una tarea, su porqué, abajo Empezar/Terminada e Incidencia, «lo que viene después» | `tarea_activa`, `iniciar_tarea`, `terminar_tarea`, `crear_incidencia` |
 | Chromebook, arriba: «Preparar reparto» / «Modificar reparto» y «Cerrar incidencias» (con el número) | `tarea_activa` (`reparto_de_hoy`, `incidencias_abiertas`), `incidencias_abiertas`, `cerrar_incidencia` |
 | Listas de producción (él elige el orden) | `tarea_activa` (elementos), `iniciar_elemento`, `terminar_elemento`, `lista_stock` |
-| Bolsas en el Pixel (una tienda por pantalla, con su bolsa de reposición, «Además, mete:» con las peticiones especiales y las bolsas de pedidos de cliente; toca cada caja y cada petición; retrasar 15/30 min) | `tarea_activa` (elementos con `bolsa`; peticiones con `tipo: "peticion"`), `marcar_cajas`, `retrasar_salida` |
+| «Producción del reparto»: referencia sin granel → «Quitarlo» o «Cogerlo de otra tienda» | `tarea_activa` (elementos con `sin_granel`), `resolver_sin_granel` |
+| «Salida del reparto» (o el panel, si sale Administración): paradas «Recoge N … en … y déjalas en …» | `tarea_activa` / `estado_actual` (`reparto_de_hoy.paradas`) |
+| Bolsas en el Pixel (una tienda por pantalla, con su bolsa de reposición, «Además, mete:» con las peticiones especiales y las bolsas de pedidos de cliente; toca cada caja y cada petición; retrasar 15/30 min) | `tarea_activa` (elementos con `bolsa`; peticiones con `tipo: "peticion"`; avisos de llamada con `tipo: "llamada"`), `marcar_cajas`, `retrasar_salida` |
 | Incidencia: llega mercancía, pedir o comprar, recogida en Nacex, corregir | `crear_incidencia` |
 | «Pedido de cliente» (operario o Administración): la lista, recoger en tienda o Nacex, y los pedidos abiertos | `catalogo`, `guardar_pedido_cliente`, `pedidos_cliente_abiertos` |
 | Tarea «Prepara el pedido de cliente (Nacex)»: «Pasar a mañana» | `aplazar_pedido_nacex` |
@@ -598,3 +628,6 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 17. **Tarea 15 · R4 por producto** (decidido por el propietario, 29/10): cada fila es un producto entero (`formato: ""`), porque la hoja da el total y la necesidad por producto y así sirve para organizar el pedido a proveedores. Los excluidos (MINI, VAPER) se quitan por su nombre.
 18. **Tarea 15 · Total negativo en PRINCIPAL** (decidido por el propietario, 29/10; hoy, TXABAKO SUST con −40): es un dato raro y va a `avisos`, no a la lista.
 19. **Tarea 15 · De cuándo es la cobertura:** de la última lectura del reparto, el envío o la lista de stock (varias al día; las ventas solo cambian con el FIN DE DÍA). Las lecturas de los pedidos de cliente no la calculan.
+20. **Tarea 16 · De dónde salen las cajas de las otras tiendas:** de sus columnas en PRINCIPAL (FIN DIA de cada tienda, que viene de su pestaña). Es lo que ya se lee al calcular: no se lee ninguna pestaña de tienda.
+21. **Tarea 16 · Lo que hay en el almacén, para qué tienda:** si hay algunas cajas pero no todas, se las llevan las primeras tiendas del reparto (en su orden) y `para` dice cuántas le faltan a cada una. El operario puede repartir la decisión de otra forma (como mucho, lo que pide cada tienda).
+22. **Tarea 16 · Quién decide:** el operario, en su producción (como el resto de su lista). Administración no tiene esta función.

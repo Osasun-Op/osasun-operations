@@ -9,6 +9,7 @@ import { prepararReparto, referencias, validarLineas, validarPeticiones } from "
 import { type Cajas, type Comprometido, listaPedido, SIN_COMPROMISOS } from "./pedidos.ts";
 import { ajusteAlmacen, aplicarAjuste, type MovimientosAlmacen, SIN_MOVIMIENTOS } from "./almacen.ts";
 import { guardarCobertura } from "./r4.ts";
+import { marcarSinGranel } from "./sin_granel.ts";
 
 export interface Dependencias {
   rpc: <T = unknown>(nombre: string, args: Record<string, unknown>) => Promise<T>;
@@ -155,6 +156,8 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
       : [],
     permitirVacio: pedidos.length > 0,
   });
+  // R1e: lo que hay que hacer sin granel se resuelve en la producción (quitarlo o de otra tienda).
+  const produccion = tipo === "reparto" ? marcarSinGranel(r.produccion, r.bolsas, lectura.datos, destinos) : r.produccion;
   if (r.estado !== "aceptado") {
     return error("REPARTO_NO_CALCULADO", "No se ha podido calcular el reparto. Avisa a Administración.",
                  { estado: r.estado, lineas: r.errores.map((l) => ({ num: l.num, texto: l.texto, error: l.error })) });
@@ -163,7 +166,7 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   const guardado = await d.rpc<Respuesta>("servidor_guardar_reparto", {
     p_persona: persona, p_jornada: ctx.jornada_id, p_tipo: tipo, p_texto: texto, p_huella: await d.huella(tipo, texto),
     p_fecha_texto: ctx.fecha, p_sale: r.sale, p_lectura: lecturaId, p_lineas: r.lineas,
-    p_produccion: r.produccion, p_bolsas: r.bolsas, p_aceptado: true,
+    p_produccion: produccion, p_bolsas: r.bolsas, p_aceptado: true,
   });
   if (guardado.error) return guardado;
 
@@ -187,9 +190,11 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
     }
   }
   await d.rpc("servidor_reparto_anotar_id_cliente", { p_reparto: guardado.reparto_id, p_id_cliente: idCliente });
+  // El texto lo da la base de datos: con lo decidido en la producción (R1e) ya aplicado.
+  const textoWhatsapp = typeof guardado.texto_whatsapp === "string" ? guardado.texto_whatsapp : texto;
   if (guardado.ya_pegado) {
-    return { ...guardado, texto_whatsapp: texto, peticiones, pedidos_cliente: pedidosCliente,
+    return { ...guardado, texto_whatsapp: textoWhatsapp, peticiones, pedidos_cliente: pedidosCliente,
              aviso: { codigo: "REPARTO_SIN_CAMBIOS", mensaje: "El reparto de hoy ya era este: no cambia nada." } };
   }
-  return { ...guardado, texto_whatsapp: texto, peticiones, pedidos_cliente: pedidosCliente };
+  return { ...guardado, texto_whatsapp: textoWhatsapp, peticiones, pedidos_cliente: pedidosCliente };
 }
