@@ -62,11 +62,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 17** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.31, §5 R1e** (el punto del envío).
+**Ninguna.** La Tarea 17 está fusionada (PR #16). Espera a que el coordinador escriba la siguiente.
 
 ---
 
-## 7. TAREA 17 (activa): envío sin granel, se comprueba al calcular, en pruebas
+## 7. TAREA 17 (fusionada en el PR #16): envío sin granel, se comprueba al calcular, en pruebas
 
 En el envío no hay «cogerlo de otra tienda»: se comprueba **al guardar el envío**, antes de que llegue nada a la producción.
 
@@ -447,3 +447,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.21 | 29/10/2026 | Tarea 16 activa: producto sin granel en el reparto (R1e). |
 | 1.22 | 29/10/2026 | Tarea 16 fusionada (PR #15). Sin tarea activa. |
 | 1.23 | 29/10/2026 | Tarea 17 activa: envío sin granel (R1e, al calcular). |
+| 1.24 | 29/10/2026 | Tarea 17 fusionada (PR #16). Sin tarea activa. |
