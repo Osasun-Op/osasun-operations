@@ -2,6 +2,8 @@
 
 **Versión:** 1.6 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 17).
 
+> **Tarea 18 (29/10) — sin cambios en los contratos:** las funciones del servidor ya no responden 500 después de guardar cuando llaman a una función de la base de datos que no devuelve nada (`guardar_reparto` era la que lo hacía); la respuesta es la de este documento.
+
 > **Cambios en 1.6 (Tarea 17) — para Lovable: envío sin granel** (`ESTADO_DEL_SISTEMA.md` v1.31, §5 R1e, el punto del envío).
 > 1. **`guardar_reparto` con `tipo: "envio"`** (§3.14), al pulsar «Calcular» en «Preparar envío» o «Modificar envío»: si algo hay que hacerlo y no tiene granel, **no se guarda nada** y responde el error nuevo **`SIN_GRANEL`**, con `mensaje` (una línea por referencia) y `referencias: [{ destino_id, destino, producto, formato, pedido, hay, mensaje }]`.
 > 2. La pantalla muestra cada referencia con su `mensaje` («SOUR DIESEL 4g: pides 5, en el almacén hay 3 cajas y no hay granel para hacer las otras 2.») y dos botones: **«Dejarlo en N»** (pone esa línea en `hay`) o **«Quitarlo»** (la pone a 0). Si `hay` es 0, solo «Quitarlo». Después vuelve a calcular (puede ser con el mismo `id_cliente`: no se había guardado nada).
