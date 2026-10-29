@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.30 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.31 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -146,6 +146,7 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
 - **La parada sale siempre a quien hace la ruta:** «Recoge N [producto] en [tienda] y déjalas en [tienda]». Si sale el operario, en su «Salida del reparto»; si sale Administración, como aviso en su panel (no es una tarea).
 - **Va en el texto para WhatsApp** («2x BZ1 4g (de Algorta)»). Como la decisión se toma en la producción, si el texto ya se ha mandado hay que volver a copiarlo.
 - Las cuentas no cambian: las cajas solo pasan de una tienda a otra (en camino: −N en la que da y +N en la que recibe, con la misma hora que el reparto).
+- **En el envío a Gipuzkoa/Durango es distinto** (decisión del propietario, 29/10/2026): se comprueba **al preparar el envío**, no en la producción, porque no hay ruta que pase por otra tienda antes de Nacex. Al pulsar «Calcular», si algo hay que hacerlo y no tiene granel, la app **no guarda** y lo dice («SOUR DIESEL 4g: pides 5, en el almacén hay 3 cajas y no hay granel para hacer las otras 2»), con dos botones: **«Dejarlo en 3»** (lo que hay) o **«Quitarlo»**. Después se vuelve a calcular. En el envío no existe «cogerlo de otra tienda».
 - **Que el operario sepa quién sale** (misma fecha): en las tareas del reparto (producción y bolsas) pone arriba «Hoy sales tú» u «Hoy sale [nombre]», y se actualiza si cambia.
 
 **R1d. Peticiones especiales** (decisión del propietario, 28/10/2026). En «Preparar reparto» y «Preparar envío», cada tienda tiene una casilla **«Peticiones especiales para [tienda]»**: una petición por línea (rollos de TPV, muestras, cajas vacías…). **No cuentan como stock ni van a producción.** En las bolsas aparecen como **«Además, mete:»**, una por una para tocarlas, y la bolsa no se da por terminada hasta tocarlas todas. También salen en el texto para WhatsApp. Si algo no está en el almacén, el operario lo avisa con Incidencia → «Hay que pedir o comprar algo».
@@ -532,3 +533,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.28 | 28/10/2026 | Decisiones del propietario en la Tarea 14: el pedido de tienda activa el reparto de hoy; el reparto de primera hora usa «almacén ahora». |
 | 1.29 | 29/10/2026 | Tras la prueba en el almacén: el mini se llama «MINI 10g» en la hoja; nuevo Inicio del panel de Administración (menos de 2 semanas siempre a la vista, horas y minutos de cada tarea, tiempo de «Orden y limpieza», sin «Almacén ahora»). |
 | 1.30 | 29/10/2026 | R1e: producto sin granel en el reparto (quitarlo o cogerlo de otra tienda, aviso de llamada en las bolsas, parada para quien hace la ruta y línea en WhatsApp); «Hoy sales tú / Hoy sale [nombre]» en las tareas del reparto. |
+| 1.31 | 29/10/2026 | R1e en el envío: se comprueba al pulsar «Calcular» en «Preparar envío» (no guarda; «Dejarlo en N» o «Quitarlo»). |

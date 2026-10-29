@@ -62,11 +62,24 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 16 está fusionada (PR #15). Espera a que el coordinador escriba la siguiente.
+**Tarea 17** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.31, §5 R1e** (el punto del envío).
 
 ---
 
-## 7. TAREA 16 (fusionada en el PR #15): producto sin granel en el reparto (quitarlo o cogerlo de otra tienda), en pruebas
+## 7. TAREA 17 (activa): envío sin granel, se comprueba al calcular, en pruebas
+
+En el envío no hay «cogerlo de otra tienda»: se comprueba **al guardar el envío**, antes de que llegue nada a la producción.
+
+1. En `guardar_reparto` con `tipo: "envio"` (preparar y modificar): con la misma cuenta que ya decide lo que falta por producir (almacén ahora, apartando antes lo del reparto como hasta ahora), si una referencia hay que hacerla y su producto tiene **granel ≤ 0** (el mismo criterio que R3 y la Tarea 16), **no se guarda nada** y se responde un error nuevo **`SIN_GRANEL`**, con un mensaje y `detalle.referencias: [{ destino_id, destino, producto, formato, pedido, hay }]`: lo que se ha pedido para ese destino y lo máximo que se puede mandar con las cajas que hay (si hay dos destinos con la misma referencia, las cajas se las llevan los primeros, en su orden, como en la Tarea 16). Mensaje por referencia: «SOUR DIESEL 4g: pides 5, en el almacén hay 3 cajas y no hay granel para hacer las otras 2.»
+2. Con todo cubierto (o con granel), el envío se guarda exactamente como ahora. El reparto **no cambia** (sigue con R1e en la producción, Tarea 16).
+3. No rompas lo que funciona: reparto, pedidos de cliente, peticiones especiales, histórico y lista de stock igual. Reintentar con el mismo `id_cliente` tras un `SIN_GRANEL` y con las líneas corregidas debe guardar normal.
+4. Casos en `REGLAS_CALCULO.md` (envío con granel; sin granel con 0 cajas; sin granel con algunas cajas; dos destinos; viernes con reparto el mismo día) y pruebas en verde. `CONTRATOS.md` a la 1.6, con su nota para Lovable (la pantalla mostrará cada aviso con «Dejarlo en N» o «Quitarlo» y se vuelve a calcular).
+
+**Entrega:** Pull Request **«Tarea 17 — Envío sin granel»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.
+
+---
+
+## 7.0 TAREA 16 (fusionada en el PR #15): producto sin granel en el reparto (quitarlo o cogerlo de otra tienda), en pruebas
 
 Hoy, si el reparto pide algo que no hay en el almacén ni tiene granel, la producción le dice al operario «haz N» y no puede. R1e lo resuelve **en la producción**, no al preparar el reparto: quien prepara el reparto no mira el almacén y el almacén decide de dónde sale cada cosa.
 
@@ -433,3 +446,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.20 | 29/10/2026 | Tarea 15 fusionada (PR #14). Sin tarea activa. |
 | 1.21 | 29/10/2026 | Tarea 16 activa: producto sin granel en el reparto (R1e). |
 | 1.22 | 29/10/2026 | Tarea 16 fusionada (PR #15). Sin tarea activa. |
+| 1.23 | 29/10/2026 | Tarea 17 activa: envío sin granel (R1e, al calcular). |
