@@ -62,11 +62,30 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 15 está fusionada (PR #14). Espera a que el coordinador escriba la siguiente.
+**Tarea 16** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.30, §5 R1e** (nueva).
 
 ---
 
-## 7. TAREA 15 (fusionada en el PR #14): panel de Administración tras la prueba en el almacén, en pruebas
+## 7. TAREA 16 (activa): producto sin granel en el reparto (quitarlo o cogerlo de otra tienda), en pruebas
+
+Hoy, si el reparto pide algo que no hay en el almacén ni tiene granel, la producción le dice al operario «haz N» y no puede. R1e lo resuelve **en la producción**, no al preparar el reparto: quien prepara el reparto no mira el almacén y el almacén decide de dónde sale cada cosa.
+
+1. **Detectarlo.** Al crear (o rehacer) la producción del reparto, cada elemento que haya que hacer y cuyo producto tenga **granel ≤ 0** en PRINCIPAL (el mismo criterio que «sin granel no se produce» de R3, variedad por variedad) lleva `sin_granel: true`. Para ayudar a elegir, añade `para`: las tiendas del reparto que reciben ese producto y cuántas cajas le faltan a cada una, y `tiendas_con_stock`: las demás tiendas del reparto (`destinos_reparto.reparto`) con las cajas que tienen de esa referencia según su pestaña de la hoja (solo las que tengan alguna). Solo se lee lo que ya se lee al calcular; no se lee la hoja de nuevo.
+2. **Decidir** (operario, en la tarea «Producción del reparto»): una función nueva, por ejemplo `resolver_sin_granel(elemento_id, decisiones)`, con una decisión por tienda que recibe: `quitar` o `otra_tienda` (con la tienda de origen) y la cantidad. Entre todas suman lo que falta. Al guardarse, el elemento queda resuelto (no hay que hacerlo) y la tarea sigue como siempre. Es idempotente y queda registrado quién lo decide y cuándo.
+   - **quitar:** baja esa cantidad en la línea del reparto de esa tienda (la bolsa lleva menos). Lo habrá hablado con Administración: no hace falta avisar.
+   - **otra_tienda:** esas cajas **no se producen ni van en la bolsa**. En la bolsa de la tienda que recibe aparece un elemento nuevo (`tipo: "llamada"`) con el texto «Llama a [origen] para que prepare N [producto formato] para su retirada», que se marca como las peticiones especiales (`marcar_cajas` con 1 o 0); la tienda no está completa sin marcarlo.
+3. **La parada para quien hace la ruta.** En el objeto `reparto_de_hoy` (el de `tarea_activa` y `estado_actual`), añade `paradas: [{ origen, destino, producto, formato, cantidad, texto }]` con «Recoge N [producto formato] en [origen] y déjalas en [destino]». Las pantallas lo enseñan en «Salida del reparto» si sale el operario y en el panel si sale Administración. No crees tareas nuevas para nadie.
+4. **Texto para WhatsApp** (`guardar_reparto` y `reparto_de_hoy_detalle`): la línea de la tienda que recibe dice «2x BZ1 4g (de Algorta)»; lo quitado ya no sale (o sale con la cantidad nueva).
+5. **Cuentas (R1c, una sola fuente):** las cajas de otra tienda no salen del almacén. En camino, desde «bolsas listas» hasta las 23:30 como el reparto: −N en la tienda de origen y +N en la que recibe (en total, igual). Hazlo dentro de `motor.en_camino_en`/`motor.almacen_ahora_de`, sin una segunda cuenta.
+6. **Modificar el reparto** conserva las decisiones de las líneas que siguen (como conserva lo hecho); si la línea desaparece o baja por debajo de lo decidido, la decisión se ajusta o se va, y explícalo en el PR.
+7. **No rompas lo que funciona:** reparto, envío, pedidos de cliente, peticiones especiales, bolsas, histórico, lista de stock y «almacén ahora» no cambian de forma; solo se añaden campos. Si para hacerlo hiciera falta cambiar algo que ya usan las pantallas, **para y pregunta**.
+8. Escribe R1e en `REGLAS_CALCULO.md` con casos: sin granel con dos tiendas que reciben (una quitar y otra de otra tienda), con granel (no sale el aviso), modificar después de decidir, la línea de WhatsApp y la cuenta de en camino. Todas las pruebas en verde; `CONTRATOS.md` a la 1.5, con su nota de cambios para Lovable.
+
+**Entrega:** Pull Request **«Tarea 16 — Producto sin granel en el reparto»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.
+
+---
+
+## 7.0 TAREA 15 (fusionada en el PR #14): panel de Administración tras la prueba en el almacén, en pruebas
 
 1. **Minis (R3).** En `configuracion.stock_excluidos`, el producto es **`MINI`** (formato `10g`), no `MINIBUDS MIX`: en la hoja real se llama «MINI» en PRINCIPAL, en CONTEO DE CAJAS TOTAL y en las tiendas. Hoy sale en la lista del +35 % («MINI · 10g · Haz 16») y no debe salir. Cambia también los datos de prueba que usen «MINIBUDS MIX» para que se parezcan a la hoja real, y añade una prueba: con «MINI 10g» en CONTEO, no sale en la lista y aparece en `excluidos`.
 2. **Hoy con horas.** En `estado_actual().hoy`, añade a cada tarea `iniciada_en`, `terminada_en` y `minutos` (de inicio a fin; hasta ahora si está en curso; `null` si no ha empezado). La tabla ya guarda las horas: solo hay que enviarlas.
@@ -412,3 +431,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.18 | 28/10/2026 | Tarea 14 fusionada (PR #13). Sin tarea activa. |
 | 1.19 | 29/10/2026 | Tarea 15 activa: minis, horas de las tareas, tiempo libre y menos de 2 semanas en el panel. |
 | 1.20 | 29/10/2026 | Tarea 15 fusionada (PR #14). Sin tarea activa. |
+| 1.21 | 29/10/2026 | Tarea 16 activa: producto sin granel en el reparto (R1e). |
