@@ -62,11 +62,25 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 17 está fusionada (PR #16). Espera a que el coordinador escriba la siguiente.
+**Tarea 18 (urgente)** (sección 7): arreglo de `rpc` con funciones que no devuelven nada.
 
 ---
 
-## 7. TAREA 17 (fusionada en el PR #16): envío sin granel, se comprueba al calcular, en pruebas
+## 7. TAREA 18 (activa, urgente): `guardar_reparto` responde 500 aunque guarda
+
+**Qué pasa** (registros de las funciones, desde el 28/10/2026 a las 09:46, justo después de la Tarea 10): casi todos los `POST guardar_reparto` que guardan bien terminan en **500** («Algo ha fallado en el servidor») con `SyntaxError: Unexpected end of JSON input` en `_compartido/servidor.ts` (`rpc`, `await r.json()`), llamado desde `reparto_lista.ts` en `servidor_reparto_anotar_id_cliente`. Esa función devuelve `void` y la base de datos responde **sin cuerpo**, así que `r.json()` falla **después** de haber guardado: el reparto o el envío quedan guardados (y con `id_cliente`), pero la pantalla ve el error y no enseña «¡Hecho!» ni el texto para WhatsApp. Lo mismo pasa con `servidor_guardar_cobertura` (`r4.ts`): ahí el error se captura y solo ensucia el registro. Repartos afectados en pruebas: 28/10 a las 09:46, 09:58, 12:30 y 14:15; 29/10 a las 07:30, 07:32, 10:36 y 14:14 (el envío), y los reintentos de las 14:55–14:57.
+
+1. Arregla `rpc` en `_compartido/servidor.ts` para que una respuesta correcta **sin cuerpo** (vacía o 204) devuelva `null` en vez de fallar. Una sola corrección para todas las llamadas; no toques cada sitio.
+2. Revisa que ninguna otra llamada dependa de que las funciones `void` devuelvan algo (`servidor_anotar_sale`, `servidor_reparto_anotar_id_cliente`, `servidor_guardar_cobertura`).
+3. **Prueba que lo cubra** con una respuesta real sin cuerpo (no un stub que devuelva `null`): por qué no lo detectaron las pruebas de la Tarea 10, y que no vuelva a pasar. Si puedes, una prueba contra el proyecto de pruebas que llame a `guardar_reparto` y espere 200.
+4. Despliega en pruebas `guardar_reparto`, `lista_stock` y las demás funciones que usen `servidor.ts`, y comprueba en los registros que el siguiente guardado da 200.
+5. No cambies nada más. `CONTRATOS.md` no cambia (solo una línea en su historial).
+
+**Entrega:** Pull Request **«Tarea 18 — rpc con respuestas sin cuerpo»**, con un resumen corto, la salida de las pruebas y el registro del 200.
+
+---
+
+## 7.0 TAREA 17 (fusionada en el PR #16): envío sin granel, se comprueba al calcular, en pruebas
 
 En el envío no hay «cogerlo de otra tienda»: se comprueba **al guardar el envío**, antes de que llegue nada a la producción.
 
@@ -448,3 +462,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.22 | 29/10/2026 | Tarea 16 fusionada (PR #15). Sin tarea activa. |
 | 1.23 | 29/10/2026 | Tarea 17 activa: envío sin granel (R1e, al calcular). |
 | 1.24 | 29/10/2026 | Tarea 17 fusionada (PR #16). Sin tarea activa. |
+| 1.25 | 29/10/2026 | Tarea 18 activa (urgente): `guardar_reparto` da 500 aunque guarda (respuestas sin cuerpo). |
