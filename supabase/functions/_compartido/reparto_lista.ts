@@ -8,6 +8,7 @@ import type { Destino } from "./r1.ts";
 import { prepararReparto, referencias, validarLineas, validarPeticiones } from "./lista.ts";
 import { type Cajas, type Comprometido, listaPedido, SIN_COMPROMISOS } from "./pedidos.ts";
 import { ajusteAlmacen, aplicarAjuste, type MovimientosAlmacen, SIN_MOVIMIENTOS } from "./almacen.ts";
+import { guardarCobertura } from "./r4.ts";
 
 export interface Dependencias {
   rpc: <T = unknown>(nombre: string, args: Record<string, unknown>) => Promise<T>;
@@ -32,6 +33,7 @@ interface Contexto {
     sheets_documento_id: string;
     sheets_pestanas: Pestanas;
     destinos_reparto?: { reparto: string[]; envio: string[] };
+    stock_excluidos?: { producto: string; formato: string; motivo: string }[];
   };
   /** R1c: lo comprometido hoy que aún no ha salido del almacén, y lo que va en camino (motor.comprometido_en). */
   comprometido?: Comprometido;
@@ -126,6 +128,8 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
     p_datos: lectura.ok ? lectura.datos : {},
   });
   if (!lectura.ok) return errorHoja(lectura);
+  // R4: la cobertura de esta lectura, para el panel de Administración.
+  await guardarCobertura(d.rpc, lecturaId, lectura.datos, ctx.config.stock_excluidos ?? []);
 
   const { entradas, ambiguas } = referencias(lectura.datos);
   if (ambiguas.length > 0) {

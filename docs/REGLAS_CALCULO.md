@@ -1,8 +1,8 @@
-# OSASUN OPERATIONS — Reglas de cálculo R1 y R3 (especificación V1)
+# OSASUN OPERATIONS — Reglas de cálculo R1, R3 y R4 (especificación V1)
 
-**Versión:** 0.9 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27).
+**Versión:** 1.0 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27). Tarea 15: el mini se llama MINI 10g (§3.3) y R4, productos con menos de 2 semanas (§4, `r4.ts`, R4-01 a R4-08).
 
-> Especificación exacta de las dos reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto) y **R3** (stock del almacén +35 %).
+> Especificación exacta de las reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto), **R3** (stock del almacén +35 %) y **R4** (cobertura a 2 semanas).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
 > Todo se calcula en el servidor, con pruebas automáticas. Los casos de este documento serán esas pruebas.
 
@@ -17,6 +17,7 @@ Documento `STOCK OSASUN-CLAUDE` (ID `1nPhB7U6FoJcYybChUcGOI3mz-yJAv8NkT3uINuQ6qa
 | **Catálogo** (producto y formato) | PRINCIPAL, columna A. Cada producto es un bloque: fila con el nombre y, debajo, una fila por formato (`4g`, `10g`, `2g`, `3g`, `20gr`, `CBD`, `CBDX`…), hasta la fila vacía. Los productos sin formato (FORTE, VAPER, 10% FS…) son una sola fila. |
 | **Cajas en el almacén** | PRINCIPAL, columna R (`ALMACEN · FIN DIA`) de la fila de formato. |
 | **Granel en el almacén** (gramos) | PRINCIPAL, columna R de la fila del nombre del producto. |
+| **Total y necesidad semanal** (R4) | PRINCIPAL, columnas «LO QUE HAY EN TOTAL» (T) y «1 SEMANA NECESIDADES» (U) de la fila del nombre del producto. Se buscan por su encabezado. |
 | **Contador** (hechas − consumo semanal) | CONTEO DE CAJAS TOTAL, columna «CAJAS TOTALES HECHAS». |
 | **Consumo semanal** (cajas) | CONTEO DE CAJAS TOTAL, columna «CONSUMO CAJAS SEMANAL». |
 | **Categoría de cada producto** | ALMACEN, fila 1: EXTERIOR, INVERNADERO, INDOOR POPS, HIGH TECH, ACEITES Y CREMAS. |
@@ -250,7 +251,7 @@ cajas = ⌈ (35 × consumo − 100 × contador) / 100 ⌉   si es > 0; si no, la
 Con enteros (o decimal exacto si el consumo trae decimales).
 
 ### 3.3 Qué entra y qué no
-- **Minis: fuera.** El único mini es **MINIBUDS MIX 10g** (decidido).
+- **Minis: fuera.** El único mini es **MINI 10g**: así se llama en PRINCIPAL, en CONTEO DE CAJAS TOTAL y en las tiendas (corregido el 29/10/2026; antes ponía «MINIBUDS MIX» y el mini salía en la lista).
 - **Vapers: fuera de R3**; los rige R7 (decidido).
 - **Invernadero e Indoor:** por categoría, con las filas «INVERNADERO TOTAL» e «INDOOR TOTAL» (una referencia por categoría y formato).
 - **FIFO lo decide el operario** (decidido): la app indica las cajas de la categoría, las variedades con granel (en el orden de PRINCIPAL) y la frase «Usa primero el granel más antiguo (FIFO). Mínimo 2 variedades de invernadero y 2 de indoor».
@@ -282,7 +283,7 @@ Una vez por turno (al pedirse la lista por primera vez en el turno), y se guarda
 | R3-04 | consumo 20, contador 7 | 0 → **no aparece** |
 | R3-05 | consumo 0, contador −3 | **3 cajas** |
 | R3-06 | TROPICANA 2025 10g: consumo 36, contador 3, granel 1136 | 9,6 → **10 cajas** |
-| R3-07 | MINIBUDS MIX 10g: consumo 33, contador −7 | **Excluido** (mini) aunque saldrían 19 |
+| R3-07 | MINI 10g: consumo 33, contador −7 | **Excluido** (mini) aunque saldrían 19 |
 | R3-08 | Producto X 4g: consumo 10, contador 0, granel 0 | No aparece. «Avisa a Administración: falta X» |
 | R3-09 | Invernadero 4g: consumo 45, contador 17 | **no aparece** |
 | R3-10 | Invernadero 10g: consumo 12, contador 0; granel Slush Mints 380, Royal Berry 127, Grapefruit 0 | **5 cajas**; motivo con «Slush Mints, Royal Berry» y la frase de FIFO |
@@ -307,13 +308,45 @@ Una vez por turno (al pedirse la lista por primera vez en el turno), y se guarda
 ### 3.9 Cajas de todas partes (R1c, rehecha en la Tarea 14)
 El contador de CONTEO DE CAJAS TOTAL se corrige con los movimientos desde el último recuento: **+ lo hecho − lo salido + lo que va en camino** a las tiendas (el reparto hasta las 23:30; el envío hasta las 11:59 del día siguiente). Un pedido de Nacex sale y no va a ninguna tienda: resta. Las variedades de Invernadero e Indoor suman al total de su categoría del mismo formato. Así la lista del +35 % no pide cajas que ya existen. El motivo lo explica: «(con 6 hechas desde el recuento y 5 en camino a las tiendas)»; antes del recuento, lo salido y lo que va en camino se compensan y no se nombran. Regla completa en §2.10.
 
-## 4. Propuestas pendientes (no aprobadas)
+## 4. R4 — Cobertura a 2 semanas (Tarea 15, `ESTADO_DEL_SISTEMA.md` v1.29)
+
+Una sola cuenta (`supabase/functions/_compartido/r4.ts`, `calcularCobertura`) para el panel de Administración («Productos con menos de 2 semanas», siempre a la vista) y, cuando se construya, para el aviso del jueves.
+
+### 4.1 Cuenta
+- Por producto: **«LO QUE HAY EN TOTAL»** frente a **2 × «1 SEMANA NECESIDADES»**, de la fila del nombre en PRINCIPAL. Solo sale si `total < 2 × necesidad` (justo 2 semanas no sale).
+- `semanas = total ÷ necesidad`, con un decimal, hacia abajo.
+- **Invernadero e Indoor:** una fila por categoría («Invernadero», «Indoor»), sumando el total y la necesidad de todas sus variedades (las de la pestaña ALMACEN, como en R3).
+- **La hoja tal cual:** sin «almacén ahora» ni cajas en camino. Producir o mandar a una tienda no cambia el total; solo las ventas, que la hoja recoge con el FIN DE DÍA.
+- El total viene por producto, no por formato: `formato` es siempre `""`.
+
+### 4.2 Qué entra y qué no
+- Los productos que se reparten (los del catálogo: con formatos o con datos de tiendas). La materia prima (DISTILLATE…) no cuenta.
+- **Fuera:** los de `stock_excluidos` (MINI y VAPER), por nombre de producto, y lo que tiene **necesidad 0**.
+- **Dato vacío, no numérico o negativo** (total o necesidad): no se inventa. Va a un aviso («No puedo calcular X en PRINCIPAL (…)»). Si es una variedad, el aviso es de toda su categoría.
+- Sin las columnas en PRINCIPAL: un solo aviso. El reparto y el stock siguen igual.
+
+### 4.3 Dónde se calcula y cuándo
+Cada vez que el servidor lee la hoja para el reparto, el envío o la lista de stock (varias veces al día), calcula R4 y lo guarda con esa lectura (`lecturas_sheets.cobertura`). `estado_actual().cobertura_baja` enseña la última, con su hora (`datos_leidos_en`). **No se lee la hoja al abrir el panel.** Las lecturas de los pedidos de cliente no la traen.
+
+### 4.4 Casos de prueba (`r4_test.ts`)
+| # | Datos | Resultado |
+| --- | --- | --- |
+| R4-01 | BZ1: total 701, necesidad 300 | Por encima (701 ≥ 600): **no sale** |
+| R4-02 | KUSH WATERHASH: 302, necesidad 219 | Por debajo (302 < 438): **sale, 1,3 semanas** («Hay 302 en total y se necesitan 219 a la semana: da para 1,3 semanas.») |
+| R4-03 | ICE O LATOR: 198, necesidad 99 | Justo 2 semanas: **no sale** |
+| R4-04 | Invernadero: Slush 662/68,5, Royal Berry 306/28, Grapefruit 4/105,5 | Por categoría: 972 ≥ 404, **no sale** aunque Grapefruit solo tenga 4. Con 100, 50 y 4: 154 < 404 → **«Invernadero», 0,7 semanas** |
+| R4-05 | MINI 10/305, VAPER 1/7, SUGAR 0/0 | **Excluidos** (mini y vaper) y necesidad 0: nada |
+| R4-06 | CBD DRY sin total; TXABAKO SUST con total −40; una variedad de Indoor con necesidad «x» | **Avisos**, ninguno en la lista (el de Indoor, de toda la categoría) |
+| R4-07 | Varios por debajo y una materia prima | De menos a más semanas; la materia prima no cuenta |
+| R4-08 | Extracto real de la hoja | Columnas por su encabezado; sin ellas, un solo aviso |
+
+## 5. Propuestas pendientes (no aprobadas)
 
 | # | Propuesta | Estado |
 | --- | --- | --- |
 | P-R3a | Limitar la lista a lo que permite el granel (`granel ÷ gramos del formato`) y avisar a Administración por la diferencia. | Para más adelante (coordinador, 26/10/2026). |
 
-## 5. Dudas
+## 6. Dudas
 
 1. **Cabecera del envío a Gipuzkoa/Durango:** ¿empieza por `REPARTO dd/mm`, por `ENVÍO dd/mm` o no lleva cabecera? (Construido así: se acepta `REPARTO` o `ENVÍO`/`ENVIO`, o ninguna.)
 2. **Envío del viernes y reparto a la vez:** los dos restan las mismas cajas del almacén de PRINCIPAL (la hoja no cambia hasta el recuento). Si en una caja del almacén se cuenta para las dos cosas, la producción saldría corta. ¿Se calcula el envío descontando lo ya pedido en el reparto del día?

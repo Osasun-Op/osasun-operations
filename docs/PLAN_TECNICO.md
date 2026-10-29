@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 1.3 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7); «¿Quién sale?» (Tarea 8); reparto de hoy en el panel (Tarea 9); reparto con lista (Tarea 10); pedidos de cliente y cajas en camino (Tarea 12); peticiones especiales e histórico (Tarea 13); almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (Tarea 14).
+**Versión:** 1.4 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7); «¿Quién sale?» (Tarea 8); reparto de hoy en el panel (Tarea 9); reparto con lista (Tarea 10); pedidos de cliente y cajas en camino (Tarea 12); peticiones especiales e histórico (Tarea 13); almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (Tarea 14); panel de Administración: minis, horas, tiempo libre y menos de 2 semanas (Tarea 15).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -199,7 +199,7 @@ Precios a confirmar en la web de Supabase al contratar. No contrato nada.
 | D3 Canal | Correo |
 | Duraciones | §2.4 (§6.10 de `ESTADO_DEL_SISTEMA.md`); duración orientativa obligatoria en las tareas de Administración (P-T1) |
 | Tiendas y envío | Como en la hoja; Durango = DURANGO o LAUDIO; envío en un bloque GIPUZKOA que va a Rentería |
-| Minis · FIFO · vapers | Solo MINIBUDS MIX 10g · lo decide el operario · fuera de R3 |
+| Minis · FIFO · vapers | Solo MINI 10g · lo decide el operario · fuera de R3 |
 | Reparto corregido | Sustituye y conserva lo hecho (`REGLAS_CALCULO.md` §2.6) |
 | Obligatorias no terminadas | Se arrastran, salvo las ligadas a hora o turno |
 | Pedido de cliente | Lo mete quien lo recibe |

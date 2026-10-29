@@ -5,6 +5,7 @@
 
 import { leerStock, type Pestanas } from "../_compartido/google.ts";
 import { ajustesStock, calcularStock, type ConfigR3 } from "../_compartido/r3.ts";
+import { guardarCobertura } from "../_compartido/r4.ts";
 import type { Cajas } from "../_compartido/pedidos.ts";
 import { CORS, error, quienLlama, responder, rpc } from "../_compartido/servidor.ts";
 
@@ -51,6 +52,8 @@ Deno.serve(async (req) => {
         ? "No puedo leer el stock ahora: la lista de stock no está disponible. El resto de tareas sigue igual."
         : "La hoja de stock ha cambiado de forma: no hay lista de stock. Avisa a Administración.", { detalle: lectura.detalle }));
     }
+    // R4: la cobertura de esta lectura, para el panel de Administración.
+    await guardarCobertura(rpc, lecturaId, lectura.datos, ctx.config.stock_excluidos ?? []);
 
     const r = calcularStock(lectura.datos, {
       porcentaje: Number(ctx.config.stock_objetivo_pct ?? 35),

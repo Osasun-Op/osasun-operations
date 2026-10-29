@@ -25,12 +25,14 @@ const CTX = {
 };
 const ID = "6b1f7a3e-9c1d-4f2a-8b7e-2d5c9a0e1f34";
 
-function falso(o: { ctx?: Record<string, unknown>; previo?: unknown; lectura?: ResultadoLectura; guardado?: Record<string, unknown> } = {}) {
+function falso(o: { ctx?: Record<string, unknown>; previo?: unknown; lectura?: ResultadoLectura; guardado?: Record<string, unknown>;
+                    fallaCobertura?: boolean } = {}) {
   const llamadas: { nombre: string; args: Record<string, unknown> }[] = [];
   let lecturas = 0;
   const d: Dependencias = {
     rpc: <T>(nombre: string, args: Record<string, unknown>) => {
       llamadas.push({ nombre, args });
+      if (nombre === "servidor_guardar_cobertura" && o.fallaCobertura) return Promise.reject(new Error("Base de datos caída"));
       const r: Record<string, unknown> = {
         servidor_preparar: o.ctx ?? CTX,
         servidor_reparto_por_id_cliente: o.previo ?? null,
@@ -39,6 +41,7 @@ function falso(o: { ctx?: Record<string, unknown>; previo?: unknown; lectura?: R
         servidor_reparto_anotar_id_cliente: null,
         servidor_asignar_pedidos: { pedidos: [{ id: "pedido-1", estado: "por_preparar" }] },
         servidor_guardar_peticiones: { peticiones: args.p_peticiones },
+        servidor_guardar_cobertura: null,
       };
       return Promise.resolve(r[nombre] as T);
     },
@@ -280,4 +283,17 @@ Deno.test("guardar_reparto: con un pedido de tienda esperando, el reparto puede 
                "DATOS_NO_VALIDOS");
   const envio = await guardarRepartoDe(f.d, "p", { id_cliente: ID, tipo: "envio", lineas: [] }) as { error: { codigo: string } };
   assertEquals(envio.error.codigo, "DATOS_NO_VALIDOS");
+});
+
+Deno.test("guardar_reparto: guarda con la lectura la cobertura a 2 semanas (R4), sin los excluidos; si falla, el reparto sigue", async () => {
+  const ctx = { ...CTX, config: { ...CTX.config, stock_excluidos: [{ producto: "MINI", formato: "10g", motivo: "Minis" }] } };
+  const f = falso({ ctx });
+  await guardarRepartoDe(f.d, "p", cuerpo());
+  const a = f.args("servidor_guardar_cobertura")!;
+  const cobertura = a.p_cobertura as { productos: { producto: string }[]; avisos: string[] };
+  assertEquals(a.p_lectura, "lectura-1");
+  assertEquals(cobertura.productos.some((x) => x.producto === "MINI"), false);
+  const g = falso({ ctx, fallaCobertura: true });
+  const r = await guardarRepartoDe(g.d, "p", cuerpo()) as Record<string, unknown>;
+  assertEquals([r.error, r.reparto_id], [undefined, "reparto-1"]);
 });
