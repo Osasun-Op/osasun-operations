@@ -62,11 +62,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 15** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.29**: §5 R3 (minis) y R4, y §8 «Administración · Inicio».
+**Ninguna.** La Tarea 15 está fusionada (PR #14). Espera a que el coordinador escriba la siguiente.
 
 ---
 
-## 7. TAREA 15 (activa): panel de Administración tras la prueba en el almacén, en pruebas
+## 7. TAREA 15 (fusionada en el PR #14): panel de Administración tras la prueba en el almacén, en pruebas
 
 1. **Minis (R3).** En `configuracion.stock_excluidos`, el producto es **`MINI`** (formato `10g`), no `MINIBUDS MIX`: en la hoja real se llama «MINI» en PRINCIPAL, en CONTEO DE CAJAS TOTAL y en las tiendas. Hoy sale en la lista del +35 % («MINI · 10g · Haz 16») y no debe salir. Cambia también los datos de prueba que usen «MINIBUDS MIX» para que se parezcan a la hoja real, y añade una prueba: con «MINI 10g» en CONTEO, no sale en la lista y aparece en `excluidos`.
 2. **Hoy con horas.** En `estado_actual().hoy`, añade a cada tarea `iniciada_en`, `terminada_en` y `minutos` (de inicio a fin; hasta ahora si está en curso; `null` si no ha empezado). La tabla ya guarda las horas: solo hay que enviarlas.
@@ -411,3 +411,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.17 | 28/10/2026 | Tarea 13 fusionada. Tarea 14 activa: cuenta del almacén y cajas en camino con hora. |
 | 1.18 | 28/10/2026 | Tarea 14 fusionada (PR #13). Sin tarea activa. |
 | 1.19 | 29/10/2026 | Tarea 15 activa: minis, horas de las tareas, tiempo libre y menos de 2 semanas en el panel. |
+| 1.20 | 29/10/2026 | Tarea 15 fusionada (PR #14). Sin tarea activa. |
