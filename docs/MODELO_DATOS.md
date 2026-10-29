@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 1.0 · **Fecha:** 28/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 14).
+**Versión:** 1.1 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 15).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -206,7 +206,7 @@ Diario de todo lo que pasa (principio 7). Solo se añade. ocurrido_en · persona
 Tipos en uso: `jornada_generada`, `jornada_preparada`, `tarea_creada`, `tarea_retirada`, `tarea_recuperada`, `tarea_arrastrada`, `tarea_cancelada`, `sale_fijado`, `envio_fijado`, `tarea_iniciada`, `tarea_terminada`, `tarea_pausada`, `motivo_anotado`, `problema_abierto`, `problema_llamada`, `problema_resuelto`, `incidencia_iniciada`, `incidencia_terminada`, `evento_registrado`, `salida_retrasada`, `conflicto_decidido`, `cierre_generado`, `correo_encolado`, `correo_reclamado`, `correo_enviado`, `correo_fallido`.
 
 ### 3.15 `lecturas_sheets` ✅
-Cada lectura de `STOCK OSASUN-CLAUDE` ya interpretada: leido_en · motivo (`reparto` · `envio` · `stock`) · persona_id · correcto · error · datos. Solo deja constancia de con qué datos se calculó cada cosa.
+Cada lectura de `STOCK OSASUN-CLAUDE` ya interpretada: leido_en · motivo (`reparto` · `envio` · `stock` · `pedido`) · persona_id · correcto · error · datos · cobertura. Deja constancia de con qué datos se calculó cada cosa. `cobertura` (Tarea 15): R4, los productos con menos de 2 semanas y los avisos, calculados por el servidor con esa lectura (reparto, envío y stock); el panel enseña la última.
 
 ### 3.16 `motor.solicitudes_servidor` ✅
 Solicitudes internas de un solo uso (caducan a los 5 minutos) para llamar a las funciones del servidor desde la base de datos sin claves (pruebas y, en la Tarea 4, tareas programadas). No se publica en la API; RLS con política que no deja ver nada a ningún usuario.

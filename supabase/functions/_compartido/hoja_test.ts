@@ -12,7 +12,7 @@ export const PRINCIPAL = [
   [...v(19), "TOTAL MERCADERÍAS", "NECESIDADES", "NECESIDADES", "", "EXTERIOR"],
   ["FIN DIA", "FIN DIA", "TOTAL GR", "FIN DIA", "TOTAL GR", "FIN DÍA", "TOTAL GR", "FIN DIA", "TOTAL GR", "FIN DIA", "TOTAL GR", "FIN DIA", "TOTAL GR", "TOTAL", "TOTAL GR", "TOTAL", "TOTAL GR", "FIN DIA", "TOTAL GR", "", "1 SEMANA", "1 MES", "", "275"],
   [...v(23), "INVERNADERO"],
-  ["MINIBUDS MIX", ...v(16), "1670", "1670", "1930", "315", "1260", "MINIBUDS MIX", "225"],
+  ["MINI", ...v(16), "1670", "1670", "1930", "315", "1260", "MINI", "225"],
   ["10g", "5", "50", "2", "20", "4", "40", "11", "110", "0", "0", "0", "0", "0", "0", "4", "40", "0", "", "", "", "", "", "INTERIOR"],
   [...v(23), "400"],
   ["SLUSH MINTS", ...v(16), "380", "490", "772", "68,5", "274", "SLUSH MINTS"],
@@ -43,7 +43,7 @@ export const CONTEO = [
   ["", "TOTALES", "CAJAS", "", "TOTALES", "CAJAS", "", "TOTALES", "CAJAS", "", "TOTALES", "CAJAS", "", "TOTALES", "CAJAS"],
   ["", "HECHAS", "SEMANAL", "", "HECHAS", "SEMANAL", "", "HECHAS", "SEMANAL", "", "HECHAS", "SEMANAL", "", "HECHAS", "SEMANAL"],
   [],
-  ["MINIBUDS MIX", "", "", "INVERNADERO TOTAL", "", "", "INDOOR TOTAL", "", "", "KUSH WATERHASH", "", "", "T BALLS / GELATO DRY"],
+  ["MINI", "", "", "INVERNADERO TOTAL", "", "", "INDOOR TOTAL", "", "", "KUSH WATERHASH", "", "", "T BALLS / GELATO DRY"],
   ["10g", "-7", "33", "4g", "17", "45", "4g", "-14", "52", "4g", "9", "35", "2g", "2", "33"],
   ["", "", "", "10g", "0", "12", "10g", "-5", "10", "10g", "6", "10", "10g", "10", "12"],
   ["TXABAKO SUST"],
@@ -64,7 +64,7 @@ export const ALMACEN = [
   ["", "", "", "TOTAL 10GR", "9", "90", "TOTAL 10GR", "0", "0", "TOTAL 10GR", "19", "190"],
   ["", "FIN DIA", "TOTAL GR", "", "FIN DIA", "TOTAL GR", "", "FIN DIA", "TOTAL GR", "", "FIN DIA", "TOTAL GR", "", "FIN DIA"],
   [],
-  ["MINIBUDS MIX", "1670", "1670", "SLUSH MINTS", "380", "490", "INDOOR PR RELAX", "260", "260", "KUSH WATERHASH", "195", "265", "5% Aislado", "1"],
+  ["MINI", "1670", "1670", "SLUSH MINTS", "380", "490", "INDOOR PR RELAX", "260", "260", "KUSH WATERHASH", "195", "265", "5% Aislado", "1"],
   ["10g", "0", "", "4g", "15", "", "4g", "0", "", "4g", "10"],
   ["", "", "", "10g", "5", "", "10g", "0", "", "10g", "3", "", "10% FS", "12"],
   ["TXABAKO SUST", "0", "0"],
@@ -74,7 +74,7 @@ export const ALMACEN = [
 
 Deno.test("PRINCIPAL: bloques de producto, granel y cajas del almacén por formato", () => {
   const ps = leerPrincipal(PRINCIPAL);
-  assertEquals(ps.map((p) => p.nombre), ["MINIBUDS MIX", "SLUSH MINTS", "GRAPEFRUIT", "INDOOR PR RELAX", "INDOOR PR AFRU", "V2", "FORTE", "DISTILLATE"]);
+  assertEquals(ps.map((p) => p.nombre), ["MINI", "SLUSH MINTS", "GRAPEFRUIT", "INDOOR PR RELAX", "INDOOR PR AFRU", "V2", "FORTE", "DISTILLATE"]);
   const v2 = ps.find((p) => p.nombre === "V2")!;
   assertEquals([v2.granel, v2.formatos], ["730", [{ formato: "4g", almacen: "25" }, { formato: "10g", almacen: "10" }]]);
   assertEquals(ps.find((p) => p.nombre === "FORTE")!.conTiendas, true);
@@ -102,13 +102,13 @@ Deno.test("ALMACEN: categoría de cada producto y variedades que rotan", () => {
 Deno.test("Extracto real completo: lista de stock calculada", () => {
   const r = calcularStock(leerHoja(PRINCIPAL, CONTEO, ALMACEN), {
     porcentaje: 35,
-    excluidos: [{ producto: "MINIBUDS MIX", formato: "10g", motivo: "Minis" }, { producto: "VAPER", formato: "", motivo: "R7" }],
+    excluidos: [{ producto: "MINI", formato: "10g", motivo: "Minis" }, { producto: "VAPER", formato: "", motivo: "R7" }],
   });
   // Indoor 4g: 0,35×52 = 18,2 + 14 = 32,2 → 33. Indoor 10g: 3,5 + 5 = 8,5 → 9. Invernadero 10g: 4,2 → 5.
   // V2 4g: 25,55 − 30 < 0; V2 10g: 12,25 − 1 = 11,25 → 12. Los que no están en el extracto de PRINCIPAL se avisan.
   assertEquals(r.lista.map((e) => `${e.producto} ${e.formato} ${e.cajas}`),
     ["Indoor 4g 33", "V2 10g 12", "Invernadero 10g 5", "Indoor 10g 9"]);
-  assertEquals(r.excluidos.map((e) => e.producto), ["MINIBUDS MIX", "VAPER"]);
+  assertEquals(r.excluidos.map((e) => e.producto), ["MINI", "VAPER"]);
 });
 
 Deno.test("R3-15 hoja cambiada: falta un encabezado o una pestaña → ErrorEstructura", () => {

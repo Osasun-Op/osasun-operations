@@ -22,6 +22,9 @@ export interface Producto {
   formatos: { formato: string; almacen: string }[];
   conTiendas: boolean;       // la fila del nombre tiene datos de tiendas (producto sin formato)
   orden: number;             // fila en la hoja
+  /** R4: «LO QUE HAY EN TOTAL» y «1 SEMANA NECESIDADES» de la fila del nombre (sin las columnas, no están). */
+  total?: string;
+  necesidad?: string;
 }
 
 /** Línea de CONTEO DE CAJAS TOTAL. */
@@ -57,6 +60,11 @@ export function leerPrincipal(filas: Filas): Producto[] {
   if (colAlmacen < 1) throw new ErrorEstructura("PRINCIPAL: no encuentro la columna «ALMACEN» en la fila 1.");
   const filaFinDia = filas.findIndex((f, i) => i < 5 && norm(celda(f, colAlmacen)) === "FINDIA");
   if (filaFinDia < 0) throw new ErrorEstructura("PRINCIPAL: no encuentro «FIN DIA» bajo «ALMACEN».");
+  // R4: si faltan estas columnas, el reparto y el stock siguen; la cobertura lo avisa.
+  const colTotal = (filas[0] ?? []).findIndex((v) => norm(String(v ?? "")) === "LOQUEHAYENTOTAL");
+  const colNecesidad = (filas[0] ?? []).findIndex((v, c) =>
+    norm(String(v ?? "")) === "1SEMANA" && norm(celda(filas[1], c)) === "NECESIDADES");
+  const conCobertura = colTotal >= 0 && colNecesidad >= 0;
 
   const productos: Producto[] = [];
   let actual: Producto | null = null;
@@ -74,6 +82,7 @@ export function leerPrincipal(filas: Filas): Producto[] {
         formatos: [],
         conTiendas: !vacia(fila, 1, colAlmacen - 1),
         orden: i,
+        ...(conCobertura ? { total: celda(fila, colTotal), necesidad: celda(fila, colNecesidad) } : {}),
       };
       productos.push(actual);
     } else {

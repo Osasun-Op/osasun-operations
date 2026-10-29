@@ -7,7 +7,7 @@ import { ajustesStock, cajasR3, calcularStock, type ConfigR3 } from "./r3.ts";
 const CFG: ConfigR3 = {
   porcentaje: 35,
   excluidos: [
-    { producto: "MINIBUDS MIX", formato: "10g", motivo: "Minis" },
+    { producto: "MINI", formato: "10g", motivo: "Minis" },
     { producto: "VAPER", formato: "", motivo: "R7" },
   ],
 };
@@ -54,8 +54,8 @@ Deno.test("R3-06 TROPICANA 2025 10g → 10 cajas", () => {
   assertEquals(cajas(datos([c("TROPICANA 2025", "10g", "3", "36")], [p("TROPICANA 2025", "1136")])), [10]);
 });
 
-Deno.test("R3-07 MINIBUDS MIX 10g excluido (minis)", () => {
-  const r = unico(datos([c("MINIBUDS MIX", "10g", "-7", "33", "EXTERIOR")], [p("MINIBUDS MIX", "1670")]));
+Deno.test("R3-07 MINI 10g excluido (minis)", () => {
+  const r = unico(datos([c("MINI", "10g", "-7", "33", "EXTERIOR")], [p("MINI", "1670")]));
   assertEquals([r.lista.length, r.excluidos[0].motivo], [0, "Minis"]);
 });
 
