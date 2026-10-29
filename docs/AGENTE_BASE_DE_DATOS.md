@@ -62,11 +62,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 16** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.30, §5 R1e** (nueva).
+**Ninguna.** La Tarea 16 está fusionada (PR #15). Espera a que el coordinador escriba la siguiente.
 
 ---
 
-## 7. TAREA 16 (activa): producto sin granel en el reparto (quitarlo o cogerlo de otra tienda), en pruebas
+## 7. TAREA 16 (fusionada en el PR #15): producto sin granel en el reparto (quitarlo o cogerlo de otra tienda), en pruebas
 
 Hoy, si el reparto pide algo que no hay en el almacén ni tiene granel, la producción le dice al operario «haz N» y no puede. R1e lo resuelve **en la producción**, no al preparar el reparto: quien prepara el reparto no mira el almacén y el almacén decide de dónde sale cada cosa.
 
@@ -432,3 +432,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.19 | 29/10/2026 | Tarea 15 activa: minis, horas de las tareas, tiempo libre y menos de 2 semanas en el panel. |
 | 1.20 | 29/10/2026 | Tarea 15 fusionada (PR #14). Sin tarea activa. |
 | 1.21 | 29/10/2026 | Tarea 16 activa: producto sin granel en el reparto (R1e). |
+| 1.22 | 29/10/2026 | Tarea 16 fusionada (PR #15). Sin tarea activa. |
