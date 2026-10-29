@@ -62,11 +62,29 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 14 está fusionada (PR #13). Espera a que el coordinador escriba la siguiente.
+**Tarea 15** (sección 7). Lee antes `ESTADO_DEL_SISTEMA.md` **v1.29**: §5 R3 (minis) y R4, y §8 «Administración · Inicio».
 
 ---
 
-## 7. TAREA 14 (fusionada en el PR #13): cuenta del almacén entre recuentos y cajas en camino con hora, en pruebas
+## 7. TAREA 15 (activa): panel de Administración tras la prueba en el almacén, en pruebas
+
+1. **Minis (R3).** En `configuracion.stock_excluidos`, el producto es **`MINI`** (formato `10g`), no `MINIBUDS MIX`: en la hoja real se llama «MINI» en PRINCIPAL, en CONTEO DE CAJAS TOTAL y en las tiendas. Hoy sale en la lista del +35 % («MINI · 10g · Haz 16») y no debe salir. Cambia también los datos de prueba que usen «MINIBUDS MIX» para que se parezcan a la hoja real, y añade una prueba: con «MINI 10g» en CONTEO, no sale en la lista y aparece en `excluidos`.
+2. **Hoy con horas.** En `estado_actual().hoy`, añade a cada tarea `iniciada_en`, `terminada_en` y `minutos` (de inicio a fin; hasta ahora si está en curso; `null` si no ha empezado). La tabla ya guarda las horas: solo hay que enviarlas.
+3. **Tiempo libre.** En `estado_actual`, un bloque nuevo `tiempo_libre = { veces, minutos }` con las tareas «Orden y limpieza» (`cola_orden`) de hoy: cuántas se han empezado y los minutos en total (la que está en curso, hasta ahora).
+4. **Menos de 2 semanas (R4), siempre a la vista.** En `estado_actual`, un bloque nuevo `cobertura_baja = { datos_leidos_en, productos: [{ producto, formato, total, necesidad_semana, semanas }] }`, con **solo** los productos por debajo de 2 semanas.
+   - La cuenta: «LO QUE HAY EN TOTAL» de PRINCIPAL frente a 2 × «1 SEMANA NECESIDADES». Invernadero e Indoor, sumando toda la categoría (una fila por categoría).
+   - Con la hoja tal cual, sin «almacén ahora» ni cajas en camino: producir o mandar a una tienda no cambia el total.
+   - Fuera: minis y vapers (los de `stock_excluidos`) y lo que tenga necesidad 0. Un dato vacío o raro no se inventa: va a un aviso.
+   - **Una sola cuenta:** hazla como pieza propia (como `calcularStock` en `_compartido/r3.ts`), para que la use también el aviso del jueves cuando se construya. No la dupliques.
+   - `estado_actual` solo lee la base de datos. Si para esto hace falta guardar la última lectura de PRINCIPAL o leer la hoja de otra forma, usa lo que ya existe para leerla (`_compartido/hoja.ts`) y explica en el PR qué has elegido. Si hiciera falta leer la hoja cada vez que se abre el panel, **para y pregunta**.
+5. **No rompas lo que funciona.** `almacen_ahora` se queda en `estado_actual` (la pantalla dejará de mostrarlo, pero no lo quites). Lo demás de `estado_actual`, `tarea_activa`, `catalogo` y `lista_stock` no cambia de forma: solo se añaden campos.
+6. Escribe la R4 en `REGLAS_CALCULO.md` con casos de prueba (uno por encima, uno por debajo, Invernadero por categoría, uno excluido y uno con dato vacío). Todas las pruebas en verde; `CONTRATOS.md` a la 1.4, con su nota de cambios.
+
+**Entrega:** Pull Request **«Tarea 15 — Panel de Administración: minis, horas, tiempo libre y menos de 2 semanas»**, con un resumen de 10 líneas como máximo, la salida de las pruebas y las dudas.
+
+---
+
+## 7.0 TAREA 14 (fusionada en el PR #13): cuenta del almacén entre recuentos y cajas en camino con hora, en pruebas
 
 Sustituye a la versión anterior de R1c, la de «en camino hasta la mañana siguiente», que construiste en la Tarea 12.
 
@@ -392,3 +410,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.16 | 28/10/2026 | Tarea 13 activa: peticiones especiales e histórico. |
 | 1.17 | 28/10/2026 | Tarea 13 fusionada. Tarea 14 activa: cuenta del almacén y cajas en camino con hora. |
 | 1.18 | 28/10/2026 | Tarea 14 fusionada (PR #13). Sin tarea activa. |
+| 1.19 | 29/10/2026 | Tarea 15 activa: minis, horas de las tareas, tiempo libre y menos de 2 semanas en el panel. |

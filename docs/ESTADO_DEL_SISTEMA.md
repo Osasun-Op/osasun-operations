@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.28 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.29 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -184,11 +184,12 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
 - `objetivo = +35 % del consumo semanal`.
 - `cajas a hacer = objetivo − contador`, si sale positivo, **redondeado hacia arriba** (D1, decidido 26/10/2026).
 - La lista se ordena por consumo semanal, de mayor a menor. Es aceptable que las referencias que menos se venden se queden en torno a +20 %.
-- **Los minis quedan fuera de esta regla.** El único mini es **MINIBUDS MIX 10g**.
+- **Los minis quedan fuera de esta regla.** El único mini es **MINI 10g** (así se llama en toda la hoja; corregido el 29/10/2026, antes ponía «MINIBUDS MIX»). Se hacen el lunes por la tarde, unos 35 (R9).
 - **Categorías que rotan (Invernadero, Indoor):** se calcula por categoría. Dentro de cada una se aplica FIFO, con un mínimo de 2 variedades de invernadero y 2 de indoor. **El FIFO lo decide el operario:** la app indica las cajas de la categoría y las variedades con granel, y él usa primero el granel más antiguo, que reconoce en el almacén.
 - **Sin granel no se produce.** Al operario le aparece la tarea «Avisa a Administración: falta X».
 
 **R4. Aviso del jueves (cobertura a 2 semanas).** En cada producto se compara el total en gramos (almacén más tiendas, de PRINCIPAL) con 2 × la necesidad semanal. Invernadero e Indoor se valoran sumando toda la categoría, porque se compran 2 o 3 variedades a la vez. La app prepara la lista explicando cada aviso. El operario la revisa, comprueba el granel físicamente y la envía a Administración.
+- **En el panel de Administración, siempre a la vista** (decisión del propietario, 29/10/2026): la misma cuenta, con «LO QUE HAY EN TOTAL» de PRINCIPAL frente a 2 × «1 SEMANA NECESIDADES». **Solo salen los productos por debajo.** Se usa la hoja tal cual: producir o mandar a una tienda no cambia el total; solo lo cambian las ventas, que la hoja recoge con el FIN DE DÍA. Una sola cuenta para el panel y para el aviso del jueves.
 
 **R5. Verificación del recuento.** La app comprueba si STOCK ALMACÉN DIARIO se ha actualizado ese día. Si no, la tarea aparece como «declarado, no verificado».
 
@@ -330,7 +331,17 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 
 ### Administración
 - **Histórico** (decisión del propietario, 28/10/2026): con un calendario, cualquier día pasado. Muestra el reparto y el envío (quién salió, tiendas, cajas, peticiones especiales y «Copiar para WhatsApp»), los pedidos de cliente y los cierres de ese día. Solo consulta.
-- **Inicio (móvil):** en qué está el almacén ahora, problemas abiertos, pendientes que se arrastran, tareas de hoy y botón **Nueva tarea**.
+- **Inicio** (orden confirmado por el propietario, 29/10/2026), de arriba abajo:
+  1. **Ahora:** en qué está el operario.
+  2. **Avisos:** problemas e incidencias abiertas.
+  3. **Productos con menos de 2 semanas** (R4): solo los que estén por debajo.
+  4. **Hoy:** cada tarea con su hora de inicio, su hora de fin y los minutos que ha tardado.
+  5. **Tiempo libre:** cuántas veces y cuántos minutos de «Orden y limpieza» (señal de que le sobra tiempo).
+  6. **Pedidos de cliente.**
+  7. **Arrastradas y cierres.**
+  8. **Hoja y correos:** solo si hay algún error.
+  - Abajo, los botones: Preparar/Modificar reparto, Preparar envío, Pedido de cliente y **Nueva tarea**.
+  - **No se muestra «Almacén ahora»** (cuenta entre recuentos y cajas en camino): no le aporta al propietario. La app la sigue usando en sus cálculos (R1c). Lo que va en camino a Gipuzkoa o Durango se verá en la pantalla de esas tiendas (etapa 2).
 - **Nueva tarea:** qué · para quién (almacén por defecto) · cuándo (hoy, un día o antes de una hora) · duración orientativa · urgente (no por defecto) · por qué (opcional).
 - **Cierre:** llega al móvil. Contiene lo hecho con su resultado, lo no hecho con su motivo, los problemas (tiempo y solución), las incidencias (tiempo), los pendientes arrastrados y lo que toca mañana. Los viernes, además, el indicador de calidad.
 - **Ordenador:** histórico e indicadores.
@@ -508,3 +519,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.26 | 28/10/2026 | Peticiones especiales en el reparto y el envío (R1d). Histórico por día en el panel de Administración. |
 | 1.27 | 28/10/2026 | R1c rehecha: cuenta del almacén entre recuentos (lo producido suma), el recuento pone al día solo el almacén y las cajas en camino tienen hora fija (reparto hasta las 23:30, Nacex hasta las 11:59 del día siguiente); los pedidos por Nacex salen del stock. |
 | 1.28 | 28/10/2026 | Decisiones del propietario en la Tarea 14: el pedido de tienda activa el reparto de hoy; el reparto de primera hora usa «almacén ahora». |
+| 1.29 | 29/10/2026 | Tras la prueba en el almacén: el mini se llama «MINI 10g» en la hoja; nuevo Inicio del panel de Administración (menos de 2 semanas siempre a la vista, horas y minutos de cada tarea, tiempo de «Orden y limpieza», sin «Almacén ahora»). |
