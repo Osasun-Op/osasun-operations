@@ -2,6 +2,8 @@
 
 **Versión:** 1.6 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 17).
 
+> **Tarea 19 (29/10) — sin cambios para Lovable:** nueva función interna `motor.auditoria()` (§5) para las revisiones del coordinador (`docs/AUDITORIA.md`).
+
 > **Tarea 18 (29/10) — sin cambios en los contratos:** las funciones del servidor ya no responden 500 después de guardar cuando llaman a una función de la base de datos que no devuelve nada (`guardar_reparto` era la que lo hacía); la respuesta es la de este documento.
 
 > **Cambios en 1.6 (Tarea 17) — para Lovable: envío sin granel** (`ESTADO_DEL_SISTEMA.md` v1.31, §5 R1e, el punto del envío).
@@ -520,6 +522,7 @@ Pantalla **Histórico** de Administración (`ESTADO_DEL_SISTEMA.md` §8): con un
 | `motor.reintentar_correos(ahora)` ✅ | Tarea programada `reintentar_correos`, cada minuto | Vuelve a pedir los correos rechazados cuya espera de 5 min ha pasado. |
 | `hook_antes_de_crear_usuario(event)` ✅ | Supabase Auth, antes de crear un usuario (hook «Before User Created») | Solo deja crear el usuario si su correo está en `cuentas_autorizadas` (configuración del entorno). Si no: error 403 «Esta cuenta no tiene acceso a Osasun Operations. Pide acceso a Administración.» |
 | `motor.tras_crear_usuario` (disparador en `auth.users`) ✅ | Al crearse el usuario | Da de alta su persona con el rol, el centro y el horario de la lista. Nunca impide el alta. |
+| `motor.auditoria()` · `motor.huella_estructura()` ✅ (Tarea 19) | El coordinador, con el conector (`postgres`); también `service_role`. Nadie con sesión | Solo leen. La auditoría: migraciones, huella de la estructura, RLS, permisos de las funciones, disparadores, tareas programadas, configuración, últimos datos y `avisos` (ver `docs/AUDITORIA.md`). La huella es la de la prueba 00. |
 | `prueba.fijar_condicion(jornada, condicion, valor)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Simula `SALE:`, envío y eventos hasta que tengan su función real. Nadie tiene permiso para usarla. |
 | `prueba.invocar(funcion, persona, cuerpo)` ✅ | Solo las pruebas, solo en el entorno de pruebas | Llama a una función del servidor desde la base de datos con una solicitud interna. |
 | `servidor_preparar` · `servidor_guardar_lectura` · `servidor_guardar_reparto` · `servidor_reparto_por_id_cliente` · `servidor_reparto_anotar_id_cliente` (Tarea 10) · `servidor_preparar_pedido` · `servidor_guardar_pedido_cliente` · `servidor_asignar_pedidos` (Tarea 12) · `servidor_guardar_peticiones` (Tarea 13) · `servidor_guardar_cobertura` (Tarea 15) · `servidor_guardar_stock` · `servidor_canjear_solicitud` · `servidor_correo_reclamar` · `servidor_correo_respuesta` (y `servidor_correo_resultado`, de la Tarea 4) ✅ | Solo las funciones del servidor (rol `service_role`) | Guardan lo que el servidor ha calculado. Ningún usuario puede llamarlas: nadie guarda un reparto o una lista sin pasar por el cálculo. |
