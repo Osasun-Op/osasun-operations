@@ -3,6 +3,8 @@
 // La clave interna solo existe aquí (variable del entorno de Supabase); nunca
 // llega a las pantallas.
 
+import { leerRespuesta } from "./respuesta.ts";
+
 const URL_PROYECTO = Deno.env.get("SUPABASE_URL") ?? "";
 const CLAVE_SERVIDOR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const CLAVE_PUBLICA = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -23,7 +25,7 @@ export function responder(cuerpo: unknown, estado = 200): Response {
 export const error = (codigo: string, mensaje: string, extra: Record<string, unknown> = {}) =>
   ({ error: { codigo, mensaje, ...extra } });
 
-/** Llama a una función de la base de datos con la clave interna del servidor. */
+/** Llama a una función de la base de datos con la clave interna del servidor (una `void` devuelve `null`). */
 export async function rpc<T = unknown>(nombre: string, args: Record<string, unknown>): Promise<T> {
   const r = await fetch(`${URL_PROYECTO}/rest/v1/rpc/${nombre}`, {
     method: "POST",
@@ -34,8 +36,7 @@ export async function rpc<T = unknown>(nombre: string, args: Record<string, unkn
     },
     body: JSON.stringify(args),
   });
-  if (!r.ok) throw new Error(`Base de datos: ${nombre} → HTTP ${r.status} ${await r.text()}`);
-  return await r.json() as T;
+  return await leerRespuesta<T>(nombre, r);
 }
 
 /**
