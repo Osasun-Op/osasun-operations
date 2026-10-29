@@ -2,23 +2,16 @@
 
 Este repositorio contiene el software de supervisión operativa de Osasun Wellness: primero el almacén, después las tiendas. Trabajas en español.
 
-## Antes de hacer nada
+## Antes de hacer nada (obligatorio, en este orden)
 
-1. Lee `docs/ESTADO_DEL_SISTEMA.md`. Es la **fuente de verdad**. Si algo de lo que vas a hacer lo contradice, te detienes y lo comunicas.
-2. Identifica tu rol en el mensaje de arranque y lee tus instrucciones:
+1. **`docs/CONSTITUCION_TECNICA.md`**: las reglas que nadie se salta. Si algo las contradice, te detienes y lo comunicas.
+2. **`docs/ESTADO_DEL_SISTEMA.md`**: la fuente de verdad del negocio, en las partes que toca tu tarea.
+3. **`docs/CONTRATOS.md`**: las funciones que toca tu tarea.
+4. **Tus instrucciones**, según el rol del mensaje de arranque:
    - Coordinador → `docs/AGENTE_COORDINADOR.md`
    - Base de datos → `docs/AGENTE_BASE_DE_DATOS.md`
    - Pantallas (Lovable) → `docs/AGENTE_ALMACEN.md` (trabaja en el repositorio `osasun-pantallas`, con una copia de ese archivo y de `CONTRATOS.md`)
-3. Contexto operativo: `docs/ACTUALIZACIONES_MANUAL_ALMACEN.md`.
+5. **El código que ya existe** sobre lo que vas a tocar: buscar antes de escribir.
+6. Contexto operativo, si hace falta: `docs/ACTUALIZACIONES_MANUAL_ALMACEN.md`.
 
-## Reglas que nadie se salta
-
-- **Nunca** trabajas en el ordenador del propietario. Solo en entornos en la nube.
-- **Nunca** guardas claves, tokens o contraseñas en el repositorio, en documentos ni en mensajes. Van como secretos del entorno.
-- **Nunca** tocas producción sin aprobación expresa del propietario.
-- **Google Sheets:** puedes consultarlo con los conectores de Google; **nunca escribes** en él.
-- **No inventas reglas de negocio.** Si falta un dato, lo preguntas.
-- **Una tarea activa cada vez.** Cambios pequeños, reversibles y verificables.
-- **El código entra siempre por Pull Request**, nunca directamente en `main`.
-- **Lo más sencillo que funcione.** Nada de complejidad por anticipación.
-- **Las decisiones de negocio son del propietario.** Tú propones con una recomendación concreta; él decide.
+Las reglas comunes están en la constitución; aquí no se repiten.

@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.31 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.32 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -535,3 +535,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.29 | 29/10/2026 | Tras la prueba en el almacén: el mini se llama «MINI 10g» en la hoja; nuevo Inicio del panel de Administración (menos de 2 semanas siempre a la vista, horas y minutos de cada tarea, tiempo de «Orden y limpieza», sin «Almacén ahora»). |
 | 1.30 | 29/10/2026 | R1e: producto sin granel en el reparto (quitarlo o cogerlo de otra tienda, aviso de llamada en las bolsas, parada para quien hace la ruta y línea en WhatsApp); «Hoy sales tú / Hoy sale [nombre]» en las tareas del reparto. |
 | 1.31 | 29/10/2026 | R1e en el envío: se comprueba al pulsar «Calcular» en «Preparar envío» (no guarda; «Dejarlo en N» o «Quitarlo»). |
+| 1.32 | 29/10/2026 | Constitución técnica (`docs/CONSTITUCION_TECNICA.md`): reglas que no se rompen, lectura obligatoria antes de actuar y «terminado» = funciona en el proyecto de pruebas, con registros sin errores. |

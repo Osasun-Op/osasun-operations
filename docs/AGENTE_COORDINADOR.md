@@ -56,6 +56,27 @@ Antes de encargar una tarea que cambia una regla ya construida: busca en el cód
 - Con el agente de base de datos: cuando el propietario lo arranque, programa un aviso a los 15–20 minutos para comprobar si hay un PR nuevo y revisarlo.
 - **Nunca** le pidas al propietario que diga «revisa»: avísale tú.
 
+### Lista de revisión (obligatoria; constitución técnica, 29/10/2026)
+Se pasa **siempre**, entera, y el resultado va como comentario en el PR, punto por punto (✔ / ✘ / no aplica).
+
+**PR del agente de base de datos:**
+1. Tiene «Qué he leído y qué existía ya», y cuadra con lo que hay en el repositorio.
+2. Migraciones: las del proyecto de pruebas (`list_migrations`) son las mismas que las del repositorio.
+3. Funciones rehechas: comparadas con su versión anterior (script de comparación); no pierden nada.
+4. Contratos: lo que usan las pantallas solo gana campos; `CONTRATOS.md` sube de versión con su nota.
+5. Seguridad: `get_advisors` sin novedades; las funciones nuevas solo las puede llamar quien debe (permisos).
+6. Datos personales: ninguno en el cambio.
+7. **Funciona de verdad:** registros del servidor (`query_logs`, últimas 24 h) sin errores nuevos (500 o excepciones), y la llamada real del PR responde bien.
+8. Documentos al día (estado, contratos, instrucciones).
+
+**Entrega de Lovable:** solo la clave pública y las funciones del contrato; nada de escrituras directas ni cálculos; reutiliza los componentes que ya hay; compila y pasan sus pruebas.
+
+**Al escribir una tarea:** buscar antes lo que ya existe y poner en la tarea qué partes del estado y de los contratos tiene que leer y qué funciones relacionadas ya existen.
+
+**Cuando el propietario cuente una prueba real o un fallo:** primero los registros del servidor de ese rato; después la respuesta.
+
+**Herramientas:** la auditoría de solo lectura se encarga como Tarea 19, después de la 18. Cuando exista, se usa en cada revisión en lugar de las consultas sueltas.
+
 ## 6. Documentación
 
 - `docs/ESTADO_DEL_SISTEMA.md` es tuyo: lo mantienes al día, con versión e historial.
@@ -126,3 +147,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - PR #16 (Tarea 17) fusionado el 29/10/2026 (sin migraciones; `CONTRATOS.md` 1.6). **Tarea 11 de Lovable** enviada: `SIN_GRANEL` en «Preparar envío» con «Dejarlo en N» / «Quitarlo».
 - **29/10/2026 · Fallo encontrado:** `guardar_reparto` responde 500 («Algo ha fallado») desde el 28/10 09:46 aunque guarda bien: `rpc` hace `r.json()` sobre funciones `void` que responden sin cuerpo (`servidor_reparto_anotar_id_cliente`). Era la causa de que no saliera «¡Hecho!» en el envío (no la actualización de Lovable, como se dijo antes). **Tarea 18 de BD** (urgente) encargada. Lección: revisar los registros de las funciones (`query_logs`) al revisar cada PR, no solo las pruebas.
 - Tarea 11 de Lovable terminada y revisada (commit `f24a196`): `SIN_GRANEL` en «Preparar envío» con «Dejarlo en N» / «Quitarlo»; solo cambia contadores y no recalcula sola. 64 pruebas (1 nueva). Para probarla de verdad hace falta antes la Tarea 18 (500 al guardar).
+- **29/10/2026 · Constitución técnica** (`docs/CONSTITUCION_TECNICA.md`, aprobada por el propietario): 13 reglas, lectura obligatoria (constitución → estado → contratos → código → actuar), apartado «Qué he leído y qué existía ya» en cada PR y lista de revisión fija del coordinador (con registros del servidor). Siguiente: revisar la Tarea 18 con la lista; después, Tarea 19 (auditoría de solo lectura).

@@ -14,6 +14,8 @@ Toda la lógica ya existe en la base de datos (Supabase). **Tú solo muestras y 
 
 ## 2. Reglas que no te saltas
 
+> Por encima de todo, `docs/CONSTITUCION_TECNICA.md` (el coordinador te pasa sus reglas en el Knowledge del proyecto). Antes de crear un componente, busca si ya existe uno que lo haga (`ListaProductos`, `ReferenciaVista`, `PrepararReparto`…) y reutilízalo.
+
 - **Solo usas las funciones de `docs/CONTRATOS.md`**, con la URL del proyecto y la **clave pública** de su §7.1. Nada más.
 - **No activas la integración de Supabase de Lovable**, no creas ni cambias tablas, no escribes directamente en ellas y no usas nunca la clave de servidor (`service_role`).
 - **No calculas nada:** ni cajas, ni horas, ni qué tarea toca. Lo dice `tarea_activa` (o `estado_actual` para Administración).

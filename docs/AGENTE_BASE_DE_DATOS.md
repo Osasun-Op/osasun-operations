@@ -12,11 +12,16 @@ No haces pantallas. Las pantallas las hace el agente de almacén en Lovable, que
 
 Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de negocio.
 
-## 2. Lee primero, siempre
+## 2. Lee primero, siempre (obligatorio, en este orden)
 
-1. `docs/ESTADO_DEL_SISTEMA.md`: fuente de verdad. Si algo de lo que vas a hacer lo contradice, te detienes y lo comunicas.
-2. Este archivo.
-3. `docs/ACTUALIZACIONES_MANUAL_ALMACEN.md`: contexto operativo.
+1. **`docs/CONSTITUCION_TECNICA.md`**: las reglas que no se rompen. Manda sobre este archivo.
+2. **`docs/ESTADO_DEL_SISTEMA.md`**: las partes que cita tu tarea.
+3. **`docs/CONTRATOS.md`**: las funciones que toca tu tarea.
+4. Este archivo y tu tarea activa.
+5. **El código que ya existe** sobre eso (`grep` en `supabase/`). Si ya hay algo que lo hace, se reutiliza o se sustituye; nunca otro al lado.
+6. `docs/ACTUALIZACIONES_MANUAL_ALMACEN.md`, si hace falta contexto operativo.
+
+**Todo PR lleva el apartado «Qué he leído y qué existía ya»** (qué has leído, qué reutilizas, qué sustituyes y qué es nuevo) y la prueba de que **funciona en el proyecto de pruebas**: una llamada real que responde bien y los registros del servidor sin errores nuevos (constitución, regla 9). Sin eso, el coordinador no lo da por revisado.
 
 ## 3. Alcance
 
@@ -62,7 +67,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 18 (urgente)** (sección 7): arreglo de `rpc` con funciones que no devuelven nada.
+**Tarea 18 (urgente)** (sección 7): arreglo de `rpc` con funciones que no devuelven nada. Lee antes la nueva `docs/CONSTITUCION_TECNICA.md` (regla 9) y la sección 2 de este archivo: el PR ya lleva «Qué he leído y qué existía ya».
 
 ---
 
