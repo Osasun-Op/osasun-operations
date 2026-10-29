@@ -15,12 +15,17 @@ export class ErrorEstructura extends Error {
 
 export type Filas = string[][];
 
+/** R1e: cajas de cada tienda («FIN DIA» de su columna en PRINCIPAL), por el nombre de la tienda en la fila 1. */
+export type Tiendas = Record<string, string>;
+
 /** Producto de PRINCIPAL: fila del nombre y, debajo, una fila por formato. */
 export interface Producto {
   nombre: string;            // tal cual, recortado («V2 » → «V2»)
   granel: string;            // gramos de granel en el almacén (columna ALMACEN de la fila del nombre)
-  formatos: { formato: string; almacen: string }[];
+  formatos: { formato: string; almacen: string; tiendas?: Tiendas }[];
   conTiendas: boolean;       // la fila del nombre tiene datos de tiendas (producto sin formato)
+  /** Producto sin formato: cajas de cada tienda (en la fila del nombre). */
+  tiendas?: Tiendas;
   orden: number;             // fila en la hoja
   /** R4: «LO QUE HAY EN TOTAL» y «1 SEMANA NECESIDADES» de la fila del nombre (sin las columnas, no están). */
   total?: string;
@@ -65,6 +70,17 @@ export function leerPrincipal(filas: Filas): Producto[] {
   const colNecesidad = (filas[0] ?? []).findIndex((v, c) =>
     norm(String(v ?? "")) === "1SEMANA" && norm(celda(filas[1], c)) === "NECESIDADES");
   const conCobertura = colTotal >= 0 && colNecesidad >= 0;
+  // R1e: cada tienda tiene su nombre en la fila 1 y sus cajas en la columna de la
+  // izquierda («FIN DIA», o «TOTAL» en Durango y Portu).
+  const columnasTienda: [string, number][] = [];
+  for (let c = 2; c < colAlmacen; c++) {
+    const nombre = celda(filas[0], c);
+    if (nombre !== "" && ["FINDIA", "FINDÍA", "TOTAL"].includes(norm(celda(filas[filaFinDia], c - 1)))) {
+      columnasTienda.push([nombre, c - 1]);
+    }
+  }
+  const tiendasDe = (fila: unknown[] | undefined): Tiendas =>
+    Object.fromEntries(columnasTienda.map(([n, c]) => [n, celda(fila, c)]).filter(([, v]) => v !== ""));
 
   const productos: Producto[] = [];
   let actual: Producto | null = null;
@@ -84,9 +100,10 @@ export function leerPrincipal(filas: Filas): Producto[] {
         orden: i,
         ...(conCobertura ? { total: celda(fila, colTotal), necesidad: celda(fila, colNecesidad) } : {}),
       };
+      if (actual.conTiendas) actual.tiendas = tiendasDe(fila);
       productos.push(actual);
     } else {
-      actual.formatos.push({ formato: a, almacen: celda(fila, colAlmacen) });
+      actual.formatos.push({ formato: a, almacen: celda(fila, colAlmacen), tiendas: tiendasDe(fila) });
     }
   }
   if (productos.length < 5) throw new ErrorEstructura("PRINCIPAL: casi no hay productos; la hoja ha cambiado.");

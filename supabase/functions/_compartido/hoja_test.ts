@@ -76,7 +76,11 @@ Deno.test("PRINCIPAL: bloques de producto, granel y cajas del almacén por forma
   const ps = leerPrincipal(PRINCIPAL);
   assertEquals(ps.map((p) => p.nombre), ["MINI", "SLUSH MINTS", "GRAPEFRUIT", "INDOOR PR RELAX", "INDOOR PR AFRU", "V2", "FORTE", "DISTILLATE"]);
   const v2 = ps.find((p) => p.nombre === "V2")!;
-  assertEquals([v2.granel, v2.formatos], ["730", [{ formato: "4g", almacen: "25" }, { formato: "10g", almacen: "10" }]]);
+  assertEquals([v2.granel, v2.formatos.map((f) => [f.formato, f.almacen])], ["730", [["4g", "25"], ["10g", "10"]]]);
+  // R1e: las cajas de cada tienda, por el nombre de su columna (Laudio y Portu, bajo «TOTAL»).
+  assertEquals(v2.formatos[0].tiendas, { BILBAO: "24", ALGORTA: "7", DONOSTI: "6", BARAKALDO: "12", RENTERIA: "12",
+                                         BASAURI: "13", LAUDIO: "0", PORTU: "3" });
+  assertEquals(ps.find((p) => p.nombre === "FORTE")!.tiendas?.ALGORTA, "0");
   assertEquals(ps.find((p) => p.nombre === "FORTE")!.conTiendas, true);
   assertEquals(ps.find((p) => p.nombre === "DISTILLATE")!.conTiendas, false);
   const { entradas } = catalogo(ps);

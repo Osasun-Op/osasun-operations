@@ -40,6 +40,10 @@ export interface ElementoProduccion {
   faltan: number;
   aviso: string | null;
   orden: number;
+  /** R1e (solo reparto): hay que hacerlo y no hay granel. Se resuelve en la producción (sin_granel.ts). */
+  sin_granel?: true;
+  para?: { destino_id: string; destino: string; pedido: number; faltan: number }[];
+  tiendas_con_stock?: { destino_id: string; destino: string; cajas: number }[];
 }
 
 export interface Bolsa {

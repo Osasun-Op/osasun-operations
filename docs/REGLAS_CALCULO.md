@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1, R3 y R4 (especificación V1)
 
-**Versión:** 1.0 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27). Tarea 15: el mini se llama MINI 10g (§3.3) y R4, productos con menos de 2 semanas (§4, `r4.ts`, R4-01 a R4-08).
+**Versión:** 1.1 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27). Tarea 15: el mini se llama MINI 10g (§3.3) y R4, productos con menos de 2 semanas (§4, `r4.ts`, R4-01 a R4-08). Tarea 16: producto sin granel en el reparto (§2.11, `sin_granel.ts`, R1e-01 a R1e-09).
 
 > Especificación exacta de las reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto), **R3** (stock del almacén +35 %) y **R4** (cobertura a 2 semanas).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -18,6 +18,7 @@ Documento `STOCK OSASUN-CLAUDE` (ID `1nPhB7U6FoJcYybChUcGOI3mz-yJAv8NkT3uINuQ6qa
 | **Cajas en el almacén** | PRINCIPAL, columna R (`ALMACEN · FIN DIA`) de la fila de formato. |
 | **Granel en el almacén** (gramos) | PRINCIPAL, columna R de la fila del nombre del producto. |
 | **Total y necesidad semanal** (R4) | PRINCIPAL, columnas «LO QUE HAY EN TOTAL» (T) y «1 SEMANA NECESIDADES» (U) de la fila del nombre del producto. Se buscan por su encabezado. |
+| **Cajas de cada tienda** (R1e) | PRINCIPAL: cada tienda tiene su nombre en la fila 1 y sus cajas en la columna de la izquierda («FIN DIA», o «TOTAL» en Durango y Portu), en la fila de cada formato (o en la del nombre si no tiene formato). |
 | **Contador** (hechas − consumo semanal) | CONTEO DE CAJAS TOTAL, columna «CAJAS TOTALES HECHAS». |
 | **Consumo semanal** (cajas) | CONTEO DE CAJAS TOTAL, columna «CONSUMO CAJAS SEMANAL». |
 | **Categoría de cada producto** | ALMACEN, fila 1: EXTERIOR, INVERNADERO, INDOOR POPS, HIGH TECH, ACEITES Y CREMAS. |
@@ -233,6 +234,39 @@ El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 n
 | C-06 | Envío con reparto 20 y pedido de tienda 6 sin salir (V2 4g 30 en la hoja) | Apartadas 26: quedan 4. Con las bolsas ya listas (25 salidas), no se aparta nada: quedan 5. |
 
 A-01, A-02 y A-04 son R3-24 a R3-26; A-03 y A-05, en `reparto_lista_test.ts`; A-06 a A-11 y C-01 a C-05, en `supabase/tests/19_almacen_ahora.sql` y `17_pedidos_cliente.sql`; P-01 a P-08, en la 17; C-06, en `reparto_lista_test.ts`.
+
+### 2.11 Producto sin granel en el reparto (Tarea 16, `ESTADO_DEL_SISTEMA.md` v1.30, R1e)
+
+Quien prepara el reparto no mira el almacén: **de dónde sale cada cosa lo decide el almacén, en la producción.**
+
+**Detectarlo** (`_compartido/sin_granel.ts`, al guardar el reparto; el envío no):
+- Una referencia de la producción del reparto que hay que hacer (`faltan > 0`) y cuyo producto tiene **granel ≤ 0** en PRINCIPAL (el mismo criterio que «sin granel no se produce» de R3, variedad por variedad) lleva `sin_granel: true`. Un granel vacío o no numérico no se marca (R3 ya lo avisa).
+- `para`: las tiendas del reparto que la reciben, con lo que pide cada una y lo que le falta. Lo que hay en el almacén se lo llevan las primeras tiendas del reparto, en su orden.
+- `tiendas_con_stock`: las demás tiendas del reparto con cajas de esa referencia según sus columnas de PRINCIPAL (solo las que tienen alguna). Se usa lo que ya se lee al calcular.
+
+**Decidir** (`resolver_sin_granel`, el operario, una decisión por tienda de `para`): `quitar` u `otra_tienda` (con la tienda de origen) y la cantidad (de 1 a lo que pide esa tienda). Entre todas suman lo que falta. Las decisiones se guardan en la referencia y **todo lo demás sale de ellas** (una sola fuente):
+- la referencia queda hecha sin producir;
+- **quitar:** la bolsa de esa tienda lleva menos y la línea del reparto baja (o desaparece);
+- **otra tienda:** esas cajas no se producen ni van en la bolsa. En la bolsa de la tienda que recibe, «Llama a [origen] para que prepare N [producto formato] para su retirada» (se marca como una petición). La parada «Recoge N [producto formato] en [origen] y déjalas en [destino]» sale a quien hace la ruta;
+- **texto para WhatsApp:** lo quitado ya no sale; lo de otra tienda, en una línea propia: «2x BZ1 4g (de Algorta)». Si a la tienda le queda algo del almacén, va en otra línea («1x BZ1 4g»). Una tienda sin nada se quita;
+- **cuentas (R1c):** lo quitado o de otra tienda no está pendiente de salir del almacén ni sale de él. Lo de otra tienda va en camino desde «bolsas listas» hasta las 23:30, como el reparto: −N en la que da y +N en la que recibe (en total, igual).
+
+**Modificar el reparto:**
+- lo de otra tienda se conserva mientras la tienda lo siga pidiendo (como mucho, lo que pide ahora);
+- lo quitado no se conserva como decisión, porque ya está en la línea: «Modificar reparto» la abre con la cantidad nueva;
+- si lo decidido ya no cubre lo que falta, la referencia vuelve a salir sin resolver (y la parada y el aviso de llamada se quitan hasta decidir otra vez).
+
+| # | Datos | Resultado |
+| --- | --- | --- |
+| R1e-01 | BZ1 4g sin granel; Bilbao pide 3 y Portu 2; 1 en el almacén; Algorta 4, Barakaldo 0, Basauri −2 en PRINCIPAL | `sin_granel`; `para`: Bilbao 2 (de 3), Portu 2; `tiendas_con_stock`: Algorta 4 |
+| R1e-02 | V2 con granel | No se marca: se hace como siempre |
+| R1e-03 | BZ1 sin granel, pero lo hay en el almacén | No se marca (no hay que hacer nada) |
+| R1e-04 | Granel vacío | No se marca |
+| R1e-05 | Producto sin formato (FORTE) | Las cajas de las tiendas, de la fila del nombre |
+| R1e-06 | BZ1: Bilbao 3, Portu 2, nada en el almacén. Bilbao quitar 3; Portu, 2 de Algorta | Referencia hecha sin producir; bolsa de Bilbao sin BZ1; la de Portu, sin cajas de BZ1 y con «Llama a Algorta para que prepare 2 BZ1 4g para su retirada»; parada «Recoge 2 BZ1 4g en Algorta y déjalas en Portugalete» |
+| R1e-07 | Después, se modifica: Bilbao ya sin BZ1 y Portu pide 3 | Lo de Algorta (2) no cubre 3 → vuelve a salir sin resolver. Si Portu vuelve a 2, la decisión vale otra vez |
+| R1e-08 | WhatsApp de R1e-06 | «BILBAO / 2x V2 4g» (sin BZ1) y «PORTU / 2x BZ1 4g (de Algorta)» |
+| R1e-09 | Bolsas listas a las 10:45 | En camino a las 12:00: Bilbao +2 V2, Portu +2 BZ1, Algorta −2 BZ1; a las 23:45, nada. BZ1 no sale del almacén |
 
 ## 3. R3 — Stock del almacén (+35 %)
 

@@ -297,3 +297,24 @@ Deno.test("guardar_reparto: guarda con la lectura la cobertura a 2 semanas (R4),
   const r = await guardarRepartoDe(g.d, "p", cuerpo()) as Record<string, unknown>;
   assertEquals([r.error, r.reparto_id], [undefined, "reparto-1"]);
 });
+
+// ===== Tarea 16: producto sin granel en el reparto (R1e) =====
+Deno.test("guardar_reparto: lo que hay que hacer sin granel va marcado a la producción; el texto lo da la base de datos", async () => {
+  const sinGranel: DatosHoja = {
+    ...DATOS, productos: DATOS.productos.map((p) => p.nombre === "BZ1"
+      ? { ...p, granel: "0", formatos: [{ formato: "4g", almacen: "0", tiendas: { ALGORTA: "4", BILBAO: "1" } }] } : p),
+  };
+  const lineas = [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 3 }];
+  const f = falso({ lectura: { ok: true, datos: sinGranel },
+                    guardado: { reparto_id: "reparto-1", estado: "aceptado", texto_whatsapp: "texto de la base de datos" } });
+  const r = await guardarRepartoDe(f.d, "p", cuerpo({ lineas }));
+  const prod = (f.args("servidor_guardar_reparto")!.p_produccion as Record<string, unknown>[])[0];
+  assertEquals([prod.producto, prod.faltan, prod.sin_granel], ["BZ1", 3, true]);
+  assertEquals(prod.para, [{ destino_id: "bilbao", destino: "Bilbao", pedido: 3, faltan: 3 }]);
+  assertEquals(prod.tiendas_con_stock, [{ destino_id: "algorta", destino: "Algorta", cajas: 4 }]);
+  assertEquals(r.texto_whatsapp, "texto de la base de datos");
+  // En el envío no se marca (R1e es del reparto).
+  const g = falso({ lectura: { ok: true, datos: sinGranel } });
+  await guardarRepartoDe(g.d, "p", { id_cliente: ID, tipo: "envio", lineas: [{ destino_id: "gipuzkoa", producto: "BZ1", formato: "4g", cantidad: 2 }] });
+  assertEquals((g.args("servidor_guardar_reparto")!.p_produccion as Record<string, unknown>[])[0].sin_granel, undefined);
+});
