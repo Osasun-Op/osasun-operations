@@ -313,8 +313,62 @@ Deno.test("guardar_reparto: lo que hay que hacer sin granel va marcado a la prod
   assertEquals(prod.para, [{ destino_id: "bilbao", destino: "Bilbao", pedido: 3, faltan: 3 }]);
   assertEquals(prod.tiendas_con_stock, [{ destino_id: "algorta", destino: "Algorta", cajas: 4 }]);
   assertEquals(r.texto_whatsapp, "texto de la base de datos");
-  // En el envío no se marca (R1e es del reparto).
-  const g = falso({ lectura: { ok: true, datos: sinGranel } });
-  await guardarRepartoDe(g.d, "p", { id_cliente: ID, tipo: "envio", lineas: [{ destino_id: "gipuzkoa", producto: "BZ1", formato: "4g", cantidad: 2 }] });
-  assertEquals((g.args("servidor_guardar_reparto")!.p_produccion as Record<string, unknown>[])[0].sin_granel, undefined);
+});
+
+// ===== Tarea 17: envío sin granel (R1e en el envío): se comprueba al calcular =====
+const hojaEnvio = (granel: string, almacen: string): DatosHoja => ({
+  ...DATOS, productos: DATOS.productos.map((p) => p.nombre === "BZ1"
+    ? { ...p, granel, formatos: [{ formato: "4g", almacen }] } : p),
+});
+const envio = (lineas: { destino_id: string; cantidad: number }[], id = ID) =>
+  ({ id_cliente: id, tipo: "envio", lineas: lineas.map((l) => ({ ...l, producto: "BZ1", formato: "4g" })) });
+
+Deno.test("E-01 envío con granel: se guarda como siempre (BZ1 con 0 en el almacén se hace)", async () => {
+  const f = falso({ lectura: { ok: true, datos: hojaEnvio("500", "0") } });
+  const r = await guardarRepartoDe(f.d, "p", envio([{ destino_id: "gipuzkoa", cantidad: 5 }]));
+  assertEquals([r.error, (f.args("servidor_guardar_reparto")!.p_produccion as { faltan: number }[])[0].faltan], [undefined, 5]);
+});
+
+Deno.test("E-02 y E-03 sin granel: no se guarda nada; SIN_GRANEL con lo pedido y lo que hay", async () => {
+  const cero = falso({ lectura: { ok: true, datos: hojaEnvio("0", "0") } });
+  const r0 = await guardarRepartoDe(cero.d, "p", envio([{ destino_id: "gipuzkoa", cantidad: 5 }])) as { error: Record<string, unknown> };
+  assertEquals(r0.error.codigo, "SIN_GRANEL");
+  assertEquals(r0.error.mensaje, "BZ1 4g: pides 5, en el almacén no hay cajas y no hay granel para hacerlas.");
+  assertEquals(r0.error.referencias, [{ destino_id: "gipuzkoa", destino: "Gipuzkoa (envío a Rentería)", producto: "BZ1", formato: "4g",
+                                        pedido: 5, hay: 0, mensaje: "BZ1 4g: pides 5, en el almacén no hay cajas y no hay granel para hacerlas." }]);
+  assertEquals([cero.args("servidor_guardar_reparto"), cero.args("servidor_reparto_anotar_id_cliente")], [undefined, undefined]);
+  const tres = falso({ lectura: { ok: true, datos: hojaEnvio("0", "3") } });
+  const r3 = await guardarRepartoDe(tres.d, "p", envio([{ destino_id: "gipuzkoa", cantidad: 5 }])) as { error: Record<string, unknown> };
+  assertEquals(r3.error.mensaje, "BZ1 4g: pides 5, en el almacén hay 3 cajas y no hay granel para hacer las otras 2.");
+  assertEquals((r3.error.referencias as { hay: number }[])[0].hay, 3);
+});
+
+Deno.test("E-04 dos destinos: las cajas se las lleva el primero (Gipuzkoa); a Durango le faltan", async () => {
+  const f = falso({ lectura: { ok: true, datos: hojaEnvio("0", "5") } });
+  const r = await guardarRepartoDe(f.d, "p", envio([{ destino_id: "durango", cantidad: 3 }, { destino_id: "gipuzkoa", cantidad: 4 }])) as
+    { error: { referencias: { destino: string; pedido: number; hay: number; mensaje: string }[] } };
+  assertEquals(r.error.referencias.map((x) => [x.destino, x.pedido, x.hay]), [["Durango", 3, 1]]);
+  assertEquals(r.error.referencias[0].mensaje, "BZ1 4g: pides 3, en el almacén hay 1 caja y no hay granel para hacer las otras 2.");
+});
+
+Deno.test("E-05 viernes con reparto el mismo día: primero se aparta lo del reparto", async () => {
+  // 6 en el almacén, 4 para el reparto de hoy que aún no ha salido: para el envío quedan 2.
+  const f = falso({ lectura: { ok: true, datos: hojaEnvio("0", "6") },
+                    ctx: { ...CTX, comprometido: { ...CTX.comprometido, reparto: bz1(4) } } });
+  const r = await guardarRepartoDe(f.d, "p", envio([{ destino_id: "gipuzkoa", cantidad: 3 }])) as { error: Record<string, unknown> };
+  assertEquals(r.error.mensaje, "BZ1 4g: pides 3, en el almacén hay 2 cajas y no hay granel para hacer la otra.");
+});
+
+Deno.test("E-06 tras SIN_GRANEL, el mismo id_cliente con la lista corregida («Dejarlo en 3») se guarda normal", async () => {
+  const f = falso({ lectura: { ok: true, datos: hojaEnvio("0", "3") } });
+  const primero = await guardarRepartoDe(f.d, "p", envio([{ destino_id: "gipuzkoa", cantidad: 5 }])) as { error?: { codigo: string } };
+  const segundo = await guardarRepartoDe(f.d, "p", envio([{ destino_id: "gipuzkoa", cantidad: 3 }])) as Record<string, unknown>;
+  assertEquals([primero.error?.codigo, segundo.error, segundo.reparto_id], ["SIN_GRANEL", undefined, "reparto-1"]);
+  assertEquals((f.args("servidor_guardar_reparto")!.p_produccion as { faltan: number }[])[0].faltan, 0);
+});
+
+Deno.test("E-07 el reparto no cambia: sin granel va a la producción (Tarea 16), no da SIN_GRANEL", async () => {
+  const f = falso({ lectura: { ok: true, datos: hojaEnvio("0", "0") } });
+  const r = await guardarRepartoDe(f.d, "p", cuerpo({ lineas: [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 3 }] }));
+  assertEquals([r.error, (f.args("servidor_guardar_reparto")!.p_produccion as { sin_granel?: boolean }[])[0].sin_granel], [undefined, true]);
 });

@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1, R3 y R4 (especificación V1)
 
-**Versión:** 1.1 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27). Tarea 15: el mini se llama MINI 10g (§3.3) y R4, productos con menos de 2 semanas (§4, `r4.ts`, R4-01 a R4-08). Tarea 16: producto sin granel en el reparto (§2.11, `sin_granel.ts`, R1e-01 a R1e-09).
+**Versión:** 1.2 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27). Tarea 15: el mini se llama MINI 10g (§3.3) y R4, productos con menos de 2 semanas (§4, `r4.ts`, R4-01 a R4-08). Tarea 16: producto sin granel en el reparto (§2.11, `sin_granel.ts`, R1e-01 a R1e-09). Tarea 17: envío sin granel (§2.11, E-01 a E-07).
 
 > Especificación exacta de las reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto), **R3** (stock del almacén +35 %) y **R4** (cobertura a 2 semanas).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -267,6 +267,18 @@ Quien prepara el reparto no mira el almacén: **de dónde sale cada cosa lo deci
 | R1e-07 | Después, se modifica: Bilbao ya sin BZ1 y Portu pide 3 | Lo de Algorta (2) no cubre 3 → vuelve a salir sin resolver. Si Portu vuelve a 2, la decisión vale otra vez |
 | R1e-08 | WhatsApp de R1e-06 | «BILBAO / 2x V2 4g» (sin BZ1) y «PORTU / 2x BZ1 4g (de Algorta)» |
 | R1e-09 | Bolsas listas a las 10:45 | En camino a las 12:00: Bilbao +2 V2, Portu +2 BZ1, Algorta −2 BZ1; a las 23:45, nada. BZ1 no sale del almacén |
+
+**En el envío** (Tarea 17, `ESTADO_DEL_SISTEMA.md` v1.31): no hay ruta que pase por otra tienda, así que se comprueba **al calcular**, no en la producción. Con la misma cuenta que decide lo que falta (almacén ahora y, antes, lo apartado para el reparto del día), si una referencia hay que hacerla y su producto tiene granel ≤ 0, **no se guarda nada** y el error `SIN_GRANEL` dice, por destino, lo pedido y lo que hay (lo máximo que se puede mandar). Las cajas se las llevan los primeros destinos, en su orden (`sinGranelEnvio`, `sin_granel.ts`). La pantalla ofrece «Dejarlo en N» o «Quitarlo» y vuelve a calcular.
+
+| # | Datos | Resultado |
+| --- | --- | --- |
+| E-01 | Envío: 5 BZ1 4g a Gipuzkoa; 0 en el almacén, con granel | Se guarda como siempre (hacer 5) |
+| E-02 | Lo mismo, sin granel | `SIN_GRANEL`: «BZ1 4g: pides 5, en el almacén no hay cajas y no hay granel para hacerlas.» (`hay` 0). No se guarda nada |
+| E-03 | 3 en el almacén, sin granel | «BZ1 4g: pides 5, en el almacén hay 3 cajas y no hay granel para hacer las otras 2.» (`hay` 3) |
+| E-04 | Gipuzkoa 4 y Durango 3; 5 en el almacén, sin granel | Gipuzkoa se lleva 4; Durango: «pides 3, en el almacén hay 1 caja y no hay granel para hacer las otras 2.» |
+| E-05 | Viernes: 6 en el almacén, 4 apartadas para el reparto de hoy; el envío pide 3, sin granel | «pides 3, en el almacén hay 2 cajas y no hay granel para hacer la otra.» |
+| E-06 | Tras `SIN_GRANEL`, el mismo `id_cliente` con «Dejarlo en 3» | Se guarda normal |
+| E-07 | El reparto (no el envío) sin granel | Sin cambios: va a la producción (R1e-06) |
 
 ## 3. R3 — Stock del almacén (+35 %)
 

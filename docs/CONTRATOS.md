@@ -1,6 +1,11 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.5 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 16).
+**Versión:** 1.6 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 17).
+
+> **Cambios en 1.6 (Tarea 17) — para Lovable: envío sin granel** (`ESTADO_DEL_SISTEMA.md` v1.31, §5 R1e, el punto del envío).
+> 1. **`guardar_reparto` con `tipo: "envio"`** (§3.14), al pulsar «Calcular» en «Preparar envío» o «Modificar envío»: si algo hay que hacerlo y no tiene granel, **no se guarda nada** y responde el error nuevo **`SIN_GRANEL`**, con `mensaje` (una línea por referencia) y `referencias: [{ destino_id, destino, producto, formato, pedido, hay, mensaje }]`.
+> 2. La pantalla muestra cada referencia con su `mensaje` («SOUR DIESEL 4g: pides 5, en el almacén hay 3 cajas y no hay granel para hacer las otras 2.») y dos botones: **«Dejarlo en N»** (pone esa línea en `hay`) o **«Quitarlo»** (la pone a 0). Si `hay` es 0, solo «Quitarlo». Después vuelve a calcular (puede ser con el mismo `id_cliente`: no se había guardado nada).
+> 3. El reparto no cambia (sigue con R1e en la producción, versión 1.5). En el envío no existe «cogerlo de otra tienda».
 
 > **Cambios en 1.5 (Tarea 16) — para Lovable: producto sin granel en el reparto** (`ESTADO_DEL_SISTEMA.md` v1.30, §5 R1e). Solo se añaden campos y una función.
 > 1. **«Producción del reparto»** (`tarea_activa`, §3.2): una referencia que hay que hacer y no tiene granel trae `sin_granel: true`, `para` (las tiendas que la reciben y cuántas les faltan), `tiendas_con_stock` (las demás tiendas del reparto con cajas, según PRINCIPAL), `resuelto` y `decisiones`. Al elegirla, en vez de «Haz N», el aviso con dos opciones por tienda: **Quitarlo** o **Cogerlo de otra tienda** (elegir la tienda, viendo cuántas tiene cada una).
@@ -371,6 +376,7 @@ Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_rep
 | `DATOS_NO_VALIDOS` | Sin `id_cliente` o `tipo` no válido, cantidad no entera o negativa, tienda que no vale para ese tipo, lista vacía, o petición especial de más de 120 letras o de una tienda que no vale. |
 | `SIN_JORNADA` | Hoy no hay jornada del operario. |
 | `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` · `CATALOGO_AMBIGUO` | Como siempre. No se calcula nada. |
+| `SIN_GRANEL` | Solo envío (Tarea 17, R1e): algo hay que hacerlo y no tiene granel. `mensaje`: una línea por referencia; `referencias: [{ destino_id, destino, producto, formato, pedido, hay, mensaje }]`, con lo pedido para ese destino y lo máximo que se puede mandar con las cajas que hay (si dos destinos piden lo mismo, las cajas se las llevan los primeros, en su orden). La pantalla ofrece «Dejarlo en `hay`» o «Quitarlo» y vuelve a calcular. |
 | `REPARTO_NO_CALCULADO` | No debería pasar: la lista era válida pero R1 no la acepta. Avisar a Administración. |
 | `NO_AUTORIZADO` · `ERROR_INTERNO` | Como siempre. |
 
@@ -596,6 +602,7 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 | `PEDIDO_YA_GUARDADO` (aviso) | No es un error: el pedido ya estaba guardado; mostrarlo. |
 | `FALTA_SALE` | Preguntar «¿Quién sale hoy?» (`opciones`) y repetir `guardar_reparto` con `sale`. Con el desplegable siempre relleno no aparece. |
 | `REFERENCIA_NO_EXISTE` | Volver a pedir `catalogo`, marcar las referencias de `error.referencias` y dejar quitarlas antes de guardar. |
+| `SIN_GRANEL` | Solo en el envío: cada referencia de `referencias` con su `mensaje` y los botones «Dejarlo en N» (`hay`) y «Quitarlo»; después, volver a calcular. |
 | `REPARTO_NO_CALCULADO` | Mostrar el mensaje (avisar a Administración). |
 | `FECHA_NO_ES_HOY` · `REPARTO_CON_ERRORES` | Solo `pegar_reparto` (obsoleta). |
 | `CONFLICTO` | Mostrar `conflicto.obligatorias_en_riesgo` y los minutos que faltan; Administración elige qué cede (o no crear) y se repite `crear_tarea_admin` con `decision_conflicto` y `confirmar: true`. |
@@ -632,3 +639,4 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 21. **Tarea 16 · Lo que hay en el almacén, para qué tienda** (decidido por el propietario, 29/10): si hay algunas cajas pero no todas, se las llevan las primeras tiendas del reparto (en su orden) y `para` dice cuántas le faltan a cada una. El operario puede repartir la decisión de otra forma (como mucho, lo que pide cada tienda).
 22. **Tarea 16 · Quién decide** (decidido por el propietario, 29/10): solo el operario, en su producción (como el resto de su lista). Administración no tiene esta función.
 23. **Tarea 16 · Cambiar lo decidido** (decidido por el propietario, 29/10): con la producción ya cerrada no se puede; repetir lo mismo sí. Para cambiarlo, se modifica el reparto.
+24. **Tarea 17 · Dónde va la lista de `SIN_GRANEL`:** en `error.referencias`, como en `REFERENCIA_NO_EXISTE` (los datos del error van junto a `codigo` y `mensaje`).
