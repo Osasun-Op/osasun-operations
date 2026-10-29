@@ -67,11 +67,39 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 18 (urgente)** (sección 7): arreglo de `rpc` con funciones que no devuelven nada. Lee antes la nueva `docs/CONSTITUCION_TECNICA.md` (regla 9) y la sección 2 de este archivo: el PR ya lleva «Qué he leído y qué existía ya».
+**Tarea 19** (sección 7): auditoría de solo lectura. Lee antes `docs/CONSTITUCION_TECNICA.md` (reglas 5, 9 y 13) y la sección «Lista de revisión» de `docs/AGENTE_COORDINADOR.md`. **El PR lleva «Qué he leído y qué existía ya» (obligatorio desde esta tarea).**
 
 ---
 
-## 7. TAREA 18 (activa, urgente): `guardar_reparto` responde 500 aunque guarda
+## 7. TAREA 19 (activa): auditoría de solo lectura para el coordinador, en pruebas
+
+El coordinador repite en cada PR las mismas comprobaciones con consultas sueltas. Esta tarea las convierte en **una sola llamada que siempre devuelve lo mismo**, para que no dependa de acordarse (constitución, regla 13). **Solo lee: no cambia nada.**
+
+**Qué existe ya y hay que reutilizar** (no hagas otro al lado): `supabase/tests/00_huella_estructura.sql` ya calcula una huella por apartado (tablas, restricciones, índices, RLS, permisos, funciones, carga inicial y tarea programada). La auditoría la usa (mueve la lógica a la función y que la prueba 00 llame a la función, para que haya una sola versión).
+
+1. **`motor.auditoria()`** → `jsonb`, `stable`, sin escrituras. Solo la pueden ejecutar `postgres` y `service_role` (nada de `anon` ni `authenticated`). Devuelve:
+   - `generado_en`;
+   - `migraciones`: cuántas hay y la última (de `supabase_migrations.schema_migrations`);
+   - `huella`: las mismas cifras por apartado que la prueba 00 (para compararlas con una base creada solo con las migraciones);
+   - `tablas`: por tabla de `public` y `motor`, si tiene RLS y cuántas políticas;
+   - `funciones`: cuántas por esquema; y, de `public`, cuáles puede ejecutar `anon`, cuáles `authenticated` y cuáles son `security definer`;
+   - `triggers` y tareas programadas (`cron`);
+   - `configuracion`: las claves de `public.configuracion` que usan los cálculos, con su valor (ninguna es secreta), y las que falten;
+   - `datos`: última lectura correcta de la hoja y último error, correos fallidos de los últimos 7 días, si existe la jornada de hoy;
+   - **`avisos`**: lista de frases con lo que esté raro. Al menos: tabla sin RLS en `public`; función `servidor_*` que pueda ejecutar alguien que no sea `service_role`; función de `public` ejecutable por `anon` (salvo las que lo necesiten, que se listan como permitidas en la propia función); clave de configuración que falte; más de una tarea en curso para la misma persona; más de un reparto (o envío) aceptado en la misma jornada; elementos sin su tarea; lectura de la hoja con error más reciente que la última correcta.
+   - `resumen`: «Sin avisos» o «N avisos».
+2. **`docs/AUDITORIA.md`** (corto): cómo se usa y qué es lo normal. Incluye además, para lo que no se ve desde SQL:
+   - la consulta fija de **registros del servidor** para `query_logs` (respuestas 500 y excepciones de las funciones en las últimas 24 h, agrupadas por función);
+   - la lista de **funciones del servidor** que deben estar desplegadas (para compararla con `list_edge_functions`);
+   - un **script de comparación de funciones rehechas** en el repositorio (por ejemplo `scripts/comparar_funciones.py`): dada una migración nueva, enseña por cada función rehecha qué líneas pierde frente a su versión anterior en `supabase/migrations/`. Solo lee archivos.
+3. Pruebas: la 00 sigue dando lo mismo; una prueba nueva de la auditoría (en una base sana da «Sin avisos»; con un caso raro preparado dentro de una transacción que se deshace, da el aviso correspondiente); permisos (`authenticated` no puede ejecutarla).
+4. Ejecútala en pruebas y pega en el PR el resultado entero. Si sale algún aviso real, **no lo arregles en esta tarea**: lístalo en el PR para que el coordinador decida.
+
+**Entrega:** Pull Request **«Tarea 19 — Auditoría de solo lectura»**, con «Qué he leído y qué existía ya», el resultado de la auditoría en pruebas, la consulta de registros y las dudas.
+
+---
+
+## 7.0 TAREA 18 (fusionada en el PR #17): `guardar_reparto` responde 500 aunque guarda
 
 **Qué pasa** (registros de las funciones, desde el 28/10/2026 a las 09:46, justo después de la Tarea 10): casi todos los `POST guardar_reparto` que guardan bien terminan en **500** («Algo ha fallado en el servidor») con `SyntaxError: Unexpected end of JSON input` en `_compartido/servidor.ts` (`rpc`, `await r.json()`), llamado desde `reparto_lista.ts` en `servidor_reparto_anotar_id_cliente`. Esa función devuelve `void` y la base de datos responde **sin cuerpo**, así que `r.json()` falla **después** de haber guardado: el reparto o el envío quedan guardados (y con `id_cliente`), pero la pantalla ve el error y no enseña «¡Hecho!» ni el texto para WhatsApp. Lo mismo pasa con `servidor_guardar_cobertura` (`r4.ts`): ahí el error se captura y solo ensucia el registro. Repartos afectados en pruebas: 28/10 a las 09:46, 09:58, 12:30 y 14:15; 29/10 a las 07:30, 07:32, 10:36 y 14:14 (el envío), y los reintentos de las 14:55–14:57.
 
@@ -468,3 +496,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.23 | 29/10/2026 | Tarea 17 activa: envío sin granel (R1e, al calcular). |
 | 1.24 | 29/10/2026 | Tarea 17 fusionada (PR #16). Sin tarea activa. |
 | 1.25 | 29/10/2026 | Tarea 18 activa (urgente): `guardar_reparto` da 500 aunque guarda (respuestas sin cuerpo). |
+| 1.26 | 29/10/2026 | Tarea 18 fusionada (PR #17). Constitución técnica: lectura obligatoria y apartado «Qué he leído y qué existía ya». Tarea 19 activa: auditoría de solo lectura. |
