@@ -159,7 +159,8 @@ Máximo 10 s y un reintento. Si sigue fallando, el cálculo **no se hace** y la 
 - **Migraciones** en `supabase/migrations/`: se escriben en el repositorio y **después** se aplican a pruebas. El nombre de cada archivo lleva la versión con la que Supabase la registró, para que coincidan.
 - Las migraciones que el conector marca como destructivas (borran algo) piden una confirmación que no llega a la app del propietario. Esas las ejecuta el propietario en el editor SQL de Supabase con el archivo del repositorio; después el agente las anota en el historial y comprueba la huella (prueba 00).
 - **Datos solo de pruebas** en `supabase/seed_pruebas.sql` (usuarios ficticios, horario del operario, `entorno = pruebas`). Nunca en producción.
-- **Pruebas automáticas** en `supabase/tests/` (ver `supabase/tests/LEEME.md`). Cada una corre dentro de una transacción que se deshace al final: la base queda como estaba. La 00 compara la «huella» de la estructura de pruebas con la de una base creada solo con las migraciones.
+- **Pruebas automáticas** en `supabase/tests/` (ver `supabase/tests/LEEME.md`). Cada una corre dentro de una transacción que se deshace al final: la base queda como estaba. La 00 compara la «huella» de la estructura de pruebas con la de una base creada solo con las migraciones (`motor.huella_estructura()`).
+- **Auditoría de solo lectura** (Tarea 19): `motor.auditoria()`, la consulta fija de registros y `scripts/comparar_funciones.py`, en `docs/AUDITORIA.md`. El coordinador la usa en cada revisión en lugar de consultas sueltas.
 
 ## 5. Permisos ✅
 
