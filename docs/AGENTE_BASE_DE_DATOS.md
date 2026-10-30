@@ -79,7 +79,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
      - Alcohol, papel de cocina, papel de horno y limpieza → «Cualquier supermercado» (sin dirección);
      - Guantes de nitrilo → «Arte Sano Tattoo Supplies», C/ San Nicolás de Olabeaga 12 (lonja), 48013 Bilbao;
      - Material de oficina, plástico de burbujas y cinta aislante → «Cualquier bazar chino» (sin dirección);
-     - Rollos de TPV → «Kutxabank», Avda. Lehendakari Aguirre 13, Deusto, Bilbao;
+     - Rollos de TPV → «Kutxabank», Avda. Lehendakari Aguirre 151, San Inazio, 48015 Bilbao (corregido por el propietario);
      - Bolsas para tienda y plástico negro de embalar → «Retif Bilbao», C/ Máximo Aguirre 10, 48009 Bilbao.
      Si una fila no encaja, pregúntalo en el PR.
    - `compras_lista()` (operario y Administración): las activas, en su orden.

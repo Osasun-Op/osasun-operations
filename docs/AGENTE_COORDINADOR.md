@@ -60,6 +60,7 @@ Antes de encargar una tarea que cambia una regla ya construida: busca en el cód
 Se pasa **siempre**, entera, y el resultado va como comentario en el PR, punto por punto (✔ / ✘ / no aplica).
 
 **PR del agente de base de datos:**
+0. **Leer todo el PR antes de nada:** la descripción, **todos los comentarios** (el propietario contesta dudas y corrige allí directamente) y **todos los commits** de la rama, no solo el primero. No preguntar al propietario lo que ya ha contestado.
 1. Tiene «Qué he leído y qué existía ya», y cuadra con lo que hay en el repositorio.
 2. Migraciones: las del proyecto de pruebas (`list_migrations`) son las mismas que las del repositorio.
 3. Funciones rehechas: comparadas con su versión anterior (script de comparación); no pierden nada.
@@ -157,3 +158,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - PR #20 (Tarea 21) fusionado el 30/10/2026 (38 migraciones; minutos trabajados = tiempo en marcha sin lo interrumpido, respuesta del propietario). **Tarea 14 de Lovable** enviada («Hoy» con interrupciones, cajas y minutos trabajados).
 - Tarea 14 de Lovable terminada y revisada (commit `f39e15a`): «Hoy» con interrupciones, cajas y minutos trabajados (`lineaTiempos`, reutiliza `hora`/`frase`). 70 pruebas. **Reparto y producción cerrados** (petición del propietario); siguiente: incidencias.
 - v1.36: incidencias rediseñadas por el propietario (tres opciones, lista de compras en la base de datos, avisos de Administración para un día, botón rojo, color puntual). **Tarea 22 de BD** encargada. Después, Lovable: pantalla de Incidencia con tres opciones, lista de compras con enlace/dirección, aviso arriba en el operario, botón rojo, «Aviso para el almacén» y edición de la lista en el panel.
+- 30/10: en la revisión del PR #21 se le volvieron a preguntar al propietario 5 dudas que ya había contestado en el PR, y no se vio la corrección de Kutxabank. Añadido a la lista el punto 0 (leer comentarios y todos los commits).
