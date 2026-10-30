@@ -54,6 +54,7 @@ begin
     (select count(*) from public.compras where forma = 'internet' and enlace like 'https://www.amazon.es/dp/%') = 6
     and (select direccion from public.compras where nombre = 'Guantes de nitrilo') = 'C/ San Nicolás de Olabeaga 12 (lonja), 48013 Bilbao'
     and (select sitio from public.compras where nombre = 'Rollos de TPV') = 'Kutxabank'
+    and (select direccion from public.compras where nombre = 'Rollos de TPV') = 'Avda. Lehendakari Aguirre 151, San Inazio, 48015 Bilbao'
     and (select sitio from public.compras where nombre = 'Alcohol') = 'Cualquier supermercado'
     and (select direccion from public.compras where nombre = 'Alcohol') is null
     and (select forma from public.compras where nombre = 'Granel') = 'administracion');
