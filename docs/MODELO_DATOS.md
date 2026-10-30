@@ -191,6 +191,11 @@ Previsto, no implementado (V1.1): la «solución directa» para `falta_material`
 Botón «Incidencia»: jornada_id · persona_id · tarea_id (la que estaba en curso) · descripcion · iniciada_en · terminada_en (cuándo se cerró) · id_cliente.
 **Tarea 7 (§6.6 v1.17):** opcion (`llega_mercancia` · `pedido_cliente` · `pedir_comprar` · `recogida_nacex` · `corregir`; vacía en las de antes) · quien (`operario` | `administracion`) · importancia (`ahora` | `hoy` | `cuando_pueda`) · estado (`abierta` · `esperando_llegada` · `esperando_administracion` · `cerrada`) · tarea_resolucion_id (la tarea creada para resolverla) · nota_cierre · cerrada_por. Puede haber varias abiertas por persona (las de antes, solo una). Un disparador en `tareas` la cierra al hacerse su tarea (las compras pasan a `esperando_llegada`), y lo que se arrastra sigue apuntando a la tarea nueva. «Estoy bloqueado» no crea fila aquí: es un `problema`.
 
+**Tarea 22 (§6.6 y §7 v1.36):** opcion gana `comprar` · `varios` · `aviso` (las de antes siguen valiendo) · compra_id (de la lista de compras) · contacto (solo en los avisos; dato personal, no va en el correo) · creada_por (quien creó el aviso). Un aviso de Administración es una incidencia del operario por defecto sin tarea; si es para otro día, `iniciada_en` es el comienzo de su turno ese día y hasta entonces no cuenta como abierta.
+
+### 3.11 bis `compras` ✅ (Tarea 22)
+Lista de compras (§7): nombre · forma (`internet` · `tienda` · `administracion`) · enlace (internet, obligatorio) · sitio (tienda, obligatorio) · direccion · nota · activo (quitar = desactivar) · orden · actualizada_en · actualizada_por. La mantiene Administración con `guardar_compra`; la lee cualquier persona activa.
+
 ### 3.12 `cierres` ✅ (Tarea 4)
 **Uno por turno** (D2): jornada_id · turno · contenido (jsonb congelado) · generado_en · envio_reclamado_en (el envío se reclama una sola vez: nunca dos correos) · enviado_en · canal (**correo**, D3) · error_envio. Único (jornada, turno).
 Su correo se sigue en `motor.correos` (§3.16 bis).
