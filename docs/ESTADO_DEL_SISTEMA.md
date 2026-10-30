@@ -508,6 +508,7 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | E2-1 | Etapa 2: las variedades indoor agrupadas en tiendas hacen que algunas se queden atrás | Para la Etapa 2 |
 | E2-2 | Etapa 2: comparar la reposición apuntada por la tienda con lo enviado; si no cuadra, se soluciona o se avisa | Para la Etapa 2 |
 | E2-3 | Etapa 2: pedido de cliente con las tiendas conectadas. Al apuntarlo, la app mira si hay en el almacén o en alguna tienda; si no hay en ningún sitio, no se puede hacer. Si no hay en el almacén, sale para preparar cogiéndolo de otra tienda (reutilizar R1e, Tarea 16). Hasta entonces, los pedidos de cliente se quedan como están (decisión del propietario, 29/10/2026). | Para la Etapa 2 |
+| E3-1 | Después de la etapa 2: **previsión del reparto** (la app propone, Administración decide; exige cambiar la regla «la app nunca propone cantidades»). Datos: el historial de repartos y envíos de la app, las ventas diarias de la etapa 2 y el **histórico del propietario en sus hojas de Google** (ventas por día y tienda de meses, y evolución de ventas por producto y tienda de años), que se importará entonces. No hace falta guardar copias diarias antes (decisión del propietario, 30/10/2026). | Después de la etapa 2 |
 
 ---
 
