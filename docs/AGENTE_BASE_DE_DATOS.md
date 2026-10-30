@@ -67,11 +67,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 22** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.36** (§6.6 «Incidencias» nuevo y §7 «Aprovisionamiento») y `CONTRATOS.md` §3.10, §3.11 y §3.2. El PR lleva «Qué he leído y qué existía ya».
+**Ninguna.** La Tarea 22 está fusionada (PR #21). Espera a que el coordinador escriba la siguiente.
 
 ---
 
-## 7. TAREA 22 (activa): incidencias nuevas, lista de compras y avisos de Administración, en pruebas
+## 7. TAREA 22 (fusionada en el PR #21): incidencias nuevas, lista de compras y avisos de Administración, en pruebas
 
 **Qué existe ya y hay que reutilizar** (constitución, regla 5): `crear_incidencia` y su tabla (opciones, quién, importancia, estados, «Pedido, esperando a que llegue», «Esperando a Administración»), la creación de tareas desde una incidencia, el correo en el momento a Administración (`motor.correos`), `cerrar_incidencia`, `incidencias_abiertas` y su número en `tarea_activa`, el cierre del turno. **Se amplía lo que hay; no se hace un segundo sistema de incidencias ni de avisos.**
 
@@ -570,3 +570,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.29 | 30/10/2026 | Tarea 21 activa: interrupciones, cajas y minutos trabajados en «Hoy». |
 | 1.30 | 30/10/2026 | Tarea 21 fusionada (PR #20). Sin tarea activa. |
 | 1.31 | 30/10/2026 | Tarea 22 activa: incidencias nuevas, lista de compras y avisos de Administración. |
+| 1.32 | 30/10/2026 | Tarea 22 fusionada (PR #21). Sin tarea activa. |
