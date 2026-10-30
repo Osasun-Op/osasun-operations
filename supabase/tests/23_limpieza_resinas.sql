@@ -1,5 +1,5 @@
 -- Prueba 23 · La limpieza de resinas del viernes va después de lo del reparto,
--- el envío y el +35 %, y antes del recuento de las 12:45 (Tarea 20, ESTADO v1.33
+-- los pedidos de cliente, el envío y el +35 %, y antes del recuento de las 12:45 (Tarea 20, ESTADO v1.33
 -- §4 «Viernes»). Reutiliza el requisito de las tareas (`requiere_clave`), ahora
 -- con una lista. Viernes 06/11 y 13/11/2026, sale el operario. Transacción deshecha.
 
@@ -36,9 +36,9 @@ declare
   t public.tareas;
 begin
   -- Plantilla: requisito, hora límite y lo que pasa si no se hace.
-  perform pg_temp.comprobar('Plantilla: después de preparar el reparto, su producción, sus bolsas, el envío y el +35 %; límite 12:45; se arrastra',
+  perform pg_temp.comprobar('Plantilla: después de preparar el reparto, su producción, los pedidos de cliente, sus bolsas, el envío y el +35 %; límite 12:45; se arrastra',
     exists (select 1 from public.plantillas_tarea where codigo = 'limpieza_resinas'
-             and requiere_codigo = 'pegar_reparto+produccion_reparto+bolsas+preparar_envio_viernes+cola_stock'
+             and requiere_codigo = 'pegar_reparto+produccion_reparto+pedido_tienda+bolsas+preparar_envio_viernes+pedido_nacex_viernes+cola_stock'
              and hora_limite = '12:45' and obligatoria and no_terminada = 'arrastrar'));
 
   -- VIERNES 06/11 · con reparto, envío y +35 % -------------------------------------------
@@ -47,7 +47,7 @@ begin
   perform prueba.fijar_condicion(j, 'hay_envio', 'true');
   select * into t from public.tareas where jornada_id = j and clave = 'limpieza_resinas';
   perform pg_temp.comprobar('La tarea del día: con su requisito y hora límite 12:45 (no 10:45)',
-    t.requiere_clave = 'pegar_reparto+produccion_reparto+bolsas+preparar_envio_viernes+cola_stock'
+    t.requiere_clave = 'pegar_reparto+produccion_reparto+pedido_tienda+bolsas+preparar_envio_viernes+pedido_nacex_viernes+cola_stock'
     and t.hora_limite = '2026-11-06 12:45+01', t.hora_limite::text);
 
   perform pg_temp.toca('08:31: la revisión inicial', '2026-11-06 08:31+01', 'revision_inicial');
@@ -64,6 +64,15 @@ begin
   perform pg_temp.hecha(j, array['bolsas']);
   perform pg_temp.toca('09:45: la preparación del envío, no la limpieza', '2026-11-06 09:45+01', 'preparar_envio_viernes');
   perform pg_temp.hecha(j, array['preparar_envio_viernes']);
+  -- Pedidos de cliente del viernes (respuesta del propietario, 30/10): para recoger en tienda y por Nacex.
+  perform motor.crear_tarea_condicionada(j, 'pedido_tienda', 'p1');
+  perform motor.crear_tarea_condicionada(j, 'pedido_nacex', 'p2');
+  perform pg_temp.comprobar('09:50: con dos pedidos de cliente por preparar, la limpieza espera',
+    (motor.tarea_activa_de(op, '2026-11-06 09:50+01') -> 'tarea' ->> 'clave') in ('pedido_tienda:p1', 'pedido_nacex_viernes:p2'),
+    motor.tarea_activa_de(op, '2026-11-06 09:50+01') -> 'tarea' ->> 'clave');
+  perform pg_temp.hecha(j, array['pedido_tienda:p1']);
+  perform pg_temp.toca('09:55: hecho el de la tienda, el de Nacex, no la limpieza', '2026-11-06 09:55+01', 'pedido_nacex_viernes:p2');
+  perform pg_temp.hecha(j, array['pedido_nacex_viernes:p2']);
   perform pg_temp.toca('10:00: el +35 %, no la limpieza', '2026-11-06 10:00+01', 'cola_stock');
   perform pg_temp.hecha(j, array['cola_stock']);
   perform pg_temp.toca('10:20: hecho todo eso, la limpieza en el siguiente punto de encaje (antes que compras y orden)',

@@ -2,7 +2,7 @@
 
 **Versión:** 1.6 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 17).
 
-> **Tarea 20 (30/10) — sin cambios para Lovable:** la limpieza de resinas del viernes sale después de preparar el reparto, su producción, sus bolsas, el envío y el +35 %, y antes de las 12:45; `tarea_activa` la da sola cuando toca. La auditoría avisa si el reparto o el envío aceptado hoy no tiene sus tareas.
+> **Tarea 20 (30/10) — sin cambios para Lovable:** la limpieza de resinas del viernes sale después de preparar el reparto, su producción, los pedidos de cliente (tienda y Nacex), sus bolsas, el envío y el +35 %, y antes de las 12:45; `tarea_activa` la da sola cuando toca. La auditoría avisa si el reparto o el envío aceptado hoy no tiene sus tareas.
 
 > **Tarea 19 (29/10) — sin cambios para Lovable:** nueva función interna `motor.auditoria()` (§5) para las revisiones del coordinador (`docs/AUDITORIA.md`).
 

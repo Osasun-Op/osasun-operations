@@ -106,7 +106,7 @@ Obligatoria/flexible según §6.3; lo que no aparece allí va como flexible. Tod
 | --- | --- | --- | --- | --- | --- |
 | `revision_inicial` (15 min) | L–V | 08:30 | — | No | nada |
 | `pegar_reparto` (5 min) | L–V | 08:45 | — | Sí | nada |
-| `limpieza_resinas` (30 min; tras preparar el reparto, su producción, sus bolsas, el envío y el +35 %, Tarea 20) | V | antes de 12:45 | — | Sí | arrastrar |
+| `limpieza_resinas` (30 min; tras preparar el reparto, su producción, los pedidos de cliente, sus bolsas, el envío y el +35 %, Tarea 20) | V | antes de 12:45 | — | Sí | arrastrar |
 | `produccion_reparto` | L–V | antes de 10:45 | reparto_pegado | Sí | nada |
 | `bolsas` (bolsas listas en la mesa de salida; retraso 15/30 min en Tarea 3) | L–V | antes de 10:45 | reparto_pegado | Sí | nada |
 | `salida_reparto` (~2 h) | L–V | 10:45 | sale_operario | Sí | nada |
