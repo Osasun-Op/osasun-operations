@@ -1,7 +1,8 @@
 -- Prueba 24 · «Hoy» del panel con interrupciones, cajas y minutos trabajados
 -- (Tarea 21, ESTADO v1.35 §8 Inicio, punto 4; CONTRATOS §4.3). Rehace lo del
 -- 30/10: el +35 % empieza a las 09:54, a las 10:45 entra la salida del reparto
--- con 3 de 6 hechos (21 de 43 cajas, 31 min trabajados) y se retoma a las 12:05.
+-- con 3 de 6 hechos (21 de 43 cajas, 52 min trabajados: todo el tiempo en marcha,
+-- también entre productos, sin la ruta) y se retoma a las 12:05.
 -- Con las horas exactas del 30/10. Martes 03/11/2026, sale el operario. Transacción deshecha.
 
 begin;
@@ -66,8 +67,8 @@ begin
   perform pg_temp.comprobar('11:00: interrumpida a las 10:45 por «Salida del reparto», sin seguir todavía',
     x -> 'interrupciones' = jsonb_build_array(jsonb_build_object(
       'a_las', pg_temp.h('10:45:48.718458'), 'por', 'Salida del reparto', 'siguio_a_las', null)), x ->> 'interrupciones');
-  perform pg_temp.comprobar('11:00: «21 de 43» cajas y 31 min trabajados (sin la ruta)',
-    x -> 'cajas' = '{"hechas": 21, "total": 43}' and (x ->> 'minutos_trabajados')::int = 31, x::text);
+  perform pg_temp.comprobar('11:00: «21 de 43» cajas y 52 min trabajados (de 09:54 a 10:45, también entre productos; sin la ruta)',
+    x -> 'cajas' = '{"hechas": 21, "total": 43}' and (x ->> 'minutos_trabajados')::int = 52, x::text);
   perform pg_temp.comprobar('Los campos de antes no cambian (iniciada a las 09:54; pendiente: minutos null)',
     (x ->> 'iniciada_en')::timestamptz = pg_temp.h('09:54:09.451908') and x -> 'terminada_en' = 'null'
     and x -> 'minutos' = 'null' and x ->> 'estado' = 'pendiente', x::text);
@@ -77,15 +78,25 @@ begin
    where jornada_id = j and clave in ('salida_reparto', 'efectivo_reporte');
   perform motor.iniciar_elemento_de(op, pg_temp.elemento(j, 'SLUSH MINTS'), pg_temp.h('12:05'));
   x := pg_temp.hoy(j, 'cola_stock', pg_temp.h('12:15'));
-  perform pg_temp.comprobar('12:15: siguió a las 12:05; trabajando en SLUSH MINTS, cuenta hasta ahora (31 + 10)',
+  perform pg_temp.comprobar('12:15: siguió a las 12:05; en marcha otra vez, cuenta hasta ahora (52 + 10)',
     x -> 'interrupciones' -> 0 ->> 'siguio_a_las' is not null
     and (x -> 'interrupciones' -> 0 ->> 'siguio_a_las')::timestamptz = pg_temp.h('12:05')
-    and (x ->> 'minutos_trabajados')::int = 41 and x -> 'cajas' = '{"hechas": 21, "total": 43}', x::text);
+    and (x ->> 'minutos_trabajados')::int = 62 and x -> 'cajas' = '{"hechas": 21, "total": 43}', x::text);
   perform motor.terminar_elemento_de(op, pg_temp.elemento(j, 'SLUSH MINTS'), pg_temp.h('12:20'));
   x := pg_temp.hoy(j, 'cola_stock', pg_temp.h('12:20'));
-  perform pg_temp.comprobar('12:20: SLUSH MINTS hecho: «34 de 43» y 46 min trabajados (minutos de inicio a fin, 146, con la ruta)',
-    x -> 'cajas' = '{"hechas": 34, "total": 43}' and (x ->> 'minutos_trabajados')::int = 46
+  perform pg_temp.comprobar('12:20: SLUSH MINTS hecho: «34 de 43» y 67 min trabajados (minutos de inicio a fin, 146, con la ruta)',
+    x -> 'cajas' = '{"hechas": 34, "total": 43}' and (x ->> 'minutos_trabajados')::int = 67
     and (x ->> 'minutos')::int = 146 and jsonb_array_length(x -> 'interrupciones') = 1, x::text);
+
+  -- Termina a las 12:40 con el resto: 52 + 35 = 87 min trabajados (la ruta no cuenta).
+  perform motor.iniciar_elemento_de(op, pg_temp.elemento(j, 'KUSH WATERHASH'), pg_temp.h('12:22'));
+  perform motor.terminar_elemento_de(op, pg_temp.elemento(j, 'KUSH WATERHASH'), pg_temp.h('12:30'));
+  perform motor.iniciar_elemento_de(op, pg_temp.elemento(j, 'SUGAR'), pg_temp.h('12:31'));
+  perform motor.terminar_elemento_de(op, pg_temp.elemento(j, 'SUGAR'), pg_temp.h('12:40'));
+  x := pg_temp.hoy(j, 'cola_stock', pg_temp.h('13:00'));
+  perform pg_temp.comprobar('12:40: hecha, «43 de 43» y 87 min trabajados (09:54–10:45 y 12:05–12:40); de inicio a fin, 166',
+    x ->> 'estado' = 'hecha' and x -> 'cajas' = '{"hechas": 43, "total": 43}'
+    and (x ->> 'minutos_trabajados')::int = 87 and (x ->> 'minutos')::int = 166, x::text);
 
   -- Tareas sin interrupciones y que no son de producción.
   x := pg_temp.hoy(j, 'revision_inicial', pg_temp.h('12:30'));
