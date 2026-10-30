@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.32 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.33 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -68,7 +68,7 @@ Cada trabajador tiene una app supervisora que le dice qué hacer, le mantiene el
 | 08:30–~08:45 | Revisión inicial: estado de las tiendas, formulario de incidencias de tiendas (hoja de respuestas) y stock empaquetado. |
 | ~08:30–08:45 | Administración publica el reparto en WhatsApp, con la línea `SALE:`. |
 | Hasta la salida | 1) Calcular el total de cajas, restar las hechas y producir lo que falta. 2) Preparar las bolsas de cada tienda. 3) Con el tiempo restante, stock del almacén (+35 %). |
-| Viernes | 30 minutos de limpieza intensiva de la estación de resinas antes del reparto. |
+| Viernes | 30 minutos de limpieza intensiva de la estación de resinas. **Cambiado por el propietario el 30/10/2026:** sale en cuanto estén hechas la producción del reparto, las bolsas, el envío (si lo hay) y la producción del +35 %, y **antes del recuento de las 12:45** (ya no «antes del reparto» ni con límite a las 10:45). Lo del reparto y el envío va siempre antes que la limpieza y el orden. |
 | Si sale él | Salida a las 10:45 y ruta de unas 2 h. A la vuelta, efectivo frente a la Z y reporte a Administración. |
 | 10:45 | **Bolsas listas en la mesa de salida.** Las organiza siempre el operario (lo normal es tenerlas hacia las 10:30). Si no llega, pulsa «Retrasar 15 min» o «Retrasar 30 min» y se avisa a quien sale de la nueva hora de salida, para que no llegue antes y espere. Cada retraso queda registrado y el cierre lo cruza con las cajas del reparto y las incidencias de la mañana. La salida suele ser entre las 10:45 y las 11:00 (decisión del propietario, 26/10/2026). |
 | Si sale Administración | Bloque libre hasta las 12:45 (cola de tiempo libre). |
@@ -338,7 +338,7 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 - **Listas de producción:**
   - Aparecen todas las referencias. Él elige una, la termina y la marca, y elige la siguiente.
   - La lista de stock aparece ordenada por prioridad, con el motivo de cada referencia, pero el orden lo decide él.
-- **Bolsas (Pixel):** una tienda por pantalla. Toca cada caja al meterla en la bolsa, porque esa es la comprobación.
+- **Bolsas (Pixel):** una tienda por pantalla. Toca cada caja al meterla en la bolsa, porque esa es la comprobación. **Sin botón «Terminada»** (decisión del propietario, 30/10/2026): solo «Empezar» mientras no ha empezado; la tarea se cierra sola al marcar la última caja (y las peticiones y llamadas) y sale el aviso **«Bolsas listas para salida»**. Si falta una caja de verdad, Incidencia o corregir el reparto.
 - **Lenguaje:** frases, no casillas. Por ejemplo: «Indoor: queda para menos de media semana. Avisa a Administración».
 
 ### Administración
@@ -354,7 +354,7 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
   8. **Hoja y correos:** solo si hay algún error.
   - Abajo, los botones: Preparar/Modificar reparto, Preparar envío, Pedido de cliente y **Nueva tarea**.
   - **No se muestra «Almacén ahora»** (cuenta entre recuentos y cajas en camino): no le aporta al propietario. La app la sigue usando en sus cálculos (R1c). Lo que va en camino a Gipuzkoa o Durango se verá en la pantalla de esas tiendas (etapa 2).
-- **Nueva tarea:** qué · para quién (almacén por defecto) · cuándo (hoy, un día o antes de una hora) · duración orientativa · urgente (no por defecto) · por qué (opcional).
+- **Nueva tarea:** qué · para quién (almacén por defecto) · cuándo (hoy, un día o antes de una hora) · duración orientativa · urgente (no por defecto) · por qué (opcional). **Un solo botón, «Crear»** (decisión del propietario, 30/10/2026): si cabe, se crea de una vez y sale «Tarea creada»; solo si choca con una obligatoria se enseña qué cede. (El 30/10 una tarea no se creó porque el paso «Continuar» solo comprobaba.)
 - **Cierre:** llega al móvil. Contiene lo hecho con su resultado, lo no hecho con su motivo, los problemas (tiempo y solución), las incidencias (tiempo), los pendientes arrastrados y lo que toca mañana. Los viernes, además, el indicador de calidad.
 - **Ordenador:** histórico e indicadores.
 - **Aprobaciones:** en la V1 siguen por WhatsApp.
@@ -536,3 +536,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.30 | 29/10/2026 | R1e: producto sin granel en el reparto (quitarlo o cogerlo de otra tienda, aviso de llamada en las bolsas, parada para quien hace la ruta y línea en WhatsApp); «Hoy sales tú / Hoy sale [nombre]» en las tareas del reparto. |
 | 1.31 | 29/10/2026 | R1e en el envío: se comprueba al pulsar «Calcular» en «Preparar envío» (no guarda; «Dejarlo en N» o «Quitarlo»). |
 | 1.32 | 29/10/2026 | Constitución técnica (`docs/CONSTITUCION_TECNICA.md`): reglas que no se rompen, lectura obligatoria antes de actuar y «terminado» = funciona en el proyecto de pruebas, con registros sin errores. |
+| 1.33 | 30/10/2026 | Tras la prueba del viernes: bolsas sin «Terminada» y aviso «Bolsas listas para salida»; «Nueva tarea» con un solo botón «Crear»; limpieza de resinas después del reparto, las bolsas, el envío y el +35 %, antes del recuento de las 12:45. |

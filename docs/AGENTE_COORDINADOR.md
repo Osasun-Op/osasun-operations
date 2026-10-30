@@ -75,7 +75,7 @@ Se pasa **siempre**, entera, y el resultado va como comentario en el PR, punto p
 
 **Cuando el propietario cuente una prueba real o un fallo:** primero los registros del servidor de ese rato; después la respuesta.
 
-**Herramientas:** la auditoría de solo lectura se encarga como Tarea 19, después de la 18. Cuando exista, se usa en cada revisión en lugar de las consultas sueltas.
+**Herramientas:** `select motor.auditoria();` (por `execute_sql`), la consulta fija de registros y `python3 -I scripts/comparar_funciones.py <migración>`, según `docs/AUDITORIA.md`. Se usan en cada revisión en lugar de las consultas sueltas.
 
 ## 6. Documentación
 
@@ -150,3 +150,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - **29/10/2026 · Constitución técnica** (`docs/CONSTITUCION_TECNICA.md`, aprobada por el propietario): 13 reglas, lectura obligatoria (constitución → estado → contratos → código → actuar), apartado «Qué he leído y qué existía ya» en cada PR y lista de revisión fija del coordinador (con registros del servidor). Siguiente: revisar la Tarea 18 con la lista; después, Tarea 19 (auditoría de solo lectura).
 - PR #17 (Tarea 18) fusionado el 29/10/2026: `guardar_reparto` vuelve a responder 200 (comprobado en los registros). Revisado con la lista nueva (7/8; faltaba el apartado de lectura, la tarea empezó antes de la regla). **Tarea 19 de BD** (auditoría de solo lectura) encargada.
 - Tarea 12 de Lovable terminada y revisada (commit `9c2e79e`): «Preparar envío» carga siempre el envío de hoy (`reparto_de_hoy_detalle`), título «Modificar envío» y «Copiar para WhatsApp» sin recalcular (también en «Modificar reparto»), reutilizando `copiar`. 66 pruebas (1 nueva).
+- **30/10/2026 · Prueba del viernes:** (1) bolsas: Eder pulsaba «Terminada» sin tocar los + (ninguna caja marcada) → `ELEMENTOS_PENDIENTES`; (2) una tarea de Administración no se creó (solo el paso «Continuar», sin «Crear»); (3) la limpieza de resinas salió antes de la producción del reparto. Decisiones en v1.33. PR #18 (Tarea 19, auditoría) fusionado. **Tarea 20 de BD** encargada (limpieza al final + retoques de la auditoría). **Tarea 13 de Lovable** enviada (bolsas sin «Terminada» + aviso; «Nueva tarea» con un solo «Crear»).

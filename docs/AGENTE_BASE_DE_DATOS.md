@@ -67,11 +67,29 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 19** (sección 7): auditoría de solo lectura. Lee antes `docs/CONSTITUCION_TECNICA.md` (reglas 5, 9 y 13) y la sección «Lista de revisión» de `docs/AGENTE_COORDINADOR.md`. **El PR lleva «Qué he leído y qué existía ya» (obligatorio desde esta tarea).**
+**Tarea 20** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.33** (§4, fila «Viernes», y §6.3–6.4) y `CONTRATOS.md` §3.2. El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 19 (activa): auditoría de solo lectura para el coordinador, en pruebas
+## 7. TAREA 20 (activa): la limpieza de resinas, después de lo del reparto y del +35 %; retoques de la auditoría
+
+**Qué pasó el 30/10/2026:** «Limpieza intensiva de la estación de resinas» (`limpieza_resinas`, obligatoria, `hora_limite` 10:45, `orden` 25) le salió al operario a las 08:35, **antes** de «Producción del reparto» (`orden` 30). Decisión del propietario: lo del reparto y el envío va siempre antes que la limpieza y el orden.
+
+1. **Regla nueva:** `limpieza_resinas` no está disponible mientras, ese día, falte alguna de estas tareas: producción del reparto, bolsas, preparación del envío (si lo hay) y **producción para el stock (+35 %, `cola_stock`)**. En cuanto estén hechas (o no las haya ese día), sale **en el siguiente punto de encaje**, sin esperar a ninguna hora.
+2. **Hora límite:** antes del recuento de las 12:45 (no las 10:45). Si a esa hora no se ha podido hacer, se comporta como las demás fijas obligatorias (pasa como arrastrada, con su motivo en el cierre).
+3. **Dónde:** **busca primero** cómo decide hoy el motor el orden y la disponibilidad (`motor` de la elección de tarea, «Nunca sin tarea», `retirada_por_condicion`, condiciones de plantilla) y **reutiliza** ese mecanismo; no hagas una segunda forma de bloquear tareas. Cambia la plantilla (`carga_inicial`: `limpieza_resinas`) con una migración nueva.
+4. «Orden y limpieza» (`cola_orden`) ya va la última: comprueba que sigue así.
+5. **Retoques de la auditoría (dudas del PR #18, aprobadas por el propietario):**
+   - aviso nuevo en `motor.auditoria()`: reparto o envío aceptado hoy sin su tarea de producción o de bolsas;
+   - en `docs/AUDITORIA.md`, que la usa `postgres` (el conector del coordinador); `motor` no se abre a `service_role`;
+   - en `docs/AUDITORIA.md` y en el LEEME de las pruebas: **la prueba 22 nunca se ejecuta en producción** (la auditoría sí).
+6. Pruebas: el viernes con reparto, envío y +35 %, la limpieza sale después de todo y antes de las 12:45; un viernes sin reparto, sale en cuanto quepa; lo demás del orden del día no cambia (pruebas 01 y 05 en verde). `CONTRATOS.md` solo historial (no cambia nada de lo que usan las pantallas).
+
+**Entrega:** Pull Request **«Tarea 20 — Limpieza de resinas al final y retoques de la auditoría»**, con «Qué he leído y qué existía ya», la lista de comprobación de `AUDITORIA.md` pasada en pruebas (auditoría + registros) y las dudas.
+
+---
+
+## 7.0 TAREA 19 (fusionada en el PR #18): auditoría de solo lectura para el coordinador, en pruebas
 
 El coordinador repite en cada PR las mismas comprobaciones con consultas sueltas. Esta tarea las convierte en **una sola llamada que siempre devuelve lo mismo**, para que no dependa de acordarse (constitución, regla 13). **Solo lee: no cambia nada.**
 
@@ -497,3 +515,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.24 | 29/10/2026 | Tarea 17 fusionada (PR #16). Sin tarea activa. |
 | 1.25 | 29/10/2026 | Tarea 18 activa (urgente): `guardar_reparto` da 500 aunque guarda (respuestas sin cuerpo). |
 | 1.26 | 29/10/2026 | Tarea 18 fusionada (PR #17). Constitución técnica: lectura obligatoria y apartado «Qué he leído y qué existía ya». Tarea 19 activa: auditoría de solo lectura. |
+| 1.27 | 30/10/2026 | Tarea 19 fusionada (PR #18). Tarea 20 activa: limpieza de resinas al final y retoques de la auditoría. |
