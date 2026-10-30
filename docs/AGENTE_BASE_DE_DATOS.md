@@ -75,7 +75,13 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 **Qué existe ya y hay que reutilizar** (constitución, regla 5): `crear_incidencia` y su tabla (opciones, quién, importancia, estados, «Pedido, esperando a que llegue», «Esperando a Administración»), la creación de tareas desde una incidencia, el correo en el momento a Administración (`motor.correos`), `cerrar_incidencia`, `incidencias_abiertas` y su número en `tarea_activa`, el cierre del turno. **Se amplía lo que hay; no se hace un segundo sistema de incidencias ni de avisos.**
 
-1. **Lista de compras** (tabla nueva, p. ej. `public.compras`): nombre, forma (`internet` | `tienda` | `administracion`), enlace (internet), sitio y dirección (tienda), nota, activo y orden. Carga inicial con la tabla de `ESTADO` §7 (sin «Paquetes y recogidas», que ya no es una compra): Amazon → `internet`; supermercado, Tatto Arte, bazar, Kutxabank, gasolinera y Retif → `tienda` (dirección vacía, la rellena Administración); imprenta y materia prima → `administracion`. Si una fila no encaja, pregúntalo en el PR.
+1. **Lista de compras** (tabla nueva, p. ej. `public.compras`): nombre, forma (`internet` | `tienda` | `administracion`), enlace (internet), sitio y dirección (tienda), nota, activo y orden. Carga inicial con la tabla de `ESTADO` §7 (sin «Paquetes y recogidas», que ya no es una compra, **ni la gasolina**, que se quita): Amazon → `internet`; imprenta y materia prima → `administracion`; `tienda`, con estos sitios (aprobados por el propietario, 30/10/2026):
+     - Alcohol, papel de cocina, papel de horno y limpieza → «Cualquier supermercado» (sin dirección);
+     - Guantes de nitrilo → «Arte Sano Tattoo Supplies», C/ San Nicolás de Olabeaga 12 (lonja), 48013 Bilbao;
+     - Material de oficina, plástico de burbujas y cinta aislante → «Cualquier bazar chino» (sin dirección);
+     - Rollos de TPV → «Kutxabank», Avda. Lehendakari Aguirre 13, Deusto, Bilbao;
+     - Bolsas para tienda y plástico negro de embalar → «Retif Bilbao», C/ Máximo Aguirre 10, 48009 Bilbao.
+     Si una fila no encaja, pregúntalo en el PR.
    - `compras_lista()` (operario y Administración): las activas, en su orden.
    - `guardar_compra(...)` (solo Administración): añadir, cambiar y quitar (quitar = desactivar, para no romper el histórico).
 2. **`crear_incidencia`, opción `comprar`** con `compra_id` (o «otra cosa» con texto):

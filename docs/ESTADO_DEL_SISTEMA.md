@@ -312,7 +312,7 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 
 ## 7. Aprovisionamiento
 
-> **Lista de compras en la base de datos** (decisión del propietario, 30/10/2026): cada producto con su forma de compra (**por internet**, con enlace · **en una tienda**, con sitio y dirección · **lo pide Administración**). Administración la mantiene desde su panel (añadir, cambiar, quitar). Se carga de entrada con la tabla de abajo; las direcciones de las tiendas las completa Administración. La lista de compras va ya a la base de datos; el stock y el catálogo de productos siguen en la hoja hasta el final del proyecto.
+> **Lista de compras en la base de datos** (decisión del propietario, 30/10/2026): cada producto con su forma de compra (**por internet**, con enlace · **en una tienda**, con sitio y dirección · **lo pide Administración**). Administración la mantiene desde su panel (añadir, cambiar, quitar). Se carga de entrada con la tabla de abajo, con estos sitios (aprobados el 30/10/2026): supermercado y bazar chino, cualquiera; guantes de nitrilo en **Arte Sano Tattoo Supplies** (San Nicolás de Olabeaga 12, 48013 Bilbao; es la «Tatto Arte» de la tabla); rollos de TPV en **Kutxabank** (Avda. Lehendakari Aguirre 13, Deusto); **Retif Bilbao** en Máximo Aguirre 10, 48009. **La gasolina sale de la lista** (se ve conduciendo; no hace falta incidencia). La lista de compras va ya a la base de datos; el stock y el catálogo de productos siguen en la hoja hasta el final del proyecto.
 
 **Regla:** cuando falta algo, se elige en el catálogo y la app da la solución en el momento. **La tarea no se cierra hasta que confirma que ya lo tiene en el almacén.** Toda mercancía se abre y se comprueba al llegar.
 
