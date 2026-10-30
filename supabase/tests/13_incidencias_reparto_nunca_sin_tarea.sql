@@ -162,7 +162,7 @@ begin
     r -> 'tarea' = 'null'::jsonb and r ->> 'siguiente' like '%15:30', r::text);
 
   -- ---------------------------------------------------------------- Incidencias (lunes tarde)
-  r := motor.crear_incidencia_de(op, c1, 'corregir', E'La selladora\n  no calienta ', null, null, null, null, pg_temp.h(lun, '15:40'));
+  r := motor.crear_incidencia_de(op, c1, 'corregir', E'La selladora\n  no calienta ', null, null, null, null, null, pg_temp.h(lun, '15:40'));
   i1 := (r -> 'incidencia' ->> 'id')::uuid;
   perform pg_temp.comprobar('Corregir, por defecto: la resuelve él, ahora; descripción en una línea',
     r -> 'incidencia' ->> 'quien' = 'operario' and r -> 'incidencia' ->> 'importancia' = 'ahora'
@@ -174,41 +174,41 @@ begin
   perform pg_temp.comprobar('…y «ahora» va como las urgentes: antes que la revisión del envío de las 15:30',
     r -> 'tarea_activa' -> 'tarea' ->> 'id' = r -> 'tarea' ->> 'id'
     and (r -> 'tarea_activa' ->> 'incidencias_abiertas')::int = 1, r -> 'tarea_activa' -> 'tarea' ->> 'titulo');
-  r2 := motor.crear_incidencia_de(op, c1, 'corregir', 'otra cosa', null, null, null, null, pg_temp.h(lun, '15:41'));
+  r2 := motor.crear_incidencia_de(op, c1, 'corregir', 'otra cosa', null, null, null, null, null, pg_temp.h(lun, '15:41'));
   perform pg_temp.comprobar('Repetir con el mismo id_cliente devuelve la misma incidencia, sin duplicar la tarea',
     (r2 -> 'incidencia' ->> 'id')::uuid = i1
     and (select count(*) from public.incidencias where persona_id = op and estado <> 'cerrada') = 1
     and (select count(*) from public.tareas where jornada_id = j and clave like 'incidencia:%') = 1, r2::text);
 
-  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'llega_mercancia', 'Cajas de Sprint Digital', null, null, null, null, pg_temp.h(lun, '15:42'));
+  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'llega_mercancia', 'Cajas de Sprint Digital', null, null, null, null, null, pg_temp.h(lun, '15:42'));
   i2 := (r -> 'incidencia' ->> 'id')::uuid;
   perform pg_temp.comprobar('Llega mercancía, por defecto: él, ahora; es la recepción de siempre (registrar_evento), urgente',
     r -> 'incidencia' ->> 'importancia' = 'ahora' and r -> 'tarea' ->> 'clave' like 'recepcion_mercancia:%'
     and (r -> 'tarea' ->> 'urgente')::boolean and r -> 'tarea' ->> 'porque' = 'Cajas de Sprint Digital'
     and exists (select 1 from public.eventos_jornada where jornada_id = j and tipo = 'llega_mercancia'), r::text);
-  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'pedido_cliente', 'Pedido web 1234', null, null, null, null, pg_temp.h(lun, '15:43'));
+  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'pedido_cliente', 'Pedido web 1234', null, null, null, null, null, pg_temp.h(lun, '15:43'));
   i3 := (r -> 'incidencia' ->> 'id')::uuid;
   perform pg_temp.comprobar('Pedido de cliente, por defecto: él, hoy (obligatoria del día, no urgente)',
     r -> 'incidencia' ->> 'importancia' = 'hoy' and r -> 'tarea' ->> 'clave' like 'pedido_cliente:%'
     and (r -> 'tarea' ->> 'obligatoria')::boolean and not (r -> 'tarea' ->> 'urgente')::boolean, r::text);
-  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'recogida_nacex', 'Paquete de Tatto Arte', null, 'cuando_pueda', null, null, pg_temp.h(lun, '15:44'));
+  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'recogida_nacex', 'Paquete de Tatto Arte', null, 'cuando_pueda', null, null, null, pg_temp.h(lun, '15:44'));
   i4 := (r -> 'incidencia' ->> 'id')::uuid;
   perform pg_temp.comprobar('Recogida en Nacex «cuando pueda»: a la cola de tiempo libre, sigue abierta de un día a otro',
     r -> 'incidencia' ->> 'importancia' = 'cuando_pueda' and r -> 'tarea' ->> 'titulo' = 'Recogida en Nacex: Paquete de Tatto Arte'
     and not (r -> 'tarea' ->> 'obligatoria')::boolean
     and (select prioridad_cola = 'C' and no_terminada = 'sigue_abierta' from public.tareas where id = (r -> 'tarea' ->> 'id')::uuid), r::text);
-  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'pedir_comprar', 'Bolsas 8x12', null, null, null, null, pg_temp.h(lun, '15:45'));
+  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'pedir_comprar', 'Bolsas 8x12', null, null, null, null, null, pg_temp.h(lun, '15:45'));
   i5 := (r -> 'incidencia' ->> 'id')::uuid;
   perform pg_temp.comprobar('Pedir o comprar, por defecto: él, hoy',
     r -> 'incidencia' ->> 'quien' = 'operario' and r -> 'incidencia' ->> 'importancia' = 'hoy'
     and r -> 'tarea' ->> 'titulo' = 'Pedir o comprar: Bolsas 8x12', r::text);
 
-  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'no_quedan_vapers', 'x', null, null, null, null, pg_temp.h(lun, '15:46'));
-  r2 := motor.crear_incidencia_de(op, gen_random_uuid(), 'corregir', '   ', null, null, null, null, pg_temp.h(lun, '15:46'));
+  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'no_quedan_vapers', 'x', null, null, null, null, null, pg_temp.h(lun, '15:46'));
+  r2 := motor.crear_incidencia_de(op, gen_random_uuid(), 'corregir', '   ', null, null, null, null, null, pg_temp.h(lun, '15:46'));
   perform pg_temp.comprobar('«No quedan vapers» no es una opción; sin descripción tampoco (DATOS_NO_VALIDOS)',
     r -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS' and r2 -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS', r::text || r2::text);
-  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'corregir', 'x', 'jefe', null, null, null, pg_temp.h(lun, '15:46'));
-  r2 := motor.crear_incidencia_de(op, gen_random_uuid(), 'corregir', 'x', null, 'mañana', null, null, pg_temp.h(lun, '15:46'));
+  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'corregir', 'x', 'jefe', null, null, null, null, pg_temp.h(lun, '15:46'));
+  r2 := motor.crear_incidencia_de(op, gen_random_uuid(), 'corregir', 'x', null, 'mañana', null, null, null, pg_temp.h(lun, '15:46'));
   perform pg_temp.comprobar('Quién e importancia no válidos: DATOS_NO_VALIDOS',
     r -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS' and r2 -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS', r::text || r2::text);
 
@@ -251,7 +251,7 @@ begin
            from public.tareas t join public.incidencias i on i.tarea_resolucion_id = t.id where i.id = i4), r::text);
 
   -- La resuelve Administración: sin tarea, correo en el momento y esperando a que él la cierre.
-  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'pedir_comprar', 'Falta granel de indoor', 'administracion', null, null, null, pg_temp.h(lun, '16:15'));
+  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'pedir_comprar', 'Falta granel de indoor', 'administracion', null, null, null, null, pg_temp.h(lun, '16:15'));
   i6 := (r -> 'incidencia' ->> 'id')::uuid;
   perform pg_temp.comprobar('La resuelve Administración: no crea tarea y queda «Esperando a Administración»',
     r -> 'tarea' = 'null'::jsonb and r -> 'incidencia' ->> 'estado' = 'esperando_administracion'
@@ -270,11 +270,11 @@ begin
 
   -- Estoy bloqueado: el flujo de problemas de siempre, sobre la tarea en curso.
   perform motor.iniciar_tarea_de(op, pg_temp.tarea(j, 'revisar_envio'), pg_temp.h(lun, '16:20'));
-  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'bloqueado', 'No encuentro la hoja de envíos', null, null, null, 'no_encuentro', pg_temp.h(lun, '16:21'));
+  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'bloqueado', 'No encuentro la hoja de envíos', null, null, null, 'no_encuentro', null, pg_temp.h(lun, '16:21'));
   perform pg_temp.comprobar('Estoy bloqueado: abre un problema en la tarea en curso, que queda bloqueada; «llama ahora»',
     r -> 'incidencia' = 'null'::jsonb and r -> 'problema' ->> 'tipo' = 'no_encuentro' and r ->> 'pasos' = 'Llama a Administración ahora.'
     and (select estado = 'bloqueada' from public.tareas where id = pg_temp.tarea(j, 'revisar_envio')), r::text);
-  r2 := motor.crear_incidencia_de(op, gen_random_uuid(), 'bloqueado', 'otra vez', null, null, pg_temp.tarea(j, 'revisar_envio'), null, pg_temp.h(lun, '16:22'));
+  r2 := motor.crear_incidencia_de(op, gen_random_uuid(), 'bloqueado', 'otra vez', null, null, pg_temp.tarea(j, 'revisar_envio'), null, null, pg_temp.h(lun, '16:22'));
   perform pg_temp.comprobar('PROBLEMA_YA_ABIERTO trae el problema abierto (error.problema)',
     r2 -> 'error' ->> 'codigo' = 'PROBLEMA_YA_ABIERTO' and r2 -> 'error' -> 'problema' ->> 'id' = r -> 'problema' ->> 'id', r2::text);
   r2 := motor.tarea_activa_de(op, pg_temp.h(lun, '16:23'));

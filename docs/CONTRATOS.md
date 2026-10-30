@@ -1,6 +1,13 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.7 · **Fecha:** 30/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 21).
+**Versión:** 1.8 · **Fecha:** 30/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 22).
+
+> **Cambios en 1.8 (Tarea 22) — para Lovable: incidencias nuevas, lista de compras y avisos de Administración** (`ESTADO_DEL_SISTEMA.md` v1.36, §6.6 y §7). Solo se añaden campos y funciones.
+> 1. **Botón Incidencia, tres opciones** (§3.11): `comprar` (elige de `compras_lista()` y manda su `compra_id`; «Otra cosa» = sin `compra_id`, con `descripcion`), `varios` (`descripcion`, `quien`, `importancia`) y `bloqueado` (como siempre). `crear_incidencia` gana el parámetro `compra_id` (y `descripcion` ya no es obligatoria con `comprar` de la lista). Las opciones de antes (`llega_mercancia`, `recogida_nacex`, `corregir`, `pedir_comprar`, `pedido_cliente`) ya no se ofrecen en la pantalla, pero se siguen aceptando.
+> 2. **Compra por internet:** su tarea («Compra: [nombre]») trae **`enlace`** (nuevo en el objeto tarea, §3.2; `null` en las demás): abrirlo. Al hacerla, la incidencia queda «Pedido, esperando a que llegue». **En una tienda:** «Ve a comprar [nombre] a [sitio]», con la dirección en `porque`; al hacerla, se cierra. **Lo pide Administración** u «otra cosa»: sin tarea, correo en el momento y «Esperando a Administración».
+> 3. **Lista de compras** (§3.20): `compras_lista()` (operario y Administración) y `guardar_compra(...)` (solo Administración: añadir, cambiar y quitar = `activo: false`). Para «Lista de compras» del panel.
+> 4. **Avisos para el almacén** (§3.21): Administración los crea con `crear_aviso_almacen(id_cliente, fecha, texto, contacto?)` («Aviso para el almacén»: día, texto y, si quiere, un contacto) y los cancela con `cancelar_aviso_almacen(aviso_id)`. Los ve en **`estado_actual().avisos_almacen`**. Al operario, desde su día, le salen arriba en **`tarea_activa().avisos: [{ id, texto, contacto, fecha }]`** y en sus incidencias abiertas («Aviso de Administración»); los cierra con `cerrar_incidencia` como las demás. No son tareas.
+> 5. **Botón rojo:** `tarea_activa().incidencias_abiertas` ya cuenta también los avisos (desde su día).
 
 > **Cambios en 1.7 (Tarea 21) — para Lovable: interrupciones, cajas y minutos trabajados en «Hoy»** (`ESTADO_DEL_SISTEMA.md` v1.35, §8 Inicio, punto 4). Solo se añaden campos; nada cambia de forma.
 > 1. **`estado_actual().hoy`** (§4.3): cada tarea trae **`interrupciones: [{ a_las, por, siguio_a_las }]`**, en orden: a qué hora la interrumpió otra tarea (con hora o urgente), el título de esa tarea y cuándo siguió (`null` si aún no se ha retomado). Lista vacía si no hubo. Se muestra aunque la tarea siga pendiente: «Interrumpida a las 10:45 por «Salida del reparto»» y, si se retoma, «siguió a las 12:05».
@@ -159,12 +166,13 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
     "estado": "pendiente|en_curso", "origen": "plantilla|administracion|reparto|evento|problema",
     "obligatoria": true, "urgente": false, "contenido": "simple|produccion_reparto|bolsas|stock_35|recuento",
     "hora_programada": null, "hora_limite": "2026-11-03T09:45:00+00:00", "duracion_min": null,
-    "arrastrada_de": null, "iniciada_en": null, "terminada_en": null,
+    "arrastrada_de": null, "iniciada_en": null, "terminada_en": null, "enlace": null,
     "elementos": []
   },
   "siguiente": "Salida del reparto · 10:45",
   "reparto_de_hoy": { "reparto_id": "...", "aceptado_en": "2026-11-03T07:48:00+00:00", "pegado_por": "<persona_id>", "pegado_por_nombre": "Administración", "paradas": [] },
   "incidencias_abiertas": 2,
+  "avisos": [ { "id": "...", "texto": "Voy al Casco Viejo y llevo yo la bolsa de Bilbao", "contacto": null, "fecha": "2026-11-03" } ],
   "incidencia_en_curso": { "id": "...", "opcion": "corregir", "descripcion": "...", "estado_texto": "En curso desde las 15:47", "minutos": 10, "...": "(objeto incidencia, §3.11)" },
   "problemas_abiertos": [ { "id": "...", "tarea_id": "...", "tarea": "Revisar el envío", "tipo": "no_encuentro", "descripcion": "...", "estado": "abierto|sin_respuesta", "llamadas": 0, "proxima_llamada_en": null } ]
 }
@@ -174,6 +182,8 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 - `reparto_de_hoy`: el reparto aceptado hoy (`null` si no hay). Con él, el botón de arriba dice «Modificar reparto» (abre la lista con `reparto_de_hoy_detalle`); sin él, «Preparar reparto».
 - `reparto_de_hoy.paradas` ✅ Tarea 16 (R1e): `[{ origen_id, origen, destino_id, destino, producto, formato, cantidad, texto }]`, lo que quien hace la ruta recoge en una tienda para dejarlo en otra («Recoge 2 BZ1 4g en Algorta y déjalas en Portugalete»). Mostrarlo en «Salida del reparto» si sale el operario. Lista vacía si no hay. (También en `estado_actual().reparto_de_hoy`, para el panel si sale Administración.)
 - **Al recargar** la pantalla recupera de aquí todo lo abierto: `incidencias_abiertas` (número para «Cerrar incidencias»), `incidencia_en_curso` (la que tiene su tarea en curso, con `minutos`; `null` si no hay) y `problemas_abiertos` (con la tarea bloqueada; el siguiente paso es `problema_llamada` o `resolver_problema`).
+- `tarea.enlace` ✅ Tarea 22: el enlace de una compra por internet (tarea «Compra: …»); `null` en las demás.
+- `avisos` ✅ Tarea 22: los avisos de Administración abiertos de hoy (o de días pasados sin cerrar), para mostrarlos arriba de la pantalla. Se cierran con `cerrar_incidencia` (también están en `incidencias_abiertas()`). Lista vacía si no hay.
 - `siguiente`: una línea con lo que viene después. Si antes llega una tarea con hora, se anuncia esa con su hora.
 - `pregunta`: reservado; hoy siempre `null`. La pregunta «¿Quién sale hoy?» la devuelve `pegar_reparto` (`FALTA_SALE`).
 - `elementos` ✅: `[ { id, tipo, producto, formato, texto, categoria, destino, destino_id, bolsa, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla) y, dentro de la tienda, por `bolsa`: «Bolsa de reposición» y, si hay pedidos de cliente, «Pedido de cliente · [cliente]» (Tarea 12). **Peticiones especiales** (Tarea 13): `tipo: "peticion"`, con su texto en `texto` (y en `producto`), `cantidad` 1 y `formato` vacío; van en la bolsa de su tienda después de las cajas, para mostrarlas bajo «Además, mete:». En los demás elementos, `texto` es `null`. En las listas de producción, `bolsa` es `null`; en los pedidos de cliente, `motivo` dice «Coge N del almacén» o «Haz N».
@@ -278,7 +288,7 @@ Lista de producción para el stock del almacén (R3, cola A). Se calcula una vez
 ### 3.11 Incidencias (modelo nuevo, Tarea 7) ✅
 Botón **Incidencia**: el operario elige qué pasa, escribe una línea y puede cambiar quién la resuelve y la importancia (§6.6).
 
-**`crear_incidencia(id_cliente, opcion, descripcion, quien?, importancia?, tarea_id?, tipo_problema?)`**
+**`crear_incidencia(id_cliente, opcion, descripcion?, quien?, importancia?, tarea_id?, tipo_problema?, compra_id?)`**
 
 | `opcion` | Texto | `quien` por defecto | `importancia` por defecto |
 | --- | --- | --- | --- |
@@ -288,6 +298,10 @@ Botón **Incidencia**: el operario elige qué pasa, escribe una línea y puede c
 | `recogida_nacex` | Recogida en Nacex | `operario` | `hoy` |
 | `corregir` | Corregir, limpiar o solucionar algo | `operario` | `ahora` |
 | `bloqueado` | Estoy bloqueado | — | — |
+| `comprar` ✅ Tarea 22 | Hay que comprar algo. Con `compra_id` (de `compras_lista()`): por internet → tarea «Compra: [nombre]» con `enlace`; en una tienda → tarea «Ve a comprar [nombre] a [sitio]» con la dirección en `porque`; lo pide Administración → sin tarea. Sin `compra_id` («Otra cosa»): `descripcion` obligatoria, sin tarea. | según la forma de compra (`administracion` sin `compra_id`) | `hoy` |
+| `varios` ✅ Tarea 22 | Varios: `descripcion`, `quien` e `importancia`. Tarea «[descripción]» si la hace él. | `operario` | `hoy` |
+
+**Desde la Tarea 22 la pantalla ofrece solo `comprar`, `varios` y `bloqueado`**; las demás opciones se siguen aceptando (histórico y compatibilidad).
 
 - `quien`: `operario` | `administracion`. `importancia`: `ahora` | `hoy` | `cuando_pueda`. `descripcion`: una línea (los saltos de línea se juntan).
 - **La resuelve él** (`quien: operario`): se crea su tarea. `ahora` entra como las urgentes (al terminar la referencia o la bolsa en curso); `hoy` es obligatoria del día; `cuando_pueda` va a su cola de tiempo libre. Lo que no se hace pasa al día siguiente con su incidencia. Llega mercancía y pedido de cliente crean la tarea de siempre («Recepción de mercancía», «Pedido de cliente»); el resto, «Pedir o comprar: …», «Recogida en Nacex: …» o «Corregir: …». **Al hacer la tarea, la incidencia se cierra sola**, salvo `pedir_comprar`, que queda «Pedido, esperando a que llegue» y se cierra a mano.
@@ -305,6 +319,9 @@ Botón **Incidencia**: el operario elige qué pasa, escribe una línea y puede c
 **`cerrar_incidencia(incidencia_id, nota?)`** → `{ incidencia, tarea_activa }`. `nota`: una línea opcional (ej. «Ya está en el almacén»). Si su tarea seguía abierta, se cancela («Ya no hace falta: incidencia cerrada»). Ya cerrada: `aviso: INCIDENCIA_YA_CERRADA`, sin error. De otro: `NO_ENCONTRADO`.
 
 Solo el operario: Administración recibe `NO_AUTORIZADO`. Cada incidencia queda registrada con su hora, su tiempo y su cierre, y sale en el cierre del turno (§4.4).
+
+- **Comprar, al hacer su tarea** ✅ Tarea 22: por internet queda «Pedido, esperando a que llegue» (como `pedir_comprar`); en una tienda, se cierra. Errores nuevos: `DATOS_NO_VALIDOS` si el producto ya no está en la lista o si «Otra cosa» va sin `descripcion`.
+- **Aviso de Administración** (`opcion: "aviso"`, solo lo crea Administración, §3.21): sin tarea; `estado_texto` «Aviso de Administración para el DD/MM»; el operario lo cierra como las demás.
 
 ### 3.12 `cambiar_quien_sale(sale)` ✅ (Tarea 8)
 Cambia quién sale hoy sin volver a pegar el reparto. Para el operario (su jornada) y para Administración (la jornada de hoy del operario por defecto).
@@ -463,6 +480,15 @@ En «Producción del reparto», una referencia que hay que hacer y **no tiene gr
 - **Salida:** `{ "elemento": { id, estado, cantidad, cantidad_hecha }, "tarea_activa": {...} }`, como `terminar_elemento`.
 - **Errores:** `DATOS_NO_VALIDOS` (no está sin granel; una tienda que no la recibe o repetida; acción, cantidad u origen no válidos; no suman lo que falta, con `faltan` y `suman`), `NO_ENCONTRADO`, `ESTADO_NO_VALIDO`, `OTRA_TAREA_EN_CURSO`, `NO_AUTORIZADO` (Administración).
 
+### 3.20 Lista de compras ✅ (Tarea 22)
+- **`compras_lista()`** (operario y Administración) → `{ compras: [{ id, nombre, forma: "internet"|"tienda"|"administracion", enlace, sitio, direccion, nota, activo, orden }] }`, solo las activas, en su orden. Para el botón Incidencia → «Hay que comprar algo» y para la pantalla «Lista de compras» del panel.
+- **`guardar_compra(nombre, forma, id?, enlace?, sitio?, direccion?, nota?, orden?, activo?)`** (solo Administración) → `{ compra }`. Sin `id`, añade (al final si no se da `orden`); con `id`, cambia. **Quitar = `activo: false`** (no se borra, para el histórico). Por internet exige `enlace` (`http…`); en una tienda, `sitio`. **Errores:** `DATOS_NO_VALIDOS`, `NO_ENCONTRADO`, `NO_AUTORIZADO` (el operario).
+
+### 3.21 Avisos para el almacén ✅ (Tarea 22)
+- **`crear_aviso_almacen(id_cliente, fecha, texto, contacto?)`** (solo Administración) → `{ aviso: { id, fecha, texto, contacto, estado, creado_por, cerrado_en, nota } }`. Para el operario por defecto, el día `fecha` (hoy o un día que viene en que trabaje el almacén). No crea tarea. Repetir con el mismo `id_cliente` devuelve el mismo. **Errores:** `DATOS_NO_VALIDOS` (sin texto o fecha pasada), `SIN_JORNADA` (ese día no trabaja el almacén), `NO_AUTORIZADO` (el operario).
+- **`cancelar_aviso_almacen(aviso_id)`** (solo Administración) → `{ aviso }`, cerrado con la nota «Cancelado por Administración». Repetir no cambia nada.
+- El operario lo ve desde su día en `tarea_activa().avisos` y en `incidencias_abiertas()`, y lo cierra con `cerrar_incidencia`. Consta en el cierre del turno (sin el contacto, que solo está en la base de datos).
+
 ## 4. Administración ✅ (Tarea 4)
 
 ### 4.1 `crear_tarea_admin` ✅
@@ -498,6 +524,7 @@ Pasa la tarea a `cancelada` con su motivo (obligatorio) y retira la llamada pend
 Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, operario, jornada: { id, sale, hay_envio, estado }, en_curso: tarea con sus elementos, reparto_de_hoy, problemas_abiertos: [...], incidencia_en_curso, incidencias_abiertas: [objeto incidencia, §3.11], arrastradas: [...], hoy: [{ id, titulo, estado, origen, obligatoria, urgente, hora, motivo, iniciada_en, terminada_en, minutos, interrupciones, cajas, minutos_trabajados }], retrasos_salida: [{ a_las, minutos, nueva_hora, sale, aviso }], correos_no_enviados: [{ tipo, asunto, estado: "fallido"|"dudoso", intentos, error, creado_en }], lectura_sheets: { ultima_correcta, ultimo_error } }`. `correos_no_enviados` = cierres o avisos de los últimos 7 días que no se han podido enviar (mostrarlos como aviso). `reparto_de_hoy` ✅ Tarea 9: el reparto aceptado hoy en la jornada del operario por defecto, el mismo objeto que en `tarea_activa` (`null` → «Preparar reparto»; si no, «Modificar reparto»).
 - **`hoy`**: `iniciada_en` y `terminada_en` (fecha y hora) y `minutos` ✅ Tarea 15: de inicio a fin; hasta ahora si está en curso; `null` si no ha empezado.
 - **`hoy`**: `interrupciones: [{ a_las, por, siguio_a_las }]`, `cajas: { hechas, total }` y `minutos_trabajados` ✅ Tarea 21. `interrupciones`: cada vez que otra tarea (con hora o urgente) entró en un punto de encaje, en orden; `por` = título de la tarea que entró; `siguio_a_las` = cuando volvió a estar en curso (`null` si aún no). Vacía si no hubo. `cajas` y `minutos_trabajados` solo en las tareas de producción (las que tienen referencias que producir; en las demás, `null`): cajas hechas de las totales, y el tiempo que la tarea ha estado en marcha: de cada vez que empieza o se retoma hasta que entra otra tarea o se termina (si está en curso, hasta ahora). Cuenta también el tiempo entre productos; no cuenta lo que estuvo interrumpida (la salida y la ruta).
+- **`avisos_almacen`** ✅ Tarea 22: `[{ id, fecha, texto, contacto, estado, creado_por, cerrado_en, nota }]`, los avisos para el almacén que siguen abiertos (de hoy y de días que vienen), por fecha. Para verlos y cancelarlos (`cancelar_aviso_almacen`). `incidencias_abiertas` solo trae los avisos desde su día.
 - **`tiempo_libre`** ✅ Tarea 15: `{ veces, minutos }`. Las tareas «Orden y limpieza» de hoy que se han empezado y sus minutos en total (la que está en curso, hasta ahora). Sin jornada: `{ veces: 0, minutos: 0 }`.
 - **`cobertura_baja`** ✅ Tarea 15 (R4, `REGLAS_CALCULO.md` §4): `{ datos_leidos_en, productos: [{ producto, formato, total, necesidad_semana, semanas, motivo }], avisos: [texto] }`. Solo los productos por debajo de 2 semanas («LO QUE HAY EN TOTAL» de PRINCIPAL frente a 2 × «1 SEMANA NECESIDADES»), de menos a más semanas; Invernadero e Indoor, una fila por categoría; `formato` siempre `""` (la hoja da el total por producto). Sin minis, vapers ni lo que tiene necesidad 0. `avisos`: datos de la hoja que no se han podido calcular. Lo calcula el servidor cada vez que lee la hoja para el reparto, el envío o la lista de stock, y lo guarda con esa lectura; aquí sale la última, con su hora (`datos_leidos_en`). Si aún no hay ninguna: `{ datos_leidos_en: null, productos: [], avisos: [] }`.
 - **`almacen_ahora`** ✅ Tarea 14 (solo para mostrar; desde la v1.29 el panel no lo muestra, pero sigue aquí): `{ recuento_en, datos_leidos_en, referencias: [{ producto, formato, hoja, producido, salido, ahora }], en_camino: [{ destino_id, destino, producto, formato, cantidad }] }`. `recuento_en`: el último recuento que recoge la hoja leída (`datos_leidos_en`). `referencias`: las que han tenido movimiento desde ese recuento; `ahora = hoja + producido − salido`. `en_camino`: lo que va a cada tienda (el reparto hasta las 23:30; el envío hasta las 11:59 del día siguiente).
