@@ -67,11 +67,37 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 21 está fusionada (PR #20). Espera a que el coordinador escriba la siguiente.
+**Tarea 22** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.36** (§6.6 «Incidencias» nuevo y §7 «Aprovisionamiento») y `CONTRATOS.md` §3.10, §3.11 y §3.2. El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 21 (fusionada en el PR #20): interrupciones, cajas y minutos trabajados en «Hoy», en pruebas
+## 7. TAREA 22 (activa): incidencias nuevas, lista de compras y avisos de Administración, en pruebas
+
+**Qué existe ya y hay que reutilizar** (constitución, regla 5): `crear_incidencia` y su tabla (opciones, quién, importancia, estados, «Pedido, esperando a que llegue», «Esperando a Administración»), la creación de tareas desde una incidencia, el correo en el momento a Administración (`motor.correos`), `cerrar_incidencia`, `incidencias_abiertas` y su número en `tarea_activa`, el cierre del turno. **Se amplía lo que hay; no se hace un segundo sistema de incidencias ni de avisos.**
+
+1. **Lista de compras** (tabla nueva, p. ej. `public.compras`): nombre, forma (`internet` | `tienda` | `administracion`), enlace (internet), sitio y dirección (tienda), nota, activo y orden. Carga inicial con la tabla de `ESTADO` §7 (sin «Paquetes y recogidas», que ya no es una compra): Amazon → `internet`; supermercado, Tatto Arte, bazar, Kutxabank, gasolinera y Retif → `tienda` (dirección vacía, la rellena Administración); imprenta y materia prima → `administracion`. Si una fila no encaja, pregúntalo en el PR.
+   - `compras_lista()` (operario y Administración): las activas, en su orden.
+   - `guardar_compra(...)` (solo Administración): añadir, cambiar y quitar (quitar = desactivar, para no romper el histórico).
+2. **`crear_incidencia`, opción `comprar`** con `compra_id` (o «otra cosa» con texto):
+   - `internet`: tarea «Compra: [nombre]» con su **enlace** (añade `enlace` al objeto tarea de `tarea_activa`, §3.2); al hacerla, «Pedido, esperando a que llegue» (como `pedir_comprar`).
+   - `tienda`: tarea «Ve a comprar [nombre] a [sitio]» con la dirección; al hacerla, la incidencia se cierra.
+   - `administracion` u «otra cosa»: sin tarea, correo en el momento y «Esperando a Administración».
+   - La importancia por defecto, «hoy»; el operario la puede cambiar como ahora.
+3. **Opción `varios`:** descripción + quién (`operario` | `administracion`) + importancia → tarea «[descripción]» o correo, como el camino genérico que ya existe. Las opciones `llega_mercancia`, `recogida_nacex`, `corregir`, `pedir_comprar` y `pedido_cliente` dejan de ofrecerse en la pantalla, pero **siguen aceptándose** (histórico y compatibilidad); `bloqueado` no cambia.
+4. **Avisos de Administración para un día:** `crear_aviso_almacen(id_cliente, fecha, texto, contacto?)` (solo Administración; fecha hoy o futura). Es una incidencia del operario por defecto, con origen Administración, que **no crea tarea**:
+   - desde su fecha cuenta en `incidencias_abiertas` y sale en `tarea_activa` como `avisos: [{ id, texto, contacto, fecha }]` (los abiertos con fecha ≤ hoy);
+   - el operario la cierra con `cerrar_incidencia` como las demás;
+   - Administración ve sus avisos pendientes (en `estado_actual`) y puede cancelarlos;
+   - consta en el cierre del turno.
+   - El contacto es dato personal: solo en la base de datos (constitución, regla 12).
+5. Solo se añaden campos y funciones (regla 6). `CONTRATOS.md` a la 1.8, con su nota para Lovable.
+6. Pruebas: cada forma de compra, «otra cosa», varios con él y con Administración, aviso de hoy y aviso futuro (no cuenta hasta su día), cierre del aviso, permisos (el operario no puede crear avisos ni cambiar la lista). Lista de `docs/AUDITORIA.md` pasada en pruebas y llamadas reales en el PR.
+
+**Entrega:** Pull Request **«Tarea 22 — Incidencias nuevas, lista de compras y avisos»**, con «Qué he leído y qué existía ya», la lista de `AUDITORIA.md` y las dudas.
+
+---
+
+## 7.0 TAREA 21 (fusionada en el PR #20): interrupciones, cajas y minutos trabajados en «Hoy», en pruebas
 
 **Por qué:** el 30/10 la lista del +35 % empezó a las 09:54, a las 10:45 entró «Salida del reparto» y volvió a `pendiente` con 3 de 6 productos. En el panel no se ve que se interrumpió, ni cuántas cajas lleva, y los minutos (de inicio a fin) contarán las 2 h de ruta.
 
@@ -537,3 +563,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.28 | 30/10/2026 | Tarea 20 fusionada (PR #19). Sin tarea activa. |
 | 1.29 | 30/10/2026 | Tarea 21 activa: interrupciones, cajas y minutos trabajados en «Hoy». |
 | 1.30 | 30/10/2026 | Tarea 21 fusionada (PR #20). Sin tarea activa. |
+| 1.31 | 30/10/2026 | Tarea 22 activa: incidencias nuevas, lista de compras y avisos de Administración. |

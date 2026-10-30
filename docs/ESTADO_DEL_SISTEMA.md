@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.35 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.36 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -258,7 +258,17 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
 5. Si no le cogen el teléfono: envía un WhatsApp con el problema, la tarea queda pendiente y pasa a otra.
 6. A los 30 minutos sin solución, le vuelve a aparecer la tarea de llamar. Si Administración le llama antes, apunta la solución y lo marca como resuelto.
 
-**Incidencias** (decisión del propietario, 27/10/2026; sustituye al modelo anterior). Cuando el operario se da cuenta de algo, pulsa **Incidencia**, elige qué pasa y escribe una línea:
+**Incidencias (rediseño del propietario, 30/10/2026; sustituye a la tabla de abajo).** Hay dos vías:
+- **Las que abre el operario** (botón Incidencia), con **tres opciones**:
+  1. **Hay que comprar algo:** elige el producto de la **lista de compras** (§7). Según cómo se compra: **por internet** → tarea con el enlace (al hacerla queda «pedido, esperando a que llegue»); **en una tienda** → tarea «Ve a comprar X a [sitio]», con la dirección (al hacerla, se cierra); **lo pide Administración** → correo en el momento y «esperando a Administración». «Otra cosa» (lo que no está en la lista): una línea y correo a Administración.
+  2. **Varios:** escribe lo que pasa → quién lo hace (él o Administración) → cuándo (ahora, hoy o cuando pueda) → Guardar. Sin subopciones (llega mercancía, Nacex, corregir… entran aquí).
+  3. **Estoy bloqueado:** como siempre (el flujo de problemas de arriba).
+  - «Pedido de cliente» ya no está en Incidencia: tiene su propio botón.
+- **Los avisos de Administración para un día concreto** (lo que no depende solo de nosotros: «voy al Casco Viejo y llevo yo la bolsa de Bilbao», «un paquete está en reparto: contacto del repartidor»). Administración los crea en su panel («Aviso para el almacén»: día, texto y, si quiere, un contacto). Ese día le sale al operario arriba de la pantalla y queda abierto en sus incidencias hasta que lo cierra. No es una tarea; si además hay que hacer algo, se usa «Nueva tarea». Consta en el cierre.
+- **Botón rojo:** mientras el operario tenga incidencias sin cerrar (suyas o avisos), al lado de «Cerrar incidencias» sale un botón rojo con el número.
+- Lo que Administración encarga para hacer ya va por «Nueva tarea», como siempre.
+
+**Modelo anterior** (decisión del propietario, 27/10/2026; sustituido el 30/10/2026 por lo de arriba). Cuando el operario se da cuenta de algo, pulsa **Incidencia**, elige qué pasa y escribe una línea:
 
 | Opción | Quién la resuelve por defecto | Importancia por defecto |
 | --- | --- | --- |
@@ -302,6 +312,8 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 
 ## 7. Aprovisionamiento
 
+> **Lista de compras en la base de datos** (decisión del propietario, 30/10/2026): cada producto con su forma de compra (**por internet**, con enlace · **en una tienda**, con sitio y dirección · **lo pide Administración**). Administración la mantiene desde su panel (añadir, cambiar, quitar). Se carga de entrada con la tabla de abajo; las direcciones de las tiendas las completa Administración. La lista de compras va ya a la base de datos; el stock y el catálogo de productos siguen en la hoja hasta el final del proyecto.
+
 **Regla:** cuando falta algo, se elige en el catálogo y la app da la solución en el momento. **La tarea no se cierra hasta que confirma que ya lo tiene en el almacén.** Toda mercancía se abre y se comprueba al llegar.
 
 | Material | Dónde | Responsable |
@@ -326,7 +338,7 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 
 ## 8. Interfaces (punto 4, aprobado)
 
-**Estilo:** blanco y negro, sin colores, con inspiración en Apple y Holded. **Marca (27/10/2026):** logotipo «ŌSASUN», isotipo «Ō» (favicon e icono) y tipografía geométrica cercana a la del lema. Las formas de colores de la marca solo se usan como acento en la pantalla de entrada; las pantallas de trabajo siguen siendo monocromas. Las referencias se distinguen por tipografía: el formato (4 g / 10 g) grande y en negrita, y la categoría escrita debajo.
+**Estilo:** blanco y negro, con inspiración en Apple y Holded. **Color solo de forma puntual, para lo que tiene que llamar la atención** (decisión del propietario, 30/10/2026); de momento, únicamente el botón rojo con el número de incidencias sin cerrar del operario. No se usa para presionar con el tiempo. **Marca (27/10/2026):** logotipo «ŌSASUN», isotipo «Ō» (favicon e icono) y tipografía geométrica cercana a la del lema. Las formas de colores de la marca solo se usan como acento en la pantalla de entrada; las pantallas de trabajo siguen siendo monocromas. Las referencias se distinguen por tipografía: el formato (4 g / 10 g) grande y en negrita, y la categoría escrita debajo.
 
 ### Operario
 - **Chromebook:**
@@ -539,3 +551,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.33 | 30/10/2026 | Tras la prueba del viernes: bolsas sin «Terminada» y aviso «Bolsas listas para salida»; «Nueva tarea» con un solo botón «Crear»; limpieza de resinas después del reparto, las bolsas, el envío y el +35 %, antes del recuento de las 12:45. |
 | 1.34 | 30/10/2026 | Tarea 20: la limpieza de resinas espera también a «Prepara el reparto» y a los pedidos de cliente; si no cabe antes de las 12:45, pasa al siguiente día; el envío del viernes se mete a primera hora. |
 | 1.35 | 30/10/2026 | «Hoy» del panel: interrupciones de cada tarea (a qué hora y por qué tarea, y cuándo siguió) y, en las de producción, cajas hechas de las totales y minutos trabajados. |
+| 1.36 | 30/10/2026 | Incidencias rediseñadas: tres opciones (comprar con la lista de compras · Varios · Estoy bloqueado), avisos de Administración para un día concreto y botón rojo con las incidencias sin cerrar; lista de compras en la base de datos; color solo puntual. |

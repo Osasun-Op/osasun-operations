@@ -27,7 +27,7 @@ Toda la lógica ya existe en la base de datos (Supabase). **Tú solo muestras y 
 
 ## 3. Estilo
 
-- **Blanco y negro, sin colores**, con inspiración en Apple y Holded: mucho aire, tipografía clara y pocos elementos.
+- **Blanco y negro**, con inspiración en Apple y Holded: mucho aire, tipografía clara y pocos elementos. **Color solo puntual para lo que debe llamar la atención** (30/10/2026): de momento, el botón rojo de incidencias sin cerrar.
 - Las referencias se distinguen **por tipografía**: el formato (4 g / 10 g) grande y en negrita, y la categoría escrita debajo. Es para evitar confundir cajas de nombres parecidos.
 - **Frases, no casillas:** por ejemplo, «Indoor: queda para menos de media semana. Avisa a Administración».
 - Botones grandes y fáciles de tocar. El Pixel se usa con una mano mientras se trabaja.
