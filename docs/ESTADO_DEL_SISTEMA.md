@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.33 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.34 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -68,7 +68,7 @@ Cada trabajador tiene una app supervisora que le dice qué hacer, le mantiene el
 | 08:30–~08:45 | Revisión inicial: estado de las tiendas, formulario de incidencias de tiendas (hoja de respuestas) y stock empaquetado. |
 | ~08:30–08:45 | Administración publica el reparto en WhatsApp, con la línea `SALE:`. |
 | Hasta la salida | 1) Calcular el total de cajas, restar las hechas y producir lo que falta. 2) Preparar las bolsas de cada tienda. 3) Con el tiempo restante, stock del almacén (+35 %). |
-| Viernes | 30 minutos de limpieza intensiva de la estación de resinas. **Cambiado por el propietario el 30/10/2026:** sale en cuanto estén hechas la producción del reparto, las bolsas, el envío (si lo hay) y la producción del +35 %, y **antes del recuento de las 12:45** (ya no «antes del reparto» ni con límite a las 10:45). Lo del reparto y el envío va siempre antes que la limpieza y el orden. |
+| Viernes | 30 minutos de limpieza intensiva de la estación de resinas. **Cambiado por el propietario el 30/10/2026:** sale en cuanto estén hechas la producción del reparto, las bolsas, el envío (si lo hay) y la producción del +35 %, y **antes del recuento de las 12:45** (ya no «antes del reparto» ni con límite a las 10:45). Lo del reparto y el envío va siempre antes que la limpieza y el orden. También espera a «Prepara el reparto» y a los pedidos de cliente del día (decisiones del propietario en la Tarea 20). Si no da tiempo antes de las 12:45 (por ejemplo, el +35 % sin terminar antes de salir a repartir), pasa al siguiente día de trabajo. **Costumbre:** el envío del viernes se mete en la app a primera hora (o el jueves al decidirlo); si no está metido, la app no sabe que hay envío y la limpieza no lo espera. |
 | Si sale él | Salida a las 10:45 y ruta de unas 2 h. A la vuelta, efectivo frente a la Z y reporte a Administración. |
 | 10:45 | **Bolsas listas en la mesa de salida.** Las organiza siempre el operario (lo normal es tenerlas hacia las 10:30). Si no llega, pulsa «Retrasar 15 min» o «Retrasar 30 min» y se avisa a quien sale de la nueva hora de salida, para que no llegue antes y espere. Cada retraso queda registrado y el cierre lo cruza con las cajas del reparto y las incidencias de la mañana. La salida suele ser entre las 10:45 y las 11:00 (decisión del propietario, 26/10/2026). |
 | Si sale Administración | Bloque libre hasta las 12:45 (cola de tiempo libre). |
@@ -537,3 +537,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.31 | 29/10/2026 | R1e en el envío: se comprueba al pulsar «Calcular» en «Preparar envío» (no guarda; «Dejarlo en N» o «Quitarlo»). |
 | 1.32 | 29/10/2026 | Constitución técnica (`docs/CONSTITUCION_TECNICA.md`): reglas que no se rompen, lectura obligatoria antes de actuar y «terminado» = funciona en el proyecto de pruebas, con registros sin errores. |
 | 1.33 | 30/10/2026 | Tras la prueba del viernes: bolsas sin «Terminada» y aviso «Bolsas listas para salida»; «Nueva tarea» con un solo botón «Crear»; limpieza de resinas después del reparto, las bolsas, el envío y el +35 %, antes del recuento de las 12:45. |
+| 1.34 | 30/10/2026 | Tarea 20: la limpieza de resinas espera también a «Prepara el reparto» y a los pedidos de cliente; si no cabe antes de las 12:45, pasa al siguiente día; el envío del viernes se mete a primera hora. |

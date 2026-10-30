@@ -67,11 +67,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 20** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.33** (§4, fila «Viernes», y §6.3–6.4) y `CONTRATOS.md` §3.2. El PR lleva «Qué he leído y qué existía ya».
+**Ninguna.** La Tarea 20 está fusionada (PR #19). Espera a que el coordinador escriba la siguiente.
 
 ---
 
-## 7. TAREA 20 (activa): la limpieza de resinas, después de lo del reparto y del +35 %; retoques de la auditoría
+## 7. TAREA 20 (fusionada en el PR #19): la limpieza de resinas, después de lo del reparto y del +35 %; retoques de la auditoría
 
 **Qué pasó el 30/10/2026:** «Limpieza intensiva de la estación de resinas» (`limpieza_resinas`, obligatoria, `hora_limite` 10:45, `orden` 25) le salió al operario a las 08:35, **antes** de «Producción del reparto» (`orden` 30). Decisión del propietario: lo del reparto y el envío va siempre antes que la limpieza y el orden.
 
@@ -516,3 +516,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.25 | 29/10/2026 | Tarea 18 activa (urgente): `guardar_reparto` da 500 aunque guarda (respuestas sin cuerpo). |
 | 1.26 | 29/10/2026 | Tarea 18 fusionada (PR #17). Constitución técnica: lectura obligatoria y apartado «Qué he leído y qué existía ya». Tarea 19 activa: auditoría de solo lectura. |
 | 1.27 | 30/10/2026 | Tarea 19 fusionada (PR #18). Tarea 20 activa: limpieza de resinas al final y retoques de la auditoría. |
+| 1.28 | 30/10/2026 | Tarea 20 fusionada (PR #19). Sin tarea activa. |
