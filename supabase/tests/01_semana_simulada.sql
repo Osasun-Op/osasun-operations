@@ -128,7 +128,7 @@ begin
   perform prueba.fijar_condicion(j, 'reparto_pegado');
   perform prueba.fijar_condicion(j, 'envio_pegado');
   perform pg_temp.comparar('Viernes (sale el operario, envío por la mañana): tareas y horas', j, colas || array[
-    'revision_inicial@08:30|', 'pegar_reparto@08:45|', 'limpieza_resinas@08:30|10:45',
+    'revision_inicial@08:30|', 'pegar_reparto@08:45|', 'limpieza_resinas@08:30|12:45',
     'produccion_reparto@08:30|10:45', 'bolsas@08:30|10:45', 'salida_reparto@10:45|', 'efectivo_reporte@08:30|',
     'nacex_viernes@10:45|', 'preparar_envio_viernes@08:30|10:45', 'recuento_manana@12:45|13:00']);
   perform pg_temp.comprobar('Viernes: el envío se prepara antes de las 10:45 y se lleva a Nacex con la salida',

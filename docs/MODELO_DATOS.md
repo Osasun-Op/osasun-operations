@@ -87,7 +87,7 @@ Las tareas del mapa semanal (§4) como configuración. Lista inicial en `PLAN_TE
 | condicion | ver abajo | |
 | condiciones_extra | text[] | Condiciones de estado que también deben cumplirse (ej. Nacex del viernes: hay envío **y** sale el operario). |
 | urgente | bool | Escalón 3 de `tarea_activa` (ej. recepción de mercancía, que se atiende en el momento). |
-| requiere_codigo | text | No aparece hasta que esa otra tarea del día esté hecha (ej. el efectivo tras la salida). |
+| requiere_codigo | text | No aparece mientras alguna de esas tareas del día esté por hacer (pendiente, en curso o bloqueada); varias, separadas por «+». Las que no hay ese día no esperan (ej. el efectivo tras la salida; la limpieza de resinas tras preparar el reparto, su producción, sus bolsas, el envío y el +35 %, Tarea 20). |
 | contenido | `simple` · `produccion_reparto` · `bolsas` · `stock_35` · `recuento` | |
 | obligatoria | bool | §6.3. |
 | prioridad_cola | `A` · `C` · `D` | Solo cola de tiempo libre. |
@@ -122,7 +122,7 @@ Las tareas concretas de una jornada.
 | plantilla_id | FK nulo | |
 | titulo, porque, contenido, obligatoria, prioridad_cola, orden | | Copiados de la plantilla o escritos por Administración. |
 | condicion | text | La de la plantilla (para retirarla si deja de cumplirse). |
-| requiere_clave | text | Clave de la tarea del día que debe estar hecha antes. |
+| requiere_clave | text | Claves de las tareas del día que deben estar hechas antes (separadas por «+»; `motor.requisitos_hechos`). |
 | disponible_desde | timestamptz | Su hora, o el inicio de su turno. Antes no aparece. |
 | hora_programada | timestamptz | Tareas con hora. |
 | hora_limite | timestamptz | «Antes de…». |

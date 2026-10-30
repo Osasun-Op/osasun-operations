@@ -2,6 +2,8 @@
 
 **Versión:** 1.6 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 17).
 
+> **Tarea 20 (30/10) — sin cambios para Lovable:** la limpieza de resinas del viernes sale después de preparar el reparto, su producción, sus bolsas, el envío y el +35 %, y antes de las 12:45; `tarea_activa` la da sola cuando toca. La auditoría avisa si el reparto o el envío aceptado hoy no tiene sus tareas.
+
 > **Tarea 19 (29/10) — sin cambios para Lovable:** nueva función interna `motor.auditoria()` (§5) para las revisiones del coordinador (`docs/AUDITORIA.md`).
 
 > **Tarea 18 (29/10) — sin cambios en los contratos:** las funciones del servidor ya no responden 500 después de guardar cuando llaman a una función de la base de datos que no devuelve nada (`guardar_reparto` era la que lo hacía); la respuesta es la de este documento.
