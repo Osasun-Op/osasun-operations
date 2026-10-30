@@ -1,18 +1,18 @@
 # OSASUN OPERATIONS — Auditoría de solo lectura
 
-**Versión:** 1.0 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos (Tarea 19)
+**Versión:** 1.1 · **Fecha:** 30/10/2026 · **Autor:** agente de base de datos (Tareas 19 y 20)
 
 Las comprobaciones de cada revisión (lista de revisión de `AGENTE_COORDINADOR.md`), siempre las mismas y en el mismo orden. Nada de esto cambia la base de datos ni los archivos.
 
 ## 1. La base de datos: `motor.auditoria()`
 
-Con el conector de Supabase (`execute_sql`) en el proyecto de pruebas:
+Con el conector de Supabase (`execute_sql`), que entra como `postgres`, en el proyecto de pruebas (y, cuando exista, en producción):
 
 ```sql
 select jsonb_pretty(motor.auditoria());
 ```
 
-Solo la pueden ejecutar `postgres` (el conector) y `service_role`; ni las pantallas ni nadie con sesión.
+La usa `postgres` (el conector del coordinador). `service_role` tiene el permiso, pero el esquema `motor` no se le abre (decidido por el propietario, 30/10/2026); ni las pantallas ni nadie con sesión la pueden usar.
 
 | Apartado | Qué trae | Lo normal |
 | --- | --- | --- |
@@ -25,9 +25,11 @@ Solo la pueden ejecutar `postgres` (el conector) y `service_role`; ni las pantal
 | `configuracion` | Las claves que usan los cálculos, con su valor, y las que falten | `faltan` vacía |
 | `datos` | Última lectura correcta de la hoja y último error, correos fallidos de 7 días, si hay jornada hoy | Lectura correcta más reciente que el error; 0 correos fallidos; jornada hoy en día de trabajo |
 
-**Avisos que da:** tabla de `public` sin RLS; función `servidor_*` que pueda ejecutar alguien que no sea `service_role`; función de `public` ejecutable por `anon` (salvo las permitidas, listadas dentro de la función: hoy ninguna); clave de configuración que falte; más de una tarea en curso para la misma persona; más de un reparto (o envío) aceptado en la misma jornada; elementos sin su tarea; lectura de la hoja con error más reciente que la última correcta.
+**Avisos que da:** tabla de `public` sin RLS; función `servidor_*` que pueda ejecutar alguien que no sea `service_role`; función de `public` ejecutable por `anon` (salvo las permitidas, listadas dentro de la función: hoy ninguna); clave de configuración que falte; más de una tarea en curso para la misma persona; más de un reparto (o envío) aceptado en la misma jornada; reparto aceptado hoy sin su tarea de producción o de bolsas, o envío sin su tarea de preparación (Tarea 20); elementos sin su tarea; lectura de la hoja con error más reciente que la última correcta.
 
 Un aviso no se arregla en la revisión: se encarga.
+
+**La prueba `supabase/tests/22_auditoria.sql` nunca se ejecuta en producción:** prepara casos raros (quita un índice y una restricción) dentro de una transacción. En producción solo se ejecuta la auditoría.
 
 ## 2. Los registros del servidor (`query_logs`)
 

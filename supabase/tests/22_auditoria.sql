@@ -1,4 +1,6 @@
 -- Prueba 22 · Auditoría de solo lectura (Tarea 19, docs/AUDITORIA.md).
+-- Nunca en producción: prepara casos raros (quita un índice y una restricción)
+-- dentro de una transacción. En producción solo se ejecuta la auditoría.
 -- En una base sana da «Sin avisos»; cada caso raro, preparado dentro de la
 -- transacción, da su aviso; la huella es la de la prueba 00; solo la ejecutan
 -- postgres y service_role. Transacción deshecha al final.
@@ -113,6 +115,28 @@ values (now() + interval '1 minute', 'reparto', false, 'SHEETS_NO_DISPONIBLE: pr
 select pg_temp.comprobar('Lectura con error más reciente que la última correcta → aviso y resumen «1 aviso»',
   pg_temp.tiene('La última lectura de la hoja (%) dio error: SHEETS_NO_DISPONIBLE: prueba')
   and motor.auditoria() ->> 'resumen' = '1 aviso', motor.auditoria() ->> 'avisos');
+
+-- Reparto y envío aceptados hoy sin sus tareas (Tarea 20).
+do $$
+declare
+  op constant uuid := '00000000-0000-4000-a000-000000000001';
+  j uuid := motor.generar_jornada(op, motor.fecha_local(now()));
+begin
+  if j is null then  -- fin de semana: una jornada de hoy solo para la prueba
+    insert into public.jornadas (persona_id, centro_id, fecha)
+    select op, centro_id, motor.fecha_local(now()) from public.personas where id = op returning id into j;
+  end if;
+  insert into public.repartos (jornada_id, tipo, texto_original, huella, estado)
+  select j, x.tipo, 'x', 'auditoria', 'aceptado' from (values ('reparto'), ('envio')) x(tipo)
+   where not exists (select 1 from public.repartos r where r.jornada_id = j and r.tipo = x.tipo and r.estado = 'aceptado');
+  update public.tareas set estado = 'cancelada'
+   where jornada_id = j and clave in ('bolsas', 'preparar_envio', 'preparar_envio_viernes');
+  perform pg_temp.comprobar('Reparto aceptado hoy sin su tarea de bolsas → aviso',
+    pg_temp.tiene('El reparto aceptado hoy no tiene su tarea de producción o de bolsas.'));
+  perform pg_temp.comprobar('Envío aceptado hoy sin su tarea de preparación → aviso',
+    pg_temp.tiene('El envío aceptado hoy no tiene su tarea de preparación.'));
+end;
+$$;
 
 -- Permisos.
 set local role authenticated;

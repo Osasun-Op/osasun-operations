@@ -53,7 +53,7 @@ Al generar la jornada se revisan las tareas no terminadas (pendiente, en curso o
 - Una copia que tampoco se hace vuelve a pasar al siguiente día trabajado (salta el fin de semana).
 
 ### 2.3 Qué tarea toca ahora (`tarea_activa`) ✅
-Solo tareas disponibles (su hora o su turno ya ha llegado), no bloqueadas y con su requisito hecho. Orden:
+Solo tareas disponibles (su hora o su turno ya ha llegado), no bloqueadas y con su requisito hecho (`motor.requisitos_hechos`: ninguna de las tareas que pide está por hacer). Orden:
 
 1. La tarea **en curso** (solo puede haber una).
 2. **«Llama a Administración»** por un problema sin resolver cuya nueva llamada ha llegado (§6.6).
@@ -106,7 +106,7 @@ Obligatoria/flexible según §6.3; lo que no aparece allí va como flexible. Tod
 | --- | --- | --- | --- | --- | --- |
 | `revision_inicial` (15 min) | L–V | 08:30 | — | No | nada |
 | `pegar_reparto` (5 min) | L–V | 08:45 | — | Sí | nada |
-| `limpieza_resinas` (30 min) | V | antes de 10:45 | — | Sí | arrastrar |
+| `limpieza_resinas` (30 min; tras preparar el reparto, su producción, los pedidos de cliente, sus bolsas, el envío y el +35 %, Tarea 20) | V | antes de 12:45 | — | Sí | arrastrar |
 | `produccion_reparto` | L–V | antes de 10:45 | reparto_pegado | Sí | nada |
 | `bolsas` (bolsas listas en la mesa de salida; retraso 15/30 min en Tarea 3) | L–V | antes de 10:45 | reparto_pegado | Sí | nada |
 | `salida_reparto` (~2 h) | L–V | 10:45 | sale_operario | Sí | nada |
