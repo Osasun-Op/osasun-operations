@@ -67,11 +67,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 21** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.35** (§8, Inicio, punto 4 «Hoy») y `CONTRATOS.md` §4.3 (`estado_actual().hoy`). El PR lleva «Qué he leído y qué existía ya».
+**Ninguna.** La Tarea 21 está fusionada (PR #20). Espera a que el coordinador escriba la siguiente.
 
 ---
 
-## 7. TAREA 21 (activa): interrupciones, cajas y minutos trabajados en «Hoy», en pruebas
+## 7. TAREA 21 (fusionada en el PR #20): interrupciones, cajas y minutos trabajados en «Hoy», en pruebas
 
 **Por qué:** el 30/10 la lista del +35 % empezó a las 09:54, a las 10:45 entró «Salida del reparto» y volvió a `pendiente` con 3 de 6 productos. En el panel no se ve que se interrumpió, ni cuántas cajas lleva, y los minutos (de inicio a fin) contarán las 2 h de ruta.
 
@@ -536,3 +536,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.27 | 30/10/2026 | Tarea 19 fusionada (PR #18). Tarea 20 activa: limpieza de resinas al final y retoques de la auditoría. |
 | 1.28 | 30/10/2026 | Tarea 20 fusionada (PR #19). Sin tarea activa. |
 | 1.29 | 30/10/2026 | Tarea 21 activa: interrupciones, cajas y minutos trabajados en «Hoy». |
+| 1.30 | 30/10/2026 | Tarea 21 fusionada (PR #20). Sin tarea activa. |
