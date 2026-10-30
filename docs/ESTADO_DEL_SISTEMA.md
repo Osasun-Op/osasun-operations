@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.34 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.35 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -347,7 +347,7 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
   1. **Ahora:** en qué está el operario.
   2. **Avisos:** problemas e incidencias abiertas.
   3. **Productos con menos de 2 semanas** (R4): solo los que estén por debajo.
-  4. **Hoy:** cada tarea con su hora de inicio, su hora de fin y los minutos que ha tardado.
+  4. **Hoy:** cada tarea con su hora de inicio, su hora de fin y los minutos que ha tardado. **Interrupciones** (decisión del propietario, 30/10/2026): si una tarea se interrumpe por otra (con hora o urgente), se ve aunque siga pendiente: «interrumpida a las 10:45 por «Salida del reparto»» y, si se retoma, «siguió a las 12:05»; todas, en orden. **En las tareas de producción** (reparto, +35 % y pedidos de cliente): «21 de 43 cajas · 31 min trabajados», donde los minutos son la suma de lo que ha tardado en cada producto, sin contar interrupciones ni la ruta.
   5. **Tiempo libre:** cuántas veces y cuántos minutos de «Orden y limpieza» (señal de que le sobra tiempo).
   6. **Pedidos de cliente.**
   7. **Arrastradas y cierres.**
@@ -538,3 +538,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.32 | 29/10/2026 | Constitución técnica (`docs/CONSTITUCION_TECNICA.md`): reglas que no se rompen, lectura obligatoria antes de actuar y «terminado» = funciona en el proyecto de pruebas, con registros sin errores. |
 | 1.33 | 30/10/2026 | Tras la prueba del viernes: bolsas sin «Terminada» y aviso «Bolsas listas para salida»; «Nueva tarea» con un solo botón «Crear»; limpieza de resinas después del reparto, las bolsas, el envío y el +35 %, antes del recuento de las 12:45. |
 | 1.34 | 30/10/2026 | Tarea 20: la limpieza de resinas espera también a «Prepara el reparto» y a los pedidos de cliente; si no cabe antes de las 12:45, pasa al siguiente día; el envío del viernes se mete a primera hora. |
+| 1.35 | 30/10/2026 | «Hoy» del panel: interrupciones de cada tarea (a qué hora y por qué tarea, y cuándo siguió) y, en las de producción, cajas hechas de las totales y minutos trabajados. |

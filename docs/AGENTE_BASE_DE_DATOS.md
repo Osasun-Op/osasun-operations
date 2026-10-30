@@ -67,11 +67,29 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 20 está fusionada (PR #19). Espera a que el coordinador escriba la siguiente.
+**Tarea 21** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.35** (§8, Inicio, punto 4 «Hoy») y `CONTRATOS.md` §4.3 (`estado_actual().hoy`). El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 20 (fusionada en el PR #19): la limpieza de resinas, después de lo del reparto y del +35 %; retoques de la auditoría
+## 7. TAREA 21 (activa): interrupciones, cajas y minutos trabajados en «Hoy», en pruebas
+
+**Por qué:** el 30/10 la lista del +35 % empezó a las 09:54, a las 10:45 entró «Salida del reparto» y volvió a `pendiente` con 3 de 6 productos. En el panel no se ve que se interrumpió, ni cuántas cajas lleva, y los minutos (de inicio a fin) contarán las 2 h de ruta.
+
+**Qué existe ya y hay que reutilizar** (no hagas otro registro al lado): `motor.tras_elemento` ya registra **`tarea_pausada`** en `registro_eventos` con `a_las` y `entra` (la tarea que entra). Los elementos ya guardan `iniciado_en`, `terminado_en` y `cantidad_hecha`; la tarea, `resultado` («N cajas») al cerrarse. Mira también cómo se retoma una tarea pendiente que ya tenía `iniciada_en` (`iniciar_tarea` / `iniciar_elemento`) y si eso ya deja rastro; si no, registra **la reanudación** en `registro_eventos` con el mismo estilo.
+
+1. En `estado_actual().hoy`, por tarea, añade:
+   - **`interrupciones: [{ a_las, por, siguio_a_las }]`** — `por` es el título de la tarea que entró; `siguio_a_las` es `null` si aún no se ha retomado. Lista vacía si no hubo.
+   - En las tareas de producción (las que tienen elementos `referencia_produccion`: producción del reparto, +35 % y pedidos de cliente): **`cajas: { hechas, total }`** y **`minutos_trabajados`** = suma, por elemento, de `terminado_en − iniciado_en` (el que esté en curso, hasta ahora), sin contar el tiempo interrumpido. En las demás, `null`.
+   - Los campos de antes (`iniciada_en`, `terminada_en`, `minutos`) no cambian.
+2. Solo se añaden campos (constitución, regla 6). `CONTRATOS.md` a la 1.7, con su nota para Lovable.
+3. Pruebas: la del 30/10 (+35 %, 3 de 6, interrumpida por la salida, retomada después) da sus interrupciones, «21 de 43» y los minutos sin la ruta; una tarea sin interrupciones da lista vacía; una tarea que no es de producción da `cajas` y `minutos_trabajados` a `null`.
+4. Lista de `docs/AUDITORIA.md` pasada en pruebas (auditoría «Sin avisos», registros sin errores nuevos) y una llamada real a `estado_actual` en pruebas con el resultado del 30/10 en el PR.
+
+**Entrega:** Pull Request **«Tarea 21 — Interrupciones, cajas y minutos trabajados»**, con «Qué he leído y qué existía ya», la lista de `AUDITORIA.md` y las dudas.
+
+---
+
+## 7.0 TAREA 20 (fusionada en el PR #19): la limpieza de resinas, después de lo del reparto y del +35 %; retoques de la auditoría
 
 **Qué pasó el 30/10/2026:** «Limpieza intensiva de la estación de resinas» (`limpieza_resinas`, obligatoria, `hora_limite` 10:45, `orden` 25) le salió al operario a las 08:35, **antes** de «Producción del reparto» (`orden` 30). Decisión del propietario: lo del reparto y el envío va siempre antes que la limpieza y el orden.
 
@@ -517,3 +535,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.26 | 29/10/2026 | Tarea 18 fusionada (PR #17). Constitución técnica: lectura obligatoria y apartado «Qué he leído y qué existía ya». Tarea 19 activa: auditoría de solo lectura. |
 | 1.27 | 30/10/2026 | Tarea 19 fusionada (PR #18). Tarea 20 activa: limpieza de resinas al final y retoques de la auditoría. |
 | 1.28 | 30/10/2026 | Tarea 20 fusionada (PR #19). Sin tarea activa. |
+| 1.29 | 30/10/2026 | Tarea 21 activa: interrupciones, cajas y minutos trabajados en «Hoy». |
