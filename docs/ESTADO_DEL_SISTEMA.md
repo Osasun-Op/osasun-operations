@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.36 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.37 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -508,6 +508,7 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | E2-1 | Etapa 2: las variedades indoor agrupadas en tiendas hacen que algunas se queden atrás | Para la Etapa 2 |
 | E2-2 | Etapa 2: comparar la reposición apuntada por la tienda con lo enviado; si no cuadra, se soluciona o se avisa | Para la Etapa 2 |
 | E2-3 | Etapa 2: pedido de cliente con las tiendas conectadas. Al apuntarlo, la app mira si hay en el almacén o en alguna tienda; si no hay en ningún sitio, no se puede hacer. Si no hay en el almacén, sale para preparar cogiéndolo de otra tienda (reutilizar R1e, Tarea 16). Hasta entonces, los pedidos de cliente se quedan como están (decisión del propietario, 29/10/2026). | Para la Etapa 2 |
+| E2-4 | **Visión de la app de tiendas** (propietario, 01/11/2026). (1) Al abrir la app, **todas las tareas del día en una lista**, cada una con su hora orientativa; **no se pueden marcar antes de esa hora**. (2) **Avisos** de almacén o Administración: al entrar, se leen y se marcan como leídos (siempre al entrar). (3) **Semanales:** revisar muestras (que estén en buen estado); **revisar productos atascados** (avisar de lo que se queda atrás: otra tienda lo pide, almacén lo recoge o se hace una promoción; queda como incidencia abierta hasta tener respuesta y meterlo en la bolsa de recogida o promocionarlo); limpieza de cristales y similares. Diferencia con el almacén: la tienda ve la lista entera, no una sola tarea. Reutilizar lo que ya existe (avisos de Administración, incidencias, «coger de otra tienda» de R1e, el motor de tareas por centro). | Para la Etapa 2 |
 | E3-1 | Después de la etapa 2: **previsión del reparto** (la app propone, Administración decide; exige cambiar la regla «la app nunca propone cantidades»). Datos: el historial de repartos y envíos de la app, las ventas diarias de la etapa 2 y el **histórico del propietario en sus hojas de Google** (ventas por día y tienda de meses, y evolución de ventas por producto y tienda de años), que se importará entonces. No hace falta guardar copias diarias antes (decisión del propietario, 30/10/2026). | Después de la etapa 2 |
 
 ---
@@ -553,3 +554,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.34 | 30/10/2026 | Tarea 20: la limpieza de resinas espera también a «Prepara el reparto» y a los pedidos de cliente; si no cabe antes de las 12:45, pasa al siguiente día; el envío del viernes se mete a primera hora. |
 | 1.35 | 30/10/2026 | «Hoy» del panel: interrupciones de cada tarea (a qué hora y por qué tarea, y cuándo siguió) y, en las de producción, cajas hechas de las totales y minutos trabajados. |
 | 1.36 | 30/10/2026 | Incidencias rediseñadas: tres opciones (comprar con la lista de compras · Varios · Estoy bloqueado), avisos de Administración para un día concreto y botón rojo con las incidencias sin cerrar; lista de compras en la base de datos; color solo puntual. |
+| 1.37 | 01/11/2026 | E2-4: visión de la app de tiendas (lista de tareas del día con hora orientativa, avisos que se marcan como leídos al entrar, semanales de muestras, productos atascados y limpieza). |

@@ -167,3 +167,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
   2. para cada dato, qué lo alimenta hoy (a mano, la tienda, el almacén), quién lo usa y qué lo sustituiría en la app (almacén, etapa 2 de tiendas, importación del histórico);
   3. proponer un orden de paso, por partes y sin romper lo que funciona: primero lo que ya genera la app, al final el catálogo y el stock (constitución, regla 13).
   Empezar preguntándole qué hojas usa y dónde están (no buscar a ciegas en su Drive).
+- 01/11/2026: el propietario deja la visión de la app de tiendas (E2-4) y pide empezar por la operativa diaria de las tiendas. Pendiente también (de la sesión anterior): inventario de sus hojas y plan para dejarlas.
