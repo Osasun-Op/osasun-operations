@@ -173,3 +173,6 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
   - Formulario «INCIDENCIAS» de tiendas → hoja «INCIDENCIAS (respuesta)»: tienda, persona, tipo (stock/producto, necesidades de cliente, otras), detalle, urgencia, foto, estado.
   - Formularios de vacaciones y bajas → «VACACIONES Y BAJAS» y «FORMULARIO DE BAJA (respuestas)».
   - «PACK 5+1» (clientes y productos; contiene datos personales: nunca al repositorio) y «ENCUESTAS CLIENTES» (2024).
+- **01/11/2026 · Tiendas (lo que va contando el propietario, para pasarlo al estado cuando termine):**
+  - 5 tiendas propias (Bilbao, Algorta, Barakaldo, Basauri, Portugalete) + Durango, que abre pronto: 6. Donosti y Rentería son franquicias: su panel no tiene tareas.
+  - Checklist orientativo actual. **Mañana:** apertura de tienda · comunicaciones del día leídas (inicio de la tienda) · cartelería fuera y visible · Glovo encendido y operativo · barrido y puesta a punto · reposición colocada y anotada · incidencias del turno registradas · ventas y stock al cierre del turno actualizados. **Tarde:** apertura de tienda · cartelería fuera · objetivos y tareas del día leídas · Glovo encendido · ventas del día registradas · fregado de suelo · cierre de caja · conteo de efectivo · dinero y bolsa preparados para mañana · incidencias de tarde registradas.
