@@ -168,3 +168,8 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
   3. proponer un orden de paso, por partes y sin romper lo que funciona: primero lo que ya genera la app, al final el catálogo y el stock (constitución, regla 13).
   Empezar preguntándole qué hojas usa y dónde están (no buscar a ciegas en su Drive).
 - 01/11/2026: el propietario deja la visión de la app de tiendas (E2-4) y pide empezar por la operativa diaria de las tiendas. Pendiente también (de la sesión anterior): inventario de sus hojas y plan para dejarlas.
+- **01/11/2026 · Inventario de la carpeta «TIENDAS PROPIAS» (Drive del propietario, solo lectura).** Sin datos personales aquí.
+  - «PLANTILLA VENTAS DIARIO [TIENDA]» (Bilbao, Algorta, Barakaldo, Basauri, Portugalete): pestañas «VENTAS Y STOCK» (por día de lunes a sábado: Z, nº de ventas, efectivo, Glovo; por producto: reposición, inicio día, ventas, total y fin día; abajo, cada venta en su fila con productos, regalos e importe), «FACTURACIÓN MENSUAL» (total de caja por día, nº de tickets y ticket medio) y «SEMANA PASADA». Manual: «MANUAL USO PLANTILLA DE STOCK» (carpeta FORMULARIOS).
+  - Formulario «INCIDENCIAS» de tiendas → hoja «INCIDENCIAS (respuesta)»: tienda, persona, tipo (stock/producto, necesidades de cliente, otras), detalle, urgencia, foto, estado.
+  - Formularios de vacaciones y bajas → «VACACIONES Y BAJAS» y «FORMULARIO DE BAJA (respuestas)».
+  - «PACK 5+1» (clientes y productos; contiene datos personales: nunca al repositorio) y «ENCUESTAS CLIENTES» (2024).
