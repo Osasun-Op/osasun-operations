@@ -186,3 +186,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - **02/11 · Definición del bloque 1 de tiendas (respuestas del propietario, para pasar a ESTADO al terminar):**
   1. Horario: lunes a viernes 11:00–13:30 y 17:00–20:30; Bilbao abre por la tarde a las 16:30. Sábados igual, pero cierran a las 19:30, salvo Bilbao, que cierra a las 20:30 todos los días.
   2. Personas: normalmente una persona por tienda, la misma mañana y tarde; Bilbao, una persona por turno; Barakaldo y Portugalete, otra persona los sábados. El propietario prefiere que entren con la **cuenta de Gmail de cada tienda**.
+  3. Acceso: **cuenta de Gmail de la tienda** y, **al empezar el turno, cada persona elige su nombre** de la lista de esa tienda (para «hecha por» y, en el futuro, fichar). Administración añade y quita nombres desde su panel.
