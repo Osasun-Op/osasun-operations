@@ -1,6 +1,7 @@
 -- Prueba 27 · Quién hizo cada tarea y nada fuera del turno (Tarea 24, ESTADO v1.39).
 -- Lo del 02/11 rehecho un lunes (14/12/2026), sale el operario: Administración guarda el reparto
 -- a las 08:27 («Prepara el reparto» se cierra sola) y el operario termina el recuento a las 13:04.
+-- El martes 15/12, lo no obligatorio que queda en curso al acabar el turno se pausa solo (opción B).
 -- Transacción deshecha.
 
 begin;
@@ -76,6 +77,9 @@ begin
   r := motor.iniciar_tarea_de(op, v_t, pg_temp.h('12:46'));
   perform pg_temp.comprobar('13:02, fuera del turno: la tarea en curso (el recuento) sigue en pantalla',
     pg_temp.toca('13:02') = 'recuento_manana', pg_temp.toca('13:02'));
+  perform pg_temp.comprobar('13:00, el cierre del turno: el recuento (obligatoria) sigue en curso',
+    motor.generar_cierres_programados(pg_temp.h('13:00')) = 1
+    and (select estado from public.tareas where id = v_t) = 'en_curso');
   r := motor.terminar_tarea_de(op, v_t, null, null, pg_temp.h('13:04'));
   perform pg_temp.comprobar('13:04: y se puede terminar', r ->> 'error' is null
     and (select estado from public.tareas where id = v_t) = 'hecha', r::text);
@@ -89,6 +93,87 @@ begin
   perform pg_temp.comprobar('… y lo pendiente de la mañana (el +35 %)', pg_temp.toca('15:40') = 'cola_stock', pg_temp.toca('15:40'));
   update public.tareas set estado = 'hecha' where jornada_id = j and estado = 'pendiente' and clave not like 'cola_orden%';
   perform pg_temp.comprobar('18:31, después del turno: nada, ni «Orden y limpieza»', pg_temp.toca('18:31') is null, pg_temp.toca('18:31'));
+end;
+$$;
+
+-- 3. Fin del turno: lo no obligatorio en curso se pausa solo -------------------------------------
+create function pg_temp.h2(p_hora text) returns timestamptz language sql as $$
+  select ('2026-12-15 ' || p_hora || '+01')::timestamptz $$;
+
+do $$
+declare
+  op constant uuid := '00000000-0000-4000-a000-000000000001';
+  adm constant uuid := '00000000-0000-4000-a000-000000000002';
+  j uuid;
+  v_s uuid;
+  v_a uuid;
+  r jsonb;
+begin
+  j := motor.generar_jornada(op, '2026-12-15');
+  perform prueba.fijar_condicion(j, 'sale', 'operario');
+  update public.tareas set estado = 'hecha'
+   where jornada_id = j and estado = 'pendiente' and disponible_desde < pg_temp.h2('13:00')
+     and clave <> 'cola_stock' and clave not like 'cola_orden%';
+  v_s := (select id from public.tareas where jornada_id = j and clave = 'cola_stock');
+  insert into public.tarea_elementos (tarea_id, tipo, lote, producto, formato, cantidad, orden_sugerido)
+  values (v_s, 'referencia_produccion', 'manana', 'Indoor', '4g', 6, 1),
+         (v_s, 'referencia_produccion', 'manana', 'BZ1', '4g', 4, 2),
+         (v_s, 'referencia_produccion', 'manana', 'V2', '4g', 3, 3);
+  perform motor.iniciar_tarea_de(op, v_s, pg_temp.h2('12:20'));
+  update public.tarea_elementos set estado = 'hecho', cantidad_hecha = 6, terminado_en = pg_temp.h2('12:35')
+   where tarea_id = v_s and producto = 'Indoor';
+
+  perform motor.generar_cierres_programados(pg_temp.h2('13:00'));
+  perform pg_temp.comprobar('13:00, cierre del turno: el +35 % (no obligatoria) en curso pasa a pendiente, con lo hecho',
+    (select estado from public.tareas where id = v_s) = 'pendiente'
+    and (select cantidad_hecha from public.tarea_elementos where tarea_id = v_s and producto = 'Indoor') = 6);
+  r := motor.interrupciones_tarea(v_s);
+  perform pg_temp.comprobar('«Hoy»: interrumpida a las 13:00 por «Fin del turno»',
+    jsonb_array_length(r) = 1 and r -> 0 ->> 'por' = 'Fin del turno'
+    and (r -> 0 ->> 'a_las')::timestamptz = pg_temp.h2('13:00') and r -> 0 -> 'siguio_a_las' = 'null'::jsonb, r::text);
+  perform pg_temp.comprobar('13:01: sin tarea', motor.tarea_activa_de(op, pg_temp.h2('13:01')) -> 'tarea' = 'null'::jsonb);
+  -- 13:03: termina la referencia que tenía entre manos (BZ1).
+  r := motor.terminar_elemento_de(op, (select id from public.tarea_elementos where tarea_id = v_s and producto = 'BZ1'),
+                                  pg_temp.h2('13:03'));
+  perform pg_temp.comprobar('13:03: puede marcar la referencia que tenía entre manos, y la tarea sigue pausada',
+    r ->> 'error' is null
+    and (select estado from public.tarea_elementos where tarea_id = v_s and producto = 'BZ1') = 'hecho'
+    and (select estado from public.tareas where id = v_s) = 'pendiente'
+    and motor.tarea_activa_de(op, pg_temp.h2('13:04')) -> 'tarea' = 'null'::jsonb, r::text);
+
+  perform pg_temp.comprobar('15:31: primero la revisión del envío',
+    motor.tarea_activa_de(op, pg_temp.h2('15:31')) -> 'tarea' ->> 'clave' = 'revisar_envio');
+  update public.tareas set estado = 'hecha' where jornada_id = j and clave in ('revisar_envio', 'resinas');
+  perform pg_temp.comprobar('15:40: vuelve el +35 %, donde se quedó (Indoor hecho)',
+    motor.tarea_activa_de(op, pg_temp.h2('15:40')) -> 'tarea' ->> 'clave' = 'cola_stock');
+  perform motor.iniciar_tarea_de(op, v_s, pg_temp.h2('15:40'));
+  perform pg_temp.comprobar('… «siguió a las 15:40» y los minutos trabajados no cuentan la pausa (12:20–13:00 + 15:40–15:50)',
+    (motor.interrupciones_tarea(v_s) -> 0 ->> 'siguio_a_las')::timestamptz = pg_temp.h2('15:40')
+    and motor.minutos_trabajados(v_s, pg_temp.h2('15:50')) = 50,
+    motor.minutos_trabajados(v_s, pg_temp.h2('15:50'))::text);
+  update public.tareas set estado = 'hecha' where id = v_s;
+
+  -- Una de Administración (no obligatoria) empezada a las 18:00 y sin terminar a las 18:30.
+  insert into public.tareas (jornada_id, clave, origen, titulo, disponible_desde, duracion_min, no_terminada, creada_por)
+  values (j, 'admin:estanteria', 'administracion', 'Ordena la estantería de cajas', pg_temp.h2('15:30'), 20, 'arrastrar', adm)
+  returning id into v_a;
+  update public.tareas set estado = 'hecha'
+   where jornada_id = j and estado = 'pendiente' and id <> v_a and clave not like 'cola_orden%';
+  perform motor.iniciar_tarea_de(op, v_a, pg_temp.h2('18:00'));
+  perform motor.generar_cierres_programados(pg_temp.h2('18:30'));
+  perform pg_temp.comprobar('18:30: la de Administración pasa a pendiente; en el cierre, «Sin terminar: fin del turno» y pasa a mañana',
+    (select estado from public.tareas where id = v_a) = 'pendiente'
+    and exists (select 1 from public.cierres c, jsonb_array_elements(c.contenido -> 'no_hecho') x
+                 where c.jornada_id = j and c.turno = 'tarde' and x ->> 'titulo' = 'Ordena la estantería de cajas'
+                   and x ->> 'motivo' = 'Sin terminar: fin del turno' and (x ->> 'pasa_a_manana')::boolean),
+    (select c.contenido -> 'no_hecho' from public.cierres c where c.jornada_id = j and c.turno = 'tarde')::text);
+  r := motor.terminar_tarea_de(op, v_a, null, null, pg_temp.h2('18:33'));
+  perform pg_temp.comprobar('18:33: la que tenía entre manos se puede dar por terminada después de la pausa',
+    r ->> 'error' is null and (select estado from public.tareas where id = v_a) = 'hecha', r::text);
+  update public.tareas set estado = 'pendiente', iniciada_en = null where jornada_id = j and clave = 'cola_orden';
+  perform pg_temp.comprobar('Fuera del turno, una no obligatoria sin empezar no se puede terminar',
+    motor.terminar_tarea_de(op, (select id from public.tareas where jornada_id = j and clave = 'cola_orden' limit 1),
+                            null, null, pg_temp.h2('18:40')) -> 'error' ->> 'codigo' = 'ESTADO_NO_VALIDO');
 end;
 $$;
 
