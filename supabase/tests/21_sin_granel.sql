@@ -222,8 +222,10 @@ begin
                                     ["PORTU", "llamada", "Llama a Algorta para que prepare 2 BZ1 4g para su retirada", 1, "pendiente"]]'
     and r ->> 'texto_whatsapp' = E'REPARTO 16/12\nSALE: ALMACÉN\n\nBILBAO\n2x V2 4g\n\nPORTU\n2x BZ1 4g (de Algorta)', r::text);
   r := pg_temp.guardar(j, 'h21-c', 0, 2, '2026-12-16 09:51+01');
-  perform pg_temp.comprobar('El mismo reparto otra vez: ya_pegado, con el texto de lo decidido',
-    r -> 'ya_pegado' = 'true' and r ->> 'texto_whatsapp' like '%2x BZ1 4g (de Algorta)', r::text);
+  perform pg_temp.comprobar('El mismo reparto otra vez: se recalcula (Tarea 23) y la decisión de Algorta se conserva',
+    r -> 'ya_pegado' is null and (r ->> 'sustituye_a') is not null
+    and (select estado = 'hecho' and (calculo ->> 'resuelto')::boolean from public.tarea_elementos where id = v_el)
+    and r ->> 'texto_whatsapp' like '%2x BZ1 4g (de Algorta)', r::text);
 
   -- 6. Bolsas: el aviso de llamada se marca como una petición; la tienda no está completa sin él.
   update public.tareas set estado = 'hecha' where jornada_id = j and id not in (v_prod, v_bolsas) and estado in ('pendiente', 'en_curso');

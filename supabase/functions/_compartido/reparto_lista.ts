@@ -200,9 +200,7 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   await d.rpc("servidor_reparto_anotar_id_cliente", { p_reparto: guardado.reparto_id, p_id_cliente: idCliente });
   // El texto lo da la base de datos: con lo decidido en la producción (R1e) ya aplicado.
   const textoWhatsapp = typeof guardado.texto_whatsapp === "string" ? guardado.texto_whatsapp : texto;
-  if (guardado.ya_pegado) {
-    return { ...guardado, texto_whatsapp: textoWhatsapp, peticiones, pedidos_cliente: pedidosCliente,
-             aviso: { codigo: "REPARTO_SIN_CAMBIOS", mensaje: "El reparto de hoy ya era este: no cambia nada." } };
-  }
+  // Con el mismo reparto, «Calcular» también recalcula con la hoja de ahora (Tarea 23):
+  // la base de datos lo sustituye conservando lo hecho; ya no hay «sin cambios».
   return { ...guardado, texto_whatsapp: textoWhatsapp, peticiones, pedidos_cliente: pedidosCliente };
 }

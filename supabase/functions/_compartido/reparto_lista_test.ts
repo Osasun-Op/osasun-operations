@@ -99,10 +99,12 @@ Deno.test("guardar_reparto: repetir con el mismo id_cliente devuelve lo guardado
   assertEquals([f.lecturas(), f.args("servidor_guardar_reparto")], [0, undefined]);
 });
 
-Deno.test("guardar_reparto: el mismo contenido que el de hoy no cambia nada (aviso REPARTO_SIN_CAMBIOS)", async () => {
-  const f = falso({ guardado: { reparto_id: "reparto-0", estado: "aceptado", ya_pegado: true } });
+Deno.test("guardar_reparto: el mismo reparto con otro id_cliente se recalcula con la hoja de ahora (Tarea 23)", async () => {
+  // Antes, si la base de datos decía «ya pegado», se respondía REPARTO_SIN_CAMBIOS sin recalcular.
+  const f = falso();
   const r = await guardarRepartoDe(f.d, "p", cuerpo()) as Record<string, unknown>;
-  assertEquals([(r.aviso as { codigo: string }).codigo, typeof r.texto_whatsapp], ["REPARTO_SIN_CAMBIOS", "string"]);
+  assertEquals([f.lecturas(), f.args("servidor_guardar_reparto")!.p_lectura, r.reparto_id, r.aviso],
+               [1, "lectura-1", "reparto-1", undefined]);
 });
 
 Deno.test("guardar_reparto: referencia que ya no está en la hoja, sin quién sale, sin jornada o tienda que no está en la lista", async () => {
@@ -173,11 +175,11 @@ Deno.test("guardar_reparto: los pedidos de tienda van en el reparto con su lista
   assertEquals(orden.indexOf("servidor_asignar_pedidos") < orden.indexOf("servidor_reparto_anotar_id_cliente"), true);
 });
 
-Deno.test("guardar_reparto: sin cambios en el reparto, los pedidos que esperan se asignan igual", async () => {
+Deno.test("guardar_reparto: con el mismo reparto recalculado, los pedidos que esperan se asignan al nuevo", async () => {
   const f = falso({ ctx: { ...CTX, pedidos_tienda: [{ id: "pedido-1", cliente: "Ane", destino_id: "bilbao", lineas: [{ producto: "V2", formato: "4g", cantidad: 1 }] }] },
-                    guardado: { reparto_id: "reparto-0", estado: "aceptado", ya_pegado: true } });
+                    guardado: { reparto_id: "reparto-2", estado: "aceptado" } });
   const r = await guardarRepartoDe(f.d, "p", cuerpo()) as Record<string, unknown>;
-  assertEquals([(r.aviso as { codigo: string }).codigo, f.args("servidor_asignar_pedidos")!.p_reparto], ["REPARTO_SIN_CAMBIOS", "reparto-0"]);
+  assertEquals([r.aviso, f.args("servidor_asignar_pedidos")!.p_reparto], [undefined, "reparto-2"]);
 });
 
 Deno.test("guardar_reparto: peticiones especiales en el texto («Además: …» tras los productos de su tienda), sin tocar producción ni bolsas (R1d)", async () => {

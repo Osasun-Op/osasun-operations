@@ -89,10 +89,11 @@ begin
     jsonb_array_length(motor.tarea_activa_de(op, ahora) -> 'tarea' -> 'elementos') >= 0
     and jsonb_array_length(motor.tarea_json(v_prod) -> 'elementos') = 2);
 
-  -- R1-10 el mismo reparto dos veces
+  -- R1-10 el mismo reparto dos veces: se recalcula y sustituye (Tarea 23; antes, «ya pegado»).
+  -- Repetir la misma petición lo para el id_cliente de guardar_reparto (prueba 16).
   r2 := pg_temp.guardar(j, 'h1', pg_temp.reparto(20, 5), '08:55');
-  perform pg_temp.comprobar('R1-10 el mismo reparto dos veces: «ya pegado» y nada duplicado',
-    (r2 ->> 'ya_pegado')::boolean
+  perform pg_temp.comprobar('R1-10 el mismo reparto dos veces: se recalcula (sustituye al anterior) y nada duplicado',
+    r2 -> 'ya_pegado' is null and (r2 ->> 'sustituye_a') is not null
     and (select count(*) from public.repartos where jornada_id = j and estado = 'aceptado') = 1
     and (select count(*) from public.tarea_elementos where tarea_id in (v_prod, v_bolsas)) = 7, r2::text);
 
@@ -154,7 +155,7 @@ begin
   -- R1-21 reparto corregido con trabajo hecho: Bilbao pasa a 22 V2 4g → faltan 7
   r := pg_temp.guardar(j, 'h2', pg_temp.reparto(22, 7), '10:50');
   perform pg_temp.comprobar('R1-21 corregido: sustituye al anterior',
-    (select count(*) from public.repartos where jornada_id = j and estado = 'sustituido') = 1
+    (select count(*) from public.repartos where jornada_id = j and estado = 'sustituido') = 2  -- el de R1-10 y este
     and (r ->> 'sustituye_a') is not null, r::text);
   perform pg_temp.comprobar('R1-21 corregido: V2 4g faltan 7 y se conservan las 5 hechas; la producción se reabre',
     (select cantidad = 7 and cantidad_hecha = 5 and estado = 'pendiente'
