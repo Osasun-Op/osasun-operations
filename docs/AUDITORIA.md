@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Auditoría de solo lectura
 
-**Versión:** 1.2 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos (Tareas 19, 20 y 25)
+**Versión:** 1.3 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos (Tareas 19, 20, 25 y 26)
 
 Las comprobaciones de cada revisión (lista de revisión de `AGENTE_COORDINADOR.md`), siempre las mismas y en el mismo orden. Nada de esto cambia la base de datos ni los archivos.
 
@@ -17,7 +17,7 @@ Las comprobaciones de cada revisión (lista de revisión de `AGENTE_COORDINADOR.
 
 Las claves públicas no son secretas (no dan permisos por sí solas). Las claves de servidor y los secretos (`GOOGLE_CUENTA_TECNICA`, `RESEND_API_KEY`) son de cada entorno y solo están en Supabase.
 
-**Propias de cada entorno** (en `public.configuracion`, nunca en una migración ni en el repositorio): `entorno`, `url_proyecto`, `correo_administracion`, `telefono_administracion`, `cuentas_autorizadas`, `operario_por_defecto`, `administracion_por_defecto` y, en pruebas, `cierres_sin_correo`. Todo lo demás de la configuración lo ponen las migraciones y es igual en los dos.
+**Propias de cada entorno** (en `public.configuracion`, nunca en una migración ni en el repositorio): `entorno`, `url_proyecto`, `correo_administracion`, `telefono_administracion`, `cuentas_autorizadas`, `operario_por_defecto`, `administracion_por_defecto` y, en pruebas, `cierres_sin_correo`. Todo lo demás de la configuración lo ponen las migraciones y es igual en los dos. La huella deja fuera esas claves (Tarea 26), así que sus 11 apartados se comparan tal cual entre los dos entornos y una base creada solo con las migraciones.
 
 ## 1. La base de datos: `motor.auditoria()`
 
@@ -33,7 +33,7 @@ La usa `postgres` (el conector del coordinador). `service_role` tiene el permiso
 | --- | --- | --- |
 | `resumen` / `avisos` | «Sin avisos» o «N avisos», y una frase por cosa rara | **«Sin avisos»** |
 | `migraciones` | Cuántas hay y la última | Las mismas que `supabase/migrations/` (cuántos archivos y el último) |
-| `huella` | Una cifra por apartado: tablas, restricciones, índices, RLS, permisos, funciones, carga inicial y tarea programada (`motor.huella_estructura()`, la misma que la prueba 00) | Igual que en una base creada solo con las migraciones del repositorio. **«Carga inicial» sale distinta** en los dos entornos porque cuenta `url_proyecto` (y en pruebas `cierres_sin_correo`), que son de cada entorno: se comprueba aparte con la consulta del punto 5.4 |
+| `huella` | Una cifra por apartado: tablas, restricciones, índices, RLS, permisos, funciones, carga inicial y tarea programada (`motor.huella_estructura()`, la misma que la prueba 00) | Los 11 apartados iguales en pruebas, en producción y en una base creada solo con las migraciones del repositorio. «Carga inicial» no cuenta las claves propias de cada entorno (§0) |
 | `tablas` | Cada tabla de `public` y `motor`, con RLS y su número de políticas | Todas con RLS |
 | `funciones` | Cuántas por esquema; de `public`, las que ejecuta `anon`, las que ejecuta `authenticated` y las `security definer` | `public_anon` vacía; ninguna `servidor_*` en `public_authenticated` |
 | `triggers` · `cron` | Disparadores propios y tareas programadas | `alta_persona_autorizada`, `tareas_tras_hecha`; `generar_jornada_diaria`, `generar_cierres_turno`, `reintentar_correos`, activas en producción (en pruebas, apagadas desde el día del cambio) |
@@ -96,19 +96,8 @@ Solo lo que está **fusionado en `main`**, y en el mismo orden. Lo hace el agent
    ```
    y se comprueba que lo guardado es el archivo: `md5(array_to_string(statements, ''))` igual al md5 del archivo sin los saltos de línea del final (`printf %s "$(cat archivo)" | md5sum`). `list_migrations` tiene que dar las mismas versiones y nombres que la carpeta.
 2. **Funciones del servidor que cambian:** `deploy_edge_function` en producción con los mismos archivos que en `main` (el `index.ts` y lo que importa de `_compartido/`, sin las pruebas) y `verify_jwt: false`. Se comprueba con `get_edge_function` que cada archivo es igual al del repositorio.
-3. **Configuración propia del entorno:** una migración no la toca (es de cada entorno). Si un cambio necesita una clave nueva de ese tipo, el PR lo dice y se pone a mano en cada entorno, sin datos personales en el PR.
-4. **Comprobaciones, solo de lectura:** `motor.auditoria()` «Sin avisos» y con las migraciones del repositorio; la huella igual a la de una base creada solo con las migraciones (sin `seed_pruebas.sql`), salvo «carga inicial», que se compara con esta consulta en las dos bases (deja fuera las claves de cada entorno):
-   ```sql
-   select md5(
-       (select string_agg(format('%s %s %s %s %s %s', codigo, nombre, tipo, nombre_en_sheets, alias::text, activo), E'\n' order by codigo) from public.centros_trabajo)
-       || (select string_agg(format('%s %s', clave, valor::text), E'\n' order by clave) from public.configuracion
-           where clave not in ('entorno', 'correo_administracion', 'cuentas_autorizadas', 'operario_por_defecto',
-                               'administracion_por_defecto', 'telefono_administracion', 'url_proyecto', 'cierres_sin_correo'))
-       || (select string_agg(row(p.codigo, p.titulo, p.programacion, p.dias_semana, p.turno, p.hora_inicio, p.hora_limite,
-                                 p.duracion_min, p.condicion, p.requiere_codigo, p.contenido, p.obligatoria, p.prioridad_cola,
-                                 p.no_terminada, p.modo, p.orden, p.activa)::text, E'\n' order by p.codigo)
-           from public.plantillas_tarea p));
-   ```
+3. **Configuración propia del entorno:** una migración no la toca (es de cada entorno). Si un cambio necesita una clave nueva de ese tipo, el PR lo dice y se pone a mano en cada entorno, sin datos personales en el PR, y la misma migración la añade a las que `motor.huella_estructura()` deja fuera en «carga inicial» (y a la prueba 22).
+4. **Comprobaciones, solo de lectura:** `motor.auditoria()` «Sin avisos» y con las migraciones del repositorio; la huella igual en los 11 apartados a la de una base creada solo con las migraciones (sin `seed_pruebas.sql`) y a la del otro entorno.
    Después, los registros (punto 2) y `list_edge_functions` (punto 3). **En producción no se ejecuta ninguna prueba de `supabase/tests/`.**
 5. **Deshacer:** como dice el PR del cambio (cada migración lleva su «Deshacer»), con una migración nueva que pasa primero por pruebas. Producción tiene además copia de seguridad diaria (plan Pro).
 6. El PR o el comentario de la entrega dice qué migraciones y funciones se han pasado y el resultado de las comprobaciones.
