@@ -70,11 +70,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 27 está fusionada (PR #26) y **no se pasa a producción** (ver la excepción de tiendas en la sección 4).
+**Tarea 28** (sección 7): tiendas, segunda parte (la bolsa, por dónde va el reparto, el cierre de caja, las muestras y el material). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **E2-8**, los puntos del bloque 1 en `AGENTE_COORDINADOR.md` y lo que hiciste en la Tarea 27 (PR #26). **Solo en pruebas: no se pasa a producción** (excepción de tiendas, sección 4). El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 28 (preparada, pendiente de aprobación del propietario): tiendas, segunda parte — la bolsa, por dónde va el reparto, el cierre de caja, las muestras y el material, en pruebas
+## 7. TAREA 28 (activa): tiendas, segunda parte — la bolsa, por dónde va el reparto, el cierre de caja, las muestras y el material, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` **E2-8** y `AGENTE_COORDINADOR.md`, bloque 1 (puntos 7 a 10, 12 a 14, 18, 24, 29 y 30). Sigue la Tarea 27 (PR #26): mismas reglas. **Solo en pruebas; producción espera** (excepción de tiendas, sección 4). **El almacén no puede cambiar**: lo que hoy hace Eder (preparar, bolsas, salida, ruta) sigue igual y sin pasos nuevos para él. Reutiliza lo que existe: el reparto y el envío del día, sus bolsas y paradas, las **peticiones especiales** (R1d, Tarea 13), los puntos y la lista del día de la tienda (Tarea 27) y la activación por tienda.
 
@@ -690,4 +690,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.38 | 02/11/2026 | Tarea 26 fusionada (PR #25). Falta pasar la migración a producción (punto 3). |
 | 1.39 | 02/11/2026 | Tarea 27 activa (tiendas, primera parte), aprobada por el propietario. |
 | 1.40 | 02/11/2026 | Tarea 27 fusionada (PR #26). Lo de tiendas no pasa a producción hasta que el propietario lo apruebe tras probarlo. Sin tarea activa. |
-| 1.41 | 02/11/2026 | Tarea 28 preparada (tiendas, segunda parte), pendiente de aprobación del propietario. |
+| 1.41 | 02/11/2026 | Tarea 28 activa (tiendas, segunda parte), aprobada por el propietario. |
