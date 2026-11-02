@@ -67,11 +67,24 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 25** (sección 7): montar producción. Lee antes `docs/CONSTITUCION_TECNICA.md` (reglas 8, 9 y 12), `docs/AUDITORIA.md` y `ESTADO_DEL_SISTEMA.md` v1.42 (separación de entornos). El PR lleva «Qué he leído y qué existía ya».
+**Tarea 26** (sección 7): la huella deja fuera las claves de cada entorno y `catalogo` igual en los dos. Lee antes `docs/CONSTITUCION_TECNICA.md` (reglas 8 y 9) y `docs/AUDITORIA.md` §0 y §5. El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 25 (activa): montar producción
+## 7. TAREA 26 (activa): la huella sin las claves de cada entorno y `catalogo` igual en los dos
+
+**Contexto:** respuestas del propietario a las dudas del PR #24 (02/11/2026).
+
+1. **Huella:** una migración pequeña que añade `url_proyecto` y `cierres_sin_correo` a las claves que `motor.huella_estructura()` deja fuera en «carga inicial», igual que `entorno` o `cuentas_autorizadas`. Así los 11 apartados se comparan directamente entre pruebas, producción y una base creada solo con las migraciones. Ajusta la prueba 00 y `AUDITORIA.md` (la fila de `huella` y el punto 5.4) para que no haga falta la consulta aparte. Lleva su «Deshacer».
+2. **`catalogo` en pruebas:** vuelve a desplegarla desde `main`, para que los dos entornos tengan los mismos archivos. Compruébalo con `get_edge_function`, archivo a archivo.
+3. **Producción:** la migración entra en producción **solo después de que el propietario fusione el PR**, siguiendo `AUDITORIA.md` §5 (misma versión, md5, comprobaciones de solo lectura). Lo cuentas en un comentario del PR: migraciones pasadas, auditoría «Sin avisos» y huella igual en los 11 apartados en los dos entornos.
+4. **Se queda como está** (decisión del propietario): los correos que salgan desde pruebas después del día del cambio (solo saldrían si alguien prueba algo a mano) y los 5 índices de `pedidos_cliente` (más adelante).
+
+**Entrega:** Pull Request **«Tarea 26 — Huella sin claves del entorno»**, con «Qué he leído y qué existía ya», pruebas en verde, auditoría de pruebas y registros sin errores nuevos.
+
+---
+
+## 7.0 TAREA 25 (fusionada en el PR #24): montar producción
 
 **Contexto (decisión del propietario, 02/11/2026):** se separan los entornos. **Producción** = proyecto `osasun-produccion` (`iqjkysfbtpkukkvfyumf`, eu-west-1, plan Pro), el que usarán el almacén y las tiendas. **Pruebas** = `osasun-pruebas` (`rvypswuoafnjwqdwxjvo`), donde pruebas tus cambios. El propietario ya ha puesto en producción los secretos `GOOGLE_CUENTA_TECNICA` y `RESEND_API_KEY`. **En producción solo entra lo aprobado y fusionado en `main`.**
 
@@ -622,3 +635,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.34 | 02/11/2026 | Tarea 23 fusionada (PR #22, con la regla «lo primero de la mañana»). Tarea 24 activa: quién hizo cada tarea. |
 | 1.35 | 02/11/2026 | Tarea 24 fusionada (PR #23): «hecha por», nada fuera del turno y pausa sola al acabar el turno. Sin tarea activa. |
 | 1.36 | 02/11/2026 | Tarea 25 activa: montar producción. |
+| 1.37 | 02/11/2026 | Tarea 25 fusionada (PR #24): producción montada. Tarea 26 activa: huella sin las claves de cada entorno y `catalogo` igual en los dos. |
