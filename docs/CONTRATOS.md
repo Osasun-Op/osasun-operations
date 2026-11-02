@@ -1,6 +1,14 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.11 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción.
+**Versión:** 1.12 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas por ahora (pasa a producción al fusionar su PR).
+
+> **Cambios en 1.12 (Tarea 27) — para Lovable: la tableta de las tiendas (primera parte).** Solo se añaden cosas: un rol nuevo (`tienda`), funciones nuevas (§9) y un tipo de elemento nuevo (`punto`). Lo del almacén y lo de Administración que ya existía no cambia.
+> 1. **Entrar:** cada tienda entra con **su cuenta de Google** (una por tienda). `mi_perfil().rol` es **`"tienda"`** y `centro` es su tienda: la pantalla abre la tableta de la tienda. Una tienda **no puede** usar las funciones del almacén ni las de Administración (`NO_AUTORIZADO`), ni ve sus datos.
+> 2. **Pantalla de la tienda (§9.1 a §9.7):** todo sale de **`tienda_hoy()`**: horario, quién está, los nombres para elegir, los avisos de Administración y la lista del día con sus puntos. Al empezar el turno se elige el nombre (`empezar_turno`): ese nombre es el «hecha por» de lo que se marque. Cada tarea de puntos se hace tocando sus puntos (`marcar_punto`); la de cristales, con «Hecho» (`terminar_tarea_tienda`); el vídeo, con `compartir_video`. Los avisos se cierran con `marcar_aviso_leido`. La lista de vídeos de todas las tiendas: `videos_semana()`.
+> 3. **Horas orientativas:** cada tarea trae su `hora` («10:50»). Antes de esa hora no se puede marcar (`se_puede_marcar: false`; si se intenta, `TODAVIA_NO`). No hay avisos de retraso. Al cerrar la tienda, lo que quedó sin hacer sale `no_hecha: true` y **no pasa al día siguiente**.
+> 4. **Administración (§9.8 y §9.9):** los nombres de cada tienda (`personas_tienda`, `guardar_persona_tienda`), los días cerrados de una tienda o de todas (`marcar_dia_cerrado`, `dias_cerrados`) y los avisos a las tiendas (`crear_aviso_tienda`, `avisos_tiendas`; se cancelan con `cancelar_aviso_almacen`, §3.21).
+> 5. **En directo:** la tableta se suscribe a `tareas` y `tarea_elementos` sin filtro (solo recibe lo de su tienda) y, ante cualquier cambio, vuelve a pedir `tienda_hoy()`. Además refresca cada minuto y al volver a la pestaña: las tareas se pueden marcar al llegar su hora sin que cambie nada en la base de datos.
+> 6. **Errores nuevos** (§9.10): `TODAVIA_NO`, `SIN_PERSONA`, `YA_COMPARTIDO` y `FECHA_PASADA`. `SIN_JORNADA` también sale en la tienda («Hoy la tienda no abre.»).
 
 > **Cambios en 1.11 (Tarea 25) — para Lovable: ya hay producción.** No cambia ninguna función. §7.1 trae los dos entornos: **pruebas** (donde se prueba todo) y **producción** (la que usarán el almacén y las tiendas), cada uno con su URL y su clave pública. Las dos bases tienen las mismas funciones y responden igual; solo cambian la dirección, la clave y los datos.
 
@@ -157,6 +165,17 @@
 | `historico_dia` · `historico_dias` | BD | — | ✔ | ✅ Tarea 13 |
 | `cierre` · `cierres_recientes` | BD | — | ✔ | ✅ Tarea 4 |
 | `generar_jornada` · `generar_cierre` · `enviar_correo` | Internas | — | — | ✅ |
+
+Tiendas (Tarea 27, §9; columna «Tienda» = la cuenta de cada tienda):
+
+| Función | Tipo | Tienda | Administración | Estado |
+| --- | --- | --- | --- | --- |
+| `mi_perfil` | BD | ✔ (`rol: "tienda"`) | ✔ | 🧪 Tarea 27 |
+| `tienda_hoy` · `empezar_turno` · `marcar_punto` · `terminar_tarea_tienda` · `compartir_video` · `marcar_aviso_leido` | BD | ✔ | — | 🧪 Tarea 27 |
+| `videos_semana` | BD | ✔ | ✔ | 🧪 Tarea 27 |
+| `personas_tienda` | BD | ✔ (solo la suya) | ✔ | 🧪 Tarea 27 |
+| `guardar_persona_tienda` · `marcar_dia_cerrado` · `dias_cerrados` · `crear_aviso_tienda` · `avisos_tiendas` | BD | — | ✔ | 🧪 Tarea 27 |
+| Todas las del almacén y las de Administración de arriba | — | — (`NO_AUTORIZADO`) | — | 🧪 Tarea 27 |
 
 ## 3. Operario
 
@@ -704,3 +723,121 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 22. **Tarea 16 · Quién decide** (decidido por el propietario, 29/10): solo el operario, en su producción (como el resto de su lista). Administración no tiene esta función.
 23. **Tarea 16 · Cambiar lo decidido** (decidido por el propietario, 29/10): con la producción ya cerrada no se puede; repetir lo mismo sí. Para cambiarlo, se modifica el reparto.
 24. **Tarea 17 · Dónde va la lista de `SIN_GRANEL`:** en `error.referencias`, como en `REFERENCIA_NO_EXISTE` (los datos del error van junto a `codigo` y `mensaje`).
+
+## 9. Tiendas (Tarea 27) 🧪
+
+Primera parte de la tableta de las tiendas (`AGENTE_BASE_DE_DATOS.md` Tarea 27; `ESTADO_DEL_SISTEMA.md` E2-8). En pruebas; pasa a producción al fusionar su PR.
+
+**Cómo funciona:**
+- **Una cuenta de Google por tienda** (cuentas autorizadas con `rol: "tienda"` y su tienda; la ficha se crea sola la primera vez, §7.2). `mi_perfil()` devuelve `rol: "tienda"` y `centro: { id, nombre }` de la tienda; con ese rol la pantalla abre la tableta. Durango está inactiva: no tiene cuenta ni tareas.
+- **Lo que ve una tienda:** solo lo suyo. Las funciones del almacén (`tarea_activa`, `crear_incidencia`, `catalogo`, `guardar_reparto`…) y las de Administración le responden `NO_AUTORIZADO`, y la base de datos no le deja leer nada de Administración ni de otras tiendas.
+- **Horario de cada tienda** (se configura por tienda; hoy): de lunes a viernes, 11:00–13:30 y 17:00–20:30 (Bilbao, tarde 16:30–20:30); sábado, igual, pero cierran a las 19:30, salvo Bilbao (20:30); Donosti y Rentería, el sábado por la tarde cerrado; domingo, nada. Un **día cerrado** (§9.9) no tiene lista.
+- **Tareas activadas por tienda.** Las propias tienen todas; las franquicias (Donosti y Rentería), solo los avisos y el vídeo de la semana.
+
+### 9.1 `tienda_hoy()` 🧪
+Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la crea (como `tarea_activa`). `empezar_turno`, `marcar_punto`, `terminar_tarea_tienda`, `compartir_video` y `marcar_aviso_leido` devuelven también esto, ya actualizado: pintarlo directamente.
+- **En directo:** suscribirse a `tareas` y `tarea_elementos` sin filtro (la tienda solo recibe lo suyo, §7.4) y volver a pedir `tienda_hoy()`; además, refrescar cada minuto y al volver a la pestaña.
+- **Salida:**
+```json
+{
+  "tienda": { "id": "…", "codigo": "BILBAO", "nombre": "Bilbao" },
+  "fecha": "2026-11-02", "ahora": "16:25",
+  "abierta_hoy": true, "cerrado": false,
+  "horario": [ { "turno": "manana", "inicio": "11:00", "fin": "13:30" }, { "turno": "tarde", "inicio": "16:30", "fin": "20:30" } ],
+  "turno": "tarde",
+  "en_turno": { "persona_id": "…", "nombre": "…", "turno": "tarde", "desde": "16:21" },
+  "personas": [ { "id": "…", "nombre": "…", "cuando": "siempre", "turno": "tarde", "sugerida": true } ],
+  "avisos": [ { "id": "…", "texto": "…", "fecha": "2026-11-02" } ],
+  "tareas": [ /* objeto tarea de la tienda, §9.2 */ ]
+}
+```
+- `abierta_hoy: false` → hoy no abre (domingo o día cerrado; `cerrado: true` si lo ha marcado Administración): mostrar «Hoy la tienda está cerrada» y nada más.
+- `turno`: `manana`, `tarde` o `null` (fuera de los dos; cuenta desde 1 hora antes de empezar hasta media hora después de acabar).
+- `en_turno`: quién está ahora (el último nombre elegido hoy); `null` si nadie ha empezado. **Si es `null`, o su `turno` no es el `turno` de ahora, la pantalla pide primero «¿Quién eres?»** con `personas` y llama a `empezar_turno`.
+- `personas`: los nombres de la tienda; primero los que trabajan hoy y en ese turno (`sugerida: true`). Se pueden elegir todos.
+- `avisos`: los avisos de Administración sin leer (los de hoy y los de días anteriores que no se leyeron). **Se enseñan al entrar** (antes de la lista); cada uno con «Leído» (`marcar_aviso_leido`).
+- `tareas`: la lista del día, por hora.
+
+### 9.2 Objeto tarea de la tienda 🧪
+```json
+{
+  "id": "…", "clave": "apertura_manana", "titulo": "Apertura de la mañana", "porque": "…",
+  "tipo": "puntos", "hora": "10:50", "desde": "2026-11-02T09:50:00Z",
+  "estado": "pendiente", "se_puede_marcar": true, "no_hecha": false, "motivo": null,
+  "terminada_en": null, "hora_fin": null, "hecha_por": null,
+  "puntos": [ { "id": "…", "texto": "Fichar en Woffu", "hecho": false, "hecho_por": null, "a_las": null } ],
+  "video": null
+}
+```
+- **`tipo`:** `puntos` (se hace tocando sus puntos uno a uno, §9.4; con el último queda hecha), `simple` («Hecho», §9.5) o `video` (§9.6).
+- **`hora`:** orientativa. Antes de esa hora, `se_puede_marcar: false` (mostrarla en gris con «desde las 10:50»). No hay avisos de retraso.
+- **`estado`:** `pendiente`, `hecha` o `cancelada` (el vídeo con «Hoy no he podido», o la tienda cerrada ese día: `motivo`). `hecha_por` y `hora_fin` dicen quién y a qué hora; cada punto, igual (`hecho_por`, `a_las`).
+- **`no_hecha: true`:** la tienda ya ha cerrado y quedó sin hacer. Queda así; **no pasa al día siguiente**.
+- **`video`** (solo en `tipo: video`, cuando ya se ha hecho): `{ enlace, aprendido, no_pudo }`.
+- **Las tareas** (decididas por el propietario; el horario de cada tienda manda):
+
+| Tarea | Días | Desde | Puntos |
+| --- | --- | --- | --- |
+| Apertura de la mañana | L–S | 10 min antes de abrir (10:50) | Fichar en Woffu · Abrir · Cartelería · Glovo · Barrido y puesta a punto |
+| Cierre de la mañana | L–S | 10 min antes de cerrar (13:20) | Ventas y stock de la plantilla al día (todo en verde) · Incidencias del turno registradas |
+| Apertura de la tarde | L–S, si hay tarde | 10 min antes (16:50; Bilbao 16:20) | Fichar · Abrir · Cartelería · Glovo |
+| Cierre del día | L–S | 10 min antes del cierre del día | Ventas del día en la plantilla (todo en verde) · Suelo fregado · Efectivo contado y en la bolsa para mañana · Incidencias de la tarde registradas |
+| Limpieza de cristales | jueves, tarde | al abrir la tarde | — («Hecho») |
+| Vídeo de la semana | viernes, mañana (y el sábado, §9.6) | al abrir la mañana | — (enlace y una línea) |
+
+  En **Bilbao** las dos semanales cambian de turno cada semana: semana ISO **par**, por la mañana; **impar**, por la tarde. Donosti y Rentería: solo el vídeo.
+
+### 9.3 `empezar_turno(persona_id)` 🧪
+Al empezar el turno, la persona toca su nombre (de `tienda_hoy().personas`). Desde ese momento es quien está (`en_turno`) y lo que se marque queda a su nombre. Se puede cambiar en cualquier momento (otra persona entra): vuelve a llamarse con el otro nombre.
+- **Salida:** `tienda_hoy()` actualizado.
+- **Errores:** `SIN_JORNADA` («Hoy la tienda no abre.»), `NO_ENCONTRADO` (el nombre no es de esta tienda o se ha quitado).
+- El **sábado**, si a esa persona aún no le ha salido el vídeo esa semana, le aparece en la lista (§9.6).
+
+### 9.4 `marcar_punto(elemento_id)` 🧪
+Tocar un punto de una tarea `puntos` (`tareas[].puntos[].id`). Con el último, la tarea queda `hecha`. Tocar uno ya hecho no hace nada (devuelve lo mismo).
+- **Salida:** `tienda_hoy()` actualizado.
+- **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (la tarea ya está cerrada), `TODAVIA_NO` («Esta tarea es desde las 16:50.»), `SIN_PERSONA` («Elige primero quién está en la tienda.»: pedir el nombre y repetir).
+
+### 9.5 `terminar_tarea_tienda(tarea_id)` 🧪
+«Hecho» de una tarea `simple` (la limpieza de cristales). **Salida** y **errores**: como §9.4.
+
+### 9.6 Vídeo de la semana: `compartir_video(tarea_id, enlace?, aprendido?, no_he_podido?)` · `videos_semana(limite?)` 🧪
+- **El texto** de la tarea (`porque`) es el aprobado por el propietario; se muestra entero.
+- **Compartir:** `compartir_video({ tarea_id, enlace, aprendido })`: `enlace` de YouTube (`youtube.com/watch?v=…`, `youtu.be/…`, `shorts/…`) y `aprendido`, una línea (200 letras como máximo). La tarea queda `hecha` y el vídeo entra en la lista.
+- **«Hoy no he podido»:** `compartir_video({ tarea_id, no_he_podido: true })`. La tarea queda `cancelada` (no hecha) y no pasa al día siguiente.
+- **Un vídeo por persona y semana** (la que está en `en_turno`): si ya compartió uno esa semana, `YA_COMPARTIDO`. **El sábado** le sale a quien trabaje si esa semana no ha compartido ni ha dicho «Hoy no he podido».
+- **Errores:** los de §9.4, más `DATOS_NO_VALIDOS` (falta el enlace, no es de YouTube o falta la línea) y `YA_COMPARTIDO`.
+- **`videos_semana(limite?)`** (tiendas y Administración; 50 por defecto, 200 como máximo): `{ videos: [{ id, enlace, aprendido, tienda, persona, fecha }] }`, los más nuevos primero. La lista la ven todas las tiendas. Los «Hoy no he podido» no salen.
+
+### 9.7 Avisos de Administración en la tienda: `marcar_aviso_leido(aviso_id)` 🧪
+Cierra el aviso (`tienda_hoy().avisos[].id`) y anota quién lo leyó (el de `en_turno`). Leerlo dos veces no hace nada. **Salida:** `tienda_hoy()` actualizado. **Error:** `NO_ENCONTRADO`.
+
+### 9.8 Administración: personas de las tiendas · `personas_tienda(tienda_id?)` · `guardar_persona_tienda(nombre, tienda_id?, id?, cuando?, turno?, activo?)` 🧪
+- **`personas_tienda(tienda_id?)`:** `{ personas: [{ id, tienda_id, tienda, nombre, cuando, turno, activo }] }`, por tienda y nombre; sin `tienda_id`, las de todas. (Una tienda también puede llamarla: solo ve las suyas.)
+- **`guardar_persona_tienda`** (solo Administración):
+  - **Añadir:** sin `id`, con `nombre` (40 letras como máximo) y `tienda_id`.
+  - **Cambiar:** con `id` y los datos nuevos (el `nombre` siempre).
+  - **Quitar:** con `id`, `nombre` y `activo: false`. Deja de salir en la tienda; lo que hizo sigue a su nombre.
+  - `cuando`: `siempre` (por defecto), `entre_semana` o `sabados`. `turno`: `manana`, `tarde` o `null` (los dos). Solo sirven para poner su nombre el primero en la tienda (`sugerida`).
+  - **Salida:** `{ persona: { … } }`. **Errores:** `NO_ENCONTRADO`, `DATOS_NO_VALIDOS` («Elige la tienda.», el nombre, `cuando` o `turno` no válidos).
+- `tienda_id` de cada tienda: el de `personas_tienda()`.
+
+### 9.9 Administración: días cerrados y avisos a las tiendas 🧪
+- **`marcar_dia_cerrado(fecha, tienda_id?, cerrado?, motivo?)`:** festivos y cierres. Sin `tienda_id`, **todas las tiendas**. `cerrado: false` lo quita. Ese día la tienda no tiene lista; si la lista ya estaba hecha (el mismo día), lo pendiente queda `cancelada` con el motivo «Tienda cerrada ese día» (y vuelve si se quita).
+  - **Salida:** `{ dias: [{ fecha, tienda_id, tienda, motivo }] }`, de hoy a un año («Todas las tiendas» cuando `tienda_id` es `null`).
+  - **Errores:** `FECHA_PASADA` («Elige hoy o un día que viene.»), `DATOS_NO_VALIDOS`.
+- **`dias_cerrados(desde?, hasta?)`:** la misma lista (por defecto, de hoy a un año).
+- **`crear_aviso_tienda(id_cliente, fecha, texto, tienda_id?)`:** un aviso para una tienda o, sin `tienda_id`, para todas, para ese día (hoy o uno que viene). A la tienda le sale al entrar (§9.1). Repetir con el mismo `id_cliente` no lo duplica.
+  - **Salida:** `{ avisos: [aviso], sin_aviso: [{ tienda, motivo }] }`. `sin_aviso`: las tiendas que no lo reciben («Todavía no ha entrado con su cuenta» o «Ese día no abre»).
+  - **Errores:** `DATOS_NO_VALIDOS` (falta el texto, fecha pasada, tienda no válida), `SIN_JORNADA` (para una sola tienda que no puede recibirlo; `error.sin_aviso` dice por qué).
+- **`avisos_tiendas()`:** `{ avisos: [{ id, fecha, texto, tienda_id, tienda, estado, leido, cerrado_en, nota, creado_por }] }`, de la última semana y los que vienen, los más nuevos primero. `nota` dice quién lo leyó («Leído por …»).
+- **Cancelar un aviso:** `cancelar_aviso_almacen(aviso_id)` (§3.21), la misma de los avisos del almacén.
+
+### 9.10 Errores nuevos 🧪
+| Código | Qué hace la pantalla |
+| --- | --- |
+| `TODAVIA_NO` | Mostrar el mensaje («Esta tarea es desde las …»). Con `se_puede_marcar` no debería salir. |
+| `SIN_PERSONA` | Pedir «¿Quién eres?» (`personas`), llamar a `empezar_turno` y repetir lo que se iba a marcar. |
+| `YA_COMPARTIDO` | Mostrar el mensaje; ofrecer «Hoy no he podido» o dejarlo. |
+| `FECHA_PASADA` | Mostrar junto a la fecha y dejar corregir. |
+| `SIN_JORNADA` | En la tienda: «Hoy la tienda no abre.». En `crear_aviso_tienda`: mostrar el mensaje. |

@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Auditoría de solo lectura
 
-**Versión:** 1.3 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos (Tareas 19, 20, 25 y 26)
+**Versión:** 1.4 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos (Tareas 19, 20, 25, 26 y 27)
 
 Las comprobaciones de cada revisión (lista de revisión de `AGENTE_COORDINADOR.md`), siempre las mismas y en el mismo orden. Nada de esto cambia la base de datos ni los archivos.
 
@@ -19,6 +19,8 @@ Las claves públicas no son secretas (no dan permisos por sí solas). Las claves
 
 **Propias de cada entorno** (en `public.configuracion`, nunca en una migración ni en el repositorio): `entorno`, `url_proyecto`, `correo_administracion`, `telefono_administracion`, `cuentas_autorizadas`, `operario_por_defecto`, `administracion_por_defecto` y, en pruebas, `cierres_sin_correo`. Todo lo demás de la configuración lo ponen las migraciones y es igual en los dos. La huella deja fuera esas claves (Tarea 26), así que sus 11 apartados se comparan tal cual entre los dos entornos y una base creada solo con las migraciones.
 
+**Tiendas (Tarea 27):** cada tienda es una cuenta autorizada más (`rol: "tienda"` y su `centro`, en `cuentas_autorizadas`). Los **nombres de cada tienda** (`personas_tienda`), los **días cerrados** (`dias_cerrados`), los turnos y los vídeos son **datos de cada entorno**: los pone Administración desde la app (o, si el propietario lo pide, el agente de base a base), nunca una migración ni el repositorio, y no cuentan en la huella. El horario de cada tienda (`horario_tienda`), `alternar_semanales` y las plantillas de tienda sí los ponen las migraciones: «carga inicial» ordena y distingue por tienda esas filas (desde la Tarea 27).
+
 ## 1. La base de datos: `motor.auditoria()`
 
 Con el conector de Supabase (`execute_sql`), que entra como `postgres`, en pruebas y en producción (en producción es lo único que se ejecuta, y solo lee):
@@ -36,7 +38,7 @@ La usa `postgres` (el conector del coordinador). `service_role` tiene el permiso
 | `huella` | Una cifra por apartado: tablas, restricciones, índices, RLS, permisos, funciones, carga inicial y tarea programada (`motor.huella_estructura()`, la misma que la prueba 00) | Los 11 apartados iguales en pruebas, en producción y en una base creada solo con las migraciones del repositorio. «Carga inicial» no cuenta las claves propias de cada entorno (§0) |
 | `tablas` | Cada tabla de `public` y `motor`, con RLS y su número de políticas | Todas con RLS |
 | `funciones` | Cuántas por esquema; de `public`, las que ejecuta `anon`, las que ejecuta `authenticated` y las `security definer` | `public_anon` vacía; ninguna `servidor_*` en `public_authenticated` |
-| `triggers` · `cron` | Disparadores propios y tareas programadas | `alta_persona_autorizada`, `tareas_tras_hecha`; `generar_jornada_diaria`, `generar_cierres_turno`, `reintentar_correos`, activas en producción (en pruebas, apagadas desde el día del cambio) |
+| `triggers` · `cron` | Disparadores propios y tareas programadas | `alta_persona_autorizada`, `tareas_tras_hecha`; `generar_jornada_diaria`, `generar_cierres_turno`, `reintentar_correos`, activas en producción (en pruebas, apagadas desde el día del cambio). `generar_jornada_diaria` hace también la jornada de cada tienda con cuenta (si no, la hace `tienda_hoy` al entrar); `generar_cierres_turno` es solo del almacén (Tarea 27) |
 | `configuracion` | Las claves que usan los cálculos, con su valor, y las que falten | `faltan` vacía |
 | `datos` | Última lectura correcta de la hoja y último error, correos fallidos de 7 días, si hay jornada hoy | Lectura correcta más reciente que el error; 0 correos fallidos; jornada hoy en día de trabajo (en producción, desde que el operario ha entrado por primera vez) |
 
