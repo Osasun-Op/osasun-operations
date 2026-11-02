@@ -67,11 +67,22 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 23** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.38** (§6.4 y §8 «Hoy») y `CONTRATOS.md` §3.1, §3.14 y §4.3. El PR lleva «Qué he leído y qué existía ya».
+**Tarea 24** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.39** (§8 «Hoy») y `CONTRATOS.md` §4.3. El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 23 (activa): cinco arreglos tras la prueba del 02/11, en pruebas
+## 7. TAREA 24 (activa): quién hizo cada tarea en «Hoy», en pruebas
+
+Es el punto 5 de la Tarea 23, que se añadió después de empezarla y no entró en el PR #22.
+
+1. En `estado_actual().hoy`, por tarea hecha, **`hecha_por`** (nombre de la persona). El caso que lo pide: «Prepara el reparto» se cierra sola cuando alguien guarda el reparto; el 02/11 la cerró Asier desde su cuenta a las 08:27 y en el panel no se veía. **Reutiliza** lo que ya se guarda (`repartos.pegado_por`, `registro_eventos.persona_id` de `tarea_terminada`); no añadas un registro nuevo. Solo se añade el campo (`null` en las no hechas).
+2. Prueba (la del 02/11: «Prepara el reparto» hecha por Asier; una tarea normal, por Eder). `CONTRATOS.md` a la 1.10, con su nota para Lovable. Lista de `docs/AUDITORIA.md` pasada en pruebas.
+
+**Entrega:** Pull Request **«Tarea 24 — Quién hizo cada tarea»**, con «Qué he leído y qué existía ya», la lista de `AUDITORIA.md` y las dudas.
+
+---
+
+## 7.0 TAREA 23 (fusionada en el PR #22; el punto 5 pasa a la Tarea 24): cinco arreglos tras la prueba del 02/11, en pruebas
 
 Aprobados por el propietario el 02/11/2026. **Reutiliza** lo que ya existe en cada punto; nada nuevo al lado.
 
@@ -587,3 +598,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.31 | 30/10/2026 | Tarea 22 activa: incidencias nuevas, lista de compras y avisos de Administración. |
 | 1.32 | 30/10/2026 | Tarea 22 fusionada (PR #21). Sin tarea activa. |
 | 1.33 | 02/11/2026 | Tarea 23 activa: cuatro arreglos tras la prueba del 02/11. |
+| 1.34 | 02/11/2026 | Tarea 23 fusionada (PR #22, con la regla «lo primero de la mañana»). Tarea 24 activa: quién hizo cada tarea. |
