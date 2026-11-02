@@ -67,11 +67,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 26** (sección 7): la huella deja fuera las claves de cada entorno y `catalogo` igual en los dos. Lee antes `docs/CONSTITUCION_TECNICA.md` (reglas 8 y 9) y `docs/AUDITORIA.md` §0 y §5. El PR lleva «Qué he leído y qué existía ya».
+**Tarea 26** (sección 7), fusionada en el PR #25: falta solo el punto 3, pasar la migración a producción (`AUDITORIA.md` §5) y contarlo en un comentario del PR #25.
 
 ---
 
-## 7. TAREA 26 (activa): la huella sin las claves de cada entorno y `catalogo` igual en los dos
+## 7. TAREA 26 (fusionada en el PR #25; falta el punto 3, producción): la huella sin las claves de cada entorno y `catalogo` igual en los dos
 
 **Contexto:** respuestas del propietario a las dudas del PR #24 (02/11/2026).
 
@@ -636,3 +636,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.35 | 02/11/2026 | Tarea 24 fusionada (PR #23): «hecha por», nada fuera del turno y pausa sola al acabar el turno. Sin tarea activa. |
 | 1.36 | 02/11/2026 | Tarea 25 activa: montar producción. |
 | 1.37 | 02/11/2026 | Tarea 25 fusionada (PR #24): producción montada. Tarea 26 activa: huella sin las claves de cada entorno y `catalogo` igual en los dos. |
+| 1.38 | 02/11/2026 | Tarea 26 fusionada (PR #25). Falta pasar la migración a producción (punto 3). |
