@@ -67,11 +67,25 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 22 está fusionada (PR #21). Espera a que el coordinador escriba la siguiente.
+**Tarea 23** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.38** (§6.4 y §8 «Hoy») y `CONTRATOS.md` §3.1, §3.14 y §4.3. El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 22 (fusionada en el PR #21): incidencias nuevas, lista de compras y avisos de Administración, en pruebas
+## 7. TAREA 23 (activa): cuatro arreglos tras la prueba del 02/11, en pruebas
+
+Aprobados por el propietario el 02/11/2026. **Reutiliza** lo que ya existe en cada punto; nada nuevo al lado.
+
+1. **Tareas de Administración no urgentes, después de lo del reparto.** El 02/11, «Pasar las cajas de Slush Mints 4g a la bolsa de granel» (Administración, para hoy, sin hora, no urgente, `orden` 50) le salió a las 08:29, antes de la revisión inicial (08:30), la producción y las bolsas. Regla: una tarea de Administración **no urgente y sin hora límite** no sale mientras falten, ese día, la revisión inicial, «Prepara el reparto», la producción del reparto, las bolsas y la preparación del envío del viernes (las que haya). **Usa el requisito de la Tarea 20** (`requiere_clave` + `motor.requisitos_hechos`) al crearla en `crear_tarea_admin`. Las urgentes y las que tienen hora límite no cambian.
+2. **«Hoy» en el orden en que se han hecho.** En `estado_actual().hoy`: primero las tareas hechas y la que está en curso, por `iniciada_en`; después las pendientes, en el orden de ahora. Solo cambia el orden; los campos son los mismos.
+3. **Administración por defecto.** `mi_perfil().quien_sale_opciones` (y donde se elija «la ficha de Administración», como `telefono_administracion`) coge hoy la primera ficha de Administración por orden alfabético, y sale «Administración de pruebas» en vez de «Asier». Haz como con el operario: una clave de configuración `administracion_por_defecto` (igual que `operario_por_defecto`), con la ficha de Asier en pruebas, y úsala; si falta, como ahora. La ficha de pruebas se queda para las pruebas.
+4. **«Calcular» siempre recalcula con la hoja de ese momento.** El 02/11 a las 10:31 la hoja tenía SLUSH MINTS 10g en 0 (mal colocado) y la producción pasó a «faltan 14, sin granel». A las 10:44 el propietario lo corrigió (19 cajas, 370 g) y pulsó «Calcular» con el mismo reparto: `guardar_reparto` leyó la hoja nueva (lectura `689498c6…`), pero por la **huella** (mismo texto) respondió `REPARTO_SIN_CAMBIOS` y no rehízo la producción. Cambio: la protección contra duplicados queda **solo por `id_cliente`** (el mismo toque repetido); un «Calcular» nuevo con el mismo reparto **recalcula** la producción y las bolsas con la lectura nueva, conservando lo hecho y las decisiones de R1e, como cualquier modificación. Explica en el PR qué pruebas cambian a propósito (las de `REPARTO_SIN_CAMBIOS` / `ya_pegado`).
+5. Pruebas de los cuatro puntos; `CONTRATOS.md` a la 1.9 con su nota (solo cambia el comportamiento del punto 4 y el orden del punto 2). Lista de `docs/AUDITORIA.md` pasada en pruebas.
+
+**Entrega:** Pull Request **«Tarea 23 — Cuatro arreglos tras la prueba del 02/11»**, con «Qué he leído y qué existía ya», la lista de `AUDITORIA.md` y las dudas.
+
+---
+
+## 7.0 TAREA 22 (fusionada en el PR #21): incidencias nuevas, lista de compras y avisos de Administración, en pruebas
 
 **Qué existe ya y hay que reutilizar** (constitución, regla 5): `crear_incidencia` y su tabla (opciones, quién, importancia, estados, «Pedido, esperando a que llegue», «Esperando a Administración»), la creación de tareas desde una incidencia, el correo en el momento a Administración (`motor.correos`), `cerrar_incidencia`, `incidencias_abiertas` y su número en `tarea_activa`, el cierre del turno. **Se amplía lo que hay; no se hace un segundo sistema de incidencias ni de avisos.**
 
@@ -571,3 +585,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.30 | 30/10/2026 | Tarea 21 fusionada (PR #20). Sin tarea activa. |
 | 1.31 | 30/10/2026 | Tarea 22 activa: incidencias nuevas, lista de compras y avisos de Administración. |
 | 1.32 | 30/10/2026 | Tarea 22 fusionada (PR #21). Sin tarea activa. |
+| 1.33 | 02/11/2026 | Tarea 23 activa: cuatro arreglos tras la prueba del 02/11. |
