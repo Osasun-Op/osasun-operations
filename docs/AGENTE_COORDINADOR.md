@@ -191,3 +191,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
   5. La apertura de la mañana se puede empezar **desde las 10:50** (10 minutos antes de abrir).
   6. **Apertura de la tarde** igual: una sola tarea (fichar, abrir, cartelería, Glovo), desde 10 minutos antes (16:50; Bilbao 16:20).
   7. **Recibir la bolsa:** al salir el reparto, la tarea «Recibe la bolsa del reparto» (con la hora de salida). **Enseña lo que trae la bolsa** (para poder saber si falta algo). Un toque: **«Bolsa recibida y reposición actualizada»** (la meten en su plantilla diaria al recibirla) y **«Falta algo»** para decir qué falta.
+  8. Dentro de «Recibe la bolsa», un punto más: **«Bolsa de ayer entregada con X € en efectivo»**, con X = el efectivo que apuntaron en el cierre de caja del día anterior; si entregan otra cantidad, indican cuál y por qué (por ejemplo, monedas para cambio). Se hace ya en el bloque 1, porque el cierre de caja va en el bloque 1.
