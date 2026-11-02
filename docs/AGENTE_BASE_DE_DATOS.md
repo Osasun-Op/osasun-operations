@@ -69,11 +69,13 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 26** (sección 7), fusionada en el PR #25: falta solo el punto 3, pasar la migración a producción (`AUDITORIA.md` §5) y contarlo en un comentario del PR #25.
+**Primero**, si no está hecho, el punto 3 de la **Tarea 26** (fusionada en el PR #25): pasar su migración a producción (`AUDITORIA.md` §5) y contarlo en un comentario del PR #25.
+
+**Después, Tarea 27** (sección 7): tiendas, primera parte (acceso, personas, horario y tareas del día). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **E2-8** y los puntos 1 a 30 del bloque 1 en `AGENTE_COORDINADOR.md`. Los nombres y las cuentas de Gmail de las tiendas te los da el propietario en el mensaje: solo de base a base. El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 27 (preparada, pendiente de aprobación del propietario): tiendas, primera parte — acceso, personas, horario y tareas del día, en pruebas
+## 7. TAREA 27 (activa): tiendas, primera parte — acceso, personas, horario y tareas del día, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` **E2-8** (bloque 1 de tiendas), con el detalle punto a punto en `AGENTE_COORDINADOR.md` (puntos 1 a 28). Es la primera de tres tareas; aquí **no** entran la bolsa, el seguimiento del reparto, el cierre de caja, las muestras, el material, las incidencias de tienda, los atascados, el panel ni el resumen del día (Tareas 28 y 29). **Reutiliza** el motor que ya existe (centros, plantillas por centro, jornadas, tareas con elementos, «hecha por», avisos de Administración, acceso con Google y cuentas autorizadas): nada al lado. Si para las tiendas hay que cambiar cómo funciona algo del almacén, te detienes y lo preguntas: **el almacén no puede cambiar**.
 
@@ -666,4 +668,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.36 | 02/11/2026 | Tarea 25 activa: montar producción. |
 | 1.37 | 02/11/2026 | Tarea 25 fusionada (PR #24): producción montada. Tarea 26 activa: huella sin las claves de cada entorno y `catalogo` igual en los dos. |
 | 1.38 | 02/11/2026 | Tarea 26 fusionada (PR #25). Falta pasar la migración a producción (punto 3). |
-| 1.39 | 02/11/2026 | Tarea 27 preparada (tiendas, primera parte), pendiente de aprobación del propietario. |
+| 1.39 | 02/11/2026 | Tarea 27 activa (tiendas, primera parte), aprobada por el propietario. |
