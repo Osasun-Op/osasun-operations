@@ -67,11 +67,31 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Ninguna.** La Tarea 24 está fusionada (PR #23). La siguiente (montar producción) la escribe el coordinador.
+**Tarea 25** (sección 7): montar producción. Lee antes `docs/CONSTITUCION_TECNICA.md` (reglas 8, 9 y 12), `docs/AUDITORIA.md` y `ESTADO_DEL_SISTEMA.md` v1.42 (separación de entornos). El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 24 (fusionada en el PR #23): quién hizo cada tarea y nada fuera del turno, en pruebas
+## 7. TAREA 25 (activa): montar producción
+
+**Contexto (decisión del propietario, 02/11/2026):** se separan los entornos. **Producción** = proyecto `osasun-produccion` (`iqjkysfbtpkukkvfyumf`, eu-west-1, plan Pro), el que usarán el almacén y las tiendas. **Pruebas** = `osasun-pruebas` (`rvypswuoafnjwqdwxjvo`), donde pruebas tus cambios. El propietario ya ha puesto en producción los secretos `GOOGLE_CUENTA_TECNICA` y `RESEND_API_KEY`. **En producción solo entra lo aprobado y fusionado en `main`.**
+
+1. **Estructura:** aplica en producción **todas** las migraciones de `supabase/migrations/`, en orden y con las mismas versiones. Nada que no esté en `main`.
+2. **Funciones del servidor:** despliega en producción las mismas que en pruebas, con la misma configuración (`verify_jwt` incluido).
+3. **Datos de partida** (opción A del propietario: solo lo necesario; el histórico de pruebas **no** se pasa):
+   - la configuración propia del entorno (la que la huella deja fuera: operario y Administración por defecto, teléfono, correos de destino, etc.), copiada de pruebas **sin** fichas ni datos de prueba;
+   - `cuentas_autorizadas` de las personas reales (Asier y Eder), copiadas de pruebas (son datos personales: de base a base, **nunca** al repositorio ni al PR);
+   - la lista de compras tal como está hoy en pruebas (con los cambios del propietario).
+   - Las fichas de persona se crean solas al entrar por primera vez con Google (hook); las claves que apuntan a una ficha (`operario_por_defecto`, `administracion_por_defecto`) se rellenan después del primer acceso: déjalo preparado y explícalo en el PR.
+4. **Comprobaciones, solo de lectura en producción:** `motor.auditoria()` («Sin avisos», mismas migraciones que el repositorio) y la huella de la prueba 00 igual a la de una base creada solo con las migraciones. **No ejecutes en producción ninguna prueba que escriba** (ni la 22 ni las demás).
+5. **Prepara, sin hacerlo todavía, el día del cambio:** qué hay que apagar en pruebas para que no mande correos al propietario ni genere cierres duplicados (las tareas programadas). Escríbelo en el PR; se hará cuando el propietario diga el día.
+6. **Fuera de tu alcance** (lo hace el propietario con la guía del coordinador): el proveedor de Google en Auth de producción, activar el hook «Before User Created», la Site URL y las direcciones de vuelta. Dilo en el PR si encuentras algo más que haga falta en el panel.
+7. `docs/AUDITORIA.md` y `CONTRATOS.md` §7.1: añade los dos entornos (URL y clave pública de producción) y cómo se pasa un cambio aprobado de pruebas a producción.
+
+**Entrega:** Pull Request **«Tarea 25 — Producción montada»**, con «Qué he leído y qué existía ya», la auditoría de producción, lo que falta en el panel y el plan del día del cambio.
+
+---
+
+## 7.0 TAREA 24 (fusionada en el PR #23): quién hizo cada tarea y nada fuera del turno, en pruebas
 
 Dos puntos aprobados por el propietario el 02/11. El 1 es el punto 5 de la Tarea 23, que no entró en el PR #22.
 
@@ -601,3 +621,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.33 | 02/11/2026 | Tarea 23 activa: cuatro arreglos tras la prueba del 02/11. |
 | 1.34 | 02/11/2026 | Tarea 23 fusionada (PR #22, con la regla «lo primero de la mañana»). Tarea 24 activa: quién hizo cada tarea. |
 | 1.35 | 02/11/2026 | Tarea 24 fusionada (PR #23): «hecha por», nada fuera del turno y pausa sola al acabar el turno. Sin tarea activa. |
+| 1.36 | 02/11/2026 | Tarea 25 activa: montar producción. |
