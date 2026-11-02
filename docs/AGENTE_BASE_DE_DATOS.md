@@ -71,7 +71,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
-## 7. TAREA 23 (activa): cuatro arreglos tras la prueba del 02/11, en pruebas
+## 7. TAREA 23 (activa): cinco arreglos tras la prueba del 02/11, en pruebas
 
 Aprobados por el propietario el 02/11/2026. **Reutiliza** lo que ya existe en cada punto; nada nuevo al lado.
 
@@ -79,9 +79,10 @@ Aprobados por el propietario el 02/11/2026. **Reutiliza** lo que ya existe en ca
 2. **«Hoy» en el orden en que se han hecho.** En `estado_actual().hoy`: primero las tareas hechas y la que está en curso, por `iniciada_en`; después las pendientes, en el orden de ahora. Solo cambia el orden; los campos son los mismos.
 3. **Administración por defecto.** `mi_perfil().quien_sale_opciones` (y donde se elija «la ficha de Administración», como `telefono_administracion`) coge hoy la primera ficha de Administración por orden alfabético, y sale «Administración de pruebas» en vez de «Asier». Haz como con el operario: una clave de configuración `administracion_por_defecto` (igual que `operario_por_defecto`), con la ficha de Asier en pruebas, y úsala; si falta, como ahora. La ficha de pruebas se queda para las pruebas.
 4. **«Calcular» siempre recalcula con la hoja de ese momento.** El 02/11 a las 10:31 la hoja tenía SLUSH MINTS 10g en 0 (mal colocado) y la producción pasó a «faltan 14, sin granel». A las 10:44 el propietario lo corrigió (19 cajas, 370 g) y pulsó «Calcular» con el mismo reparto: `guardar_reparto` leyó la hoja nueva (lectura `689498c6…`), pero por la **huella** (mismo texto) respondió `REPARTO_SIN_CAMBIOS` y no rehízo la producción. Cambio: la protección contra duplicados queda **solo por `id_cliente`** (el mismo toque repetido); un «Calcular» nuevo con el mismo reparto **recalcula** la producción y las bolsas con la lectura nueva, conservando lo hecho y las decisiones de R1e, como cualquier modificación. Explica en el PR qué pruebas cambian a propósito (las de `REPARTO_SIN_CAMBIOS` / `ya_pegado`).
-5. Pruebas de los cuatro puntos; `CONTRATOS.md` a la 1.9 con su nota (solo cambia el comportamiento del punto 4 y el orden del punto 2). Lista de `docs/AUDITORIA.md` pasada en pruebas.
+5. **Quién hizo la tarea** (añadido por el propietario el 02/11). En `estado_actual().hoy`, por tarea hecha, **`hecha_por`** (nombre). El caso que lo pide: «Prepara el reparto» se cierra sola cuando alguien guarda el reparto; el 02/11 la cerró Asier desde su cuenta a las 08:27 y no se veía. Reutiliza lo que ya se guarda (`repartos.pegado_por`, `registro_eventos.persona_id` de `tarea_terminada`); no añadas un registro nuevo. Solo se añade el campo.
+6. Pruebas de los cinco puntos; `CONTRATOS.md` a la 1.9 con su nota (cambia el comportamiento del punto 4, el orden del punto 2 y se añade `hecha_por`). Lista de `docs/AUDITORIA.md` pasada en pruebas.
 
-**Entrega:** Pull Request **«Tarea 23 — Cuatro arreglos tras la prueba del 02/11»**, con «Qué he leído y qué existía ya», la lista de `AUDITORIA.md` y las dudas.
+**Entrega:** Pull Request **«Tarea 23 — Arreglos tras la prueba del 02/11»**, con «Qué he leído y qué existía ya», la lista de `AUDITORIA.md` y las dudas.
 
 ---
 
