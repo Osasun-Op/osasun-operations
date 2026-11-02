@@ -1,6 +1,8 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.10 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24).
+**Versión:** 1.11 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción.
+
+> **Cambios en 1.11 (Tarea 25) — para Lovable: ya hay producción.** No cambia ninguna función. §7.1 trae los dos entornos: **pruebas** (donde se prueba todo) y **producción** (la que usarán el almacén y las tiendas), cada uno con su URL y su clave pública. Las dos bases tienen las mismas funciones y responden igual; solo cambian la dirección, la clave y los datos.
 
 > **Cambios en 1.10 (Tarea 24) — para Lovable: quién hizo cada tarea y nada fuera del turno** (`ESTADO_DEL_SISTEMA.md` v1.39). Solo se añade un campo y cambia un comportamiento.
 > 1. **`estado_actual().hoy`** (§4.3): cada tarea trae **`hecha_por`**, el nombre de quien la cerró («Prepara el reparto» la cierra quien guarda el reparto, aunque sea Administración). `null` si no está hecha. Para enseñarlo en «Hoy» junto a la hora de fin.
@@ -603,17 +605,21 @@ Pantalla **Histórico** de Administración (`ESTADO_DEL_SISTEMA.md` §8): con un
 
 Las pantallas están en otro repositorio (`osasun-pantallas`) y **no usan la integración de Supabase de Lovable**: solo la URL del proyecto y la clave pública, y **solo las funciones de este documento**. No crean ni cambian tablas, no escriben en ellas (la base de datos lo rechaza), no calculan nada y no envían la hora.
 
-### 7.1 Conexión (proyecto de **pruebas**)
-| Dato | Valor |
-| --- | --- |
-| URL del proyecto | `https://rvypswuoafnjwqdwxjvo.supabase.co` |
-| Clave pública (*publishable*) | `sb_publishable_IKa8qY4SO04BeRe0WWhy-Q_nE2OIwQg` |
+### 7.1 Conexión (pruebas y producción)
+| Dato | Pruebas (`osasun-pruebas`) | Producción (`osasun-produccion`) |
+| --- | --- | --- |
+| URL del proyecto | `https://rvypswuoafnjwqdwxjvo.supabase.co` | `https://iqjkysfbtpkukkvfyumf.supabase.co` |
+| Clave pública (*publishable*) | `sb_publishable_IKa8qY4SO04BeRe0WWhy-Q_nE2OIwQg` | `sb_publishable_32yrYIfaB8FT6PFMyIw3nQ_u6sJHjVu` |
 
-La clave pública no es secreta: no da permisos por sí sola; los da la sesión de cada persona. Producción tendrá otra URL y otra clave.
+La clave pública no es secreta: no da permisos por sí sola; los da la sesión de cada persona. Las dos bases tienen las mismas funciones (`CONTRATOS.md` entero vale para las dos); en producción solo entra lo ya probado en pruebas y fusionado en `main` (`AUDITORIA.md` §5). Se cambia de una a otra solo con la URL y la clave:
 ```js
 import { createClient } from '@supabase/supabase-js'
+// Pruebas
 export const supabase = createClient('https://rvypswuoafnjwqdwxjvo.supabase.co', 'sb_publishable_IKa8qY4SO04BeRe0WWhy-Q_nE2OIwQg')
+// Producción
+// export const supabase = createClient('https://iqjkysfbtpkukkvfyumf.supabase.co', 'sb_publishable_32yrYIfaB8FT6PFMyIw3nQ_u6sJHjVu')
 ```
+En producción, las cuentas autorizadas entran con Google igual que en pruebas; su ficha se crea sola la primera vez (§7.2).
 
 ### 7.2 Iniciar sesión (solo Google)
 - Un único botón «Entrar con Google». No hay registro ni contraseña.
@@ -624,6 +630,7 @@ await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo:
 - **Cuenta no autorizada:** Google vuelve a la app con `error_description` en la dirección («Esta cuenta no tiene acceso a Osasun Operations. Pide acceso a Administración.»). Se muestra tal cual, con el botón de entrar.
 - Si `mi_perfil` devuelve `NO_AUTORIZADO` (usuario sin ficha): mostrar el mensaje y un botón «Salir» (`supabase.auth.signOut()`).
 - Direcciones de vuelta permitidas en pruebas: las previsualizaciones de Lovable (`*.lovable.app`, `*.lovableproject.com`). Otra dirección se pide al coordinador.
+- En producción, la Site URL y las direcciones de vuelta las pone el propietario en el panel de Auth de producción (la dirección publicada de la app). Hasta entonces, entrar con Google en producción no funciona.
 
 ### 7.3 Llamar a las funciones
 - **Base de datos:** `const { data, error } = await supabase.rpc('nombre', { parametros })`, con los nombres de parámetro de este documento. Ej.: `supabase.rpc('terminar_tarea', { tarea_id, resultado: 'Hecho' })`.
