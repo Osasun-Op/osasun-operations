@@ -74,6 +74,27 @@ Ninguna. La Tarea 27 está fusionada (PR #26) y **no se pasa a producción** (ve
 
 ---
 
+## 7. TAREA 28 (preparada, pendiente de aprobación del propietario): tiendas, segunda parte — la bolsa, por dónde va el reparto, el cierre de caja, las muestras y el material, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` **E2-8** y `AGENTE_COORDINADOR.md`, bloque 1 (puntos 7 a 10, 12 a 14, 18, 24, 29 y 30). Sigue la Tarea 27 (PR #26): mismas reglas. **Solo en pruebas; producción espera** (excepción de tiendas, sección 4). **El almacén no puede cambiar**: lo que hoy hace Eder (preparar, bolsas, salida, ruta) sigue igual y sin pasos nuevos para él. Reutiliza lo que existe: el reparto y el envío del día, sus bolsas y paradas, las **peticiones especiales** (R1d, Tarea 13), los puntos y la lista del día de la tienda (Tarea 27) y la activación por tienda.
+
+1. **«Recibe la bolsa»** (tiendas con parada en el reparto de hoy): sale **cuando sale el reparto**, con la hora de salida. Enseña lo que trae la bolsa de esa tienda (productos, peticiones y pedidos de cliente), para poder ver si falta algo. Puntos:
+   - «Bolsa recibida»;
+   - «Bolsa de ayer entregada con X € en efectivo», con **X = el efectivo del último cierre de caja de esa tienda** (punto 4); si entregan otra cantidad, dicen cuál y por qué (por ejemplo, monedas para cambio). Si no hay cierre anterior, piden la cantidad.
+   Al hacerla, la bolsa consta como recibida a esa hora.
+2. **«Coloca y apunta la reposición»**: sale después de «Recibe la bolsa», con la lista de lo que tenía que llegar. Dos salidas: **«Reposición metida, todo bien»** o **«Falta algo»** (elegir qué de la lista y cuánto). Lo que falta llega a **[destino pendiente de decidir por el propietario]**.
+3. **Por dónde va el reparto:** sin que quien reparte haga nada. Al salir, todas las tiendas con parada ven «Ha salido a las HH:MM»; cada vez que una tienda marca «Bolsa recibida», las demás ven «Ha pasado por [tienda] a las HH:MM» y en qué lugar de la ruta van (el orden de las paradas del reparto). Va en `tienda_hoy()`.
+4. **Cierre de caja** en el «Cierre del día» (un punto más, el primero de los de dinero): **Z, número de ventas, efectivo y Glovo**. Se guarda por tienda y día; el efectivo es la X del día siguiente (punto 1). Administración lo verá en su panel (Tarea 29); deja la función de lectura preparada.
+5. **«Revisa las muestras»** (jueves por la mañana; en Bilbao alterna por semanas como las demás semanales): comprobar que están en buen estado y **elegir qué hay que traer nuevo** (de la lista de productos, con cantidad, como en el reparto). Activada también en **Donosti y Rentería**.
+6. **Pedir material de tienda** (bolsas, rollos de TPV…): texto libre, en cualquier momento (la tienda lo pide desde su pantalla; en la Tarea 29 también desde las incidencias).
+7. **Muestras y material van al siguiente reparto o envío de esa tienda como peticiones especiales** (R1d): quedan pendientes y, al preparar el siguiente reparto (o envío) que lleve esa tienda, salen **ya puestas** en su casilla de peticiones, para que Administración las vea y las pueda cambiar. Al guardarlo, quedan atendidas y la tienda lo ve («Va en el reparto de mañana»). **No cambia nada en las bolsas ni en la salida** de Eder: las peticiones ya existen.
+8. **Franquicias:** en esta tarea solo las muestras (punto 5) y sus peticiones (punto 7); no tienen «Recibe la bolsa», reposición ni cierre de caja.
+9. **Contratos:** funciones nuevas o campos nuevos de `tienda_hoy()`, solo añadiendo. Corrige de paso la nota de §9 y la leyenda 🧪 de `CONTRATOS.md`: lo de tiendas **no** pasa a producción al fusionar, sino cuando el propietario lo apruebe.
+
+**Entrega:** Pull Request **«Tarea 28 — Tiendas: bolsa, cierre de caja, muestras y material»**, con «Qué he leído y qué existía ya», pruebas en verde (incluida una prueba de que el almacén sigue igual: preparar, bolsas, salida y peticiones de siempre), una llamada real, registros sin errores nuevos y cómo deshacer. **No se pasa a producción.**
+
+---
+
 ## 7.0 TAREA 27 (fusionada en el PR #26; solo en pruebas, producción espera): tiendas, primera parte — acceso, personas, horario y tareas del día, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` **E2-8** (bloque 1 de tiendas), con el detalle punto a punto en `AGENTE_COORDINADOR.md` (puntos 1 a 28). Es la primera de tres tareas; aquí **no** entran la bolsa, el seguimiento del reparto, el cierre de caja, las muestras, el material, las incidencias de tienda, los atascados, el panel ni el resumen del día (Tareas 28 y 29). **Reutiliza** el motor que ya existe (centros, plantillas por centro, jornadas, tareas con elementos, «hecha por», avisos de Administración, acceso con Google y cuentas autorizadas): nada al lado. Si para las tiendas hay que cambiar cómo funciona algo del almacén, te detienes y lo preguntas: **el almacén no puede cambiar**.
@@ -669,3 +690,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.38 | 02/11/2026 | Tarea 26 fusionada (PR #25). Falta pasar la migración a producción (punto 3). |
 | 1.39 | 02/11/2026 | Tarea 27 activa (tiendas, primera parte), aprobada por el propietario. |
 | 1.40 | 02/11/2026 | Tarea 27 fusionada (PR #26). Lo de tiendas no pasa a producción hasta que el propietario lo apruebe tras probarlo. Sin tarea activa. |
+| 1.41 | 02/11/2026 | Tarea 28 preparada (tiendas, segunda parte), pendiente de aprobación del propietario. |
