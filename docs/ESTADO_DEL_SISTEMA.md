@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.40 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.41 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -235,6 +235,7 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
 ### 6.4 Encaje y prioridad
 - **Una tarea con hora** entra al terminar la **referencia o bolsa en curso**, nunca a mitad de un pesaje ni al final de una lista entera. Si empieza tarde, se registra la hora real.
 - **Lo primero de la mañana** (decisión del propietario, 02/11/2026; sustituye a la regla solo para tareas de Administración): la revisión inicial, «Prepara el reparto», la producción del reparto, las bolsas y, el viernes, la preparación del envío van **siempre antes que cualquier otra tarea**, venga de donde venga (Administración, arrastradas, +35 %, compras, incidencias). Siguen entrando lo urgente (Administración urgente, incidencia «ahora», mercancía), volver a llamar por un problema, lo que va a su hora (salida, Nacex, recuento), las de Administración con hora límite y los pedidos para recoger en tienda. En los huecos de espera, «Orden y limpieza». Solo por la mañana. Por la tarde, el envío ya va primero cuando está pegado; mientras se espera la decisión de Administración puede salir la fija del día (el propietario lo da por bueno).
+- **Fuera del turno, ninguna tarea** (02/11/2026): tampoco lo urgente; espera al siguiente turno. Lo **obligatorio** que esté en curso se puede terminar pasada la hora (el recuento de las 12:45). Lo **no obligatorio** en curso (+35 %, compras, orden y limpieza, tareas de Administración sin hora) **se pausa solo al acabar el turno**, conserva lo hecho y vuelve a salir en el siguiente; en «Hoy» consta «interrumpida por fin del turno» y, si no se termina en el día, el cierre dice «Sin terminar: fin del turno». En «Hoy», cada tarea hecha dice **quién la hizo**.
 - **«Calcular» siempre recalcula** con la hoja del momento (02/11/2026): si se corrige la hoja, basta con volver a calcular; cada cálculo deja el anterior como «sustituido».
   - Urgente: entra al terminar lo que tiene entre manos.
   - Con hora límite: va al primer hueco que no ponga en riesgo una obligatoria.
@@ -561,3 +562,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.38 | 02/11/2026 | Tras la prueba del 02/11: tareas de Administración no urgentes después de lo del reparto; «Hoy» en el orden en que se hicieron; Asier como Administración por defecto; «Calcular» siempre recalcula con la hoja del momento; «Hecho» para cerrar una incidencia. |
 | 1.39 | 02/11/2026 | Tarea 23: regla «lo primero de la mañana» para todas las tareas; «Calcular» siempre recalcula; Asier como Administración por defecto; «Hoy» en el orden en que se hizo. |
 | 1.40 | 02/11/2026 | E2-6: cómo se mueven hoy los datos de las tiendas (plantillas, script, control semanal, evolución), Durango en lugar de Laudio, Donosti y Rentería como franquicias, y el objetivo de pasar todo al software con un paso intermedio escribiendo en la plantilla de cada tienda. |
+| 1.41 | 02/11/2026 | Tarea 24: «hecha por» en «Hoy»; fuera del turno ninguna tarea; lo no obligatorio se pausa solo al acabar el turno. |

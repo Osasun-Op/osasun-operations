@@ -67,11 +67,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 24** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.39** (§6.4 y §8 «Hoy») y `CONTRATOS.md` §3.2 y §4.3. El PR lleva «Qué he leído y qué existía ya».
+**Ninguna.** La Tarea 24 está fusionada (PR #23). La siguiente (montar producción) la escribe el coordinador.
 
 ---
 
-## 7. TAREA 24 (activa): quién hizo cada tarea y nada fuera del turno, en pruebas
+## 7. TAREA 24 (fusionada en el PR #23): quién hizo cada tarea y nada fuera del turno, en pruebas
 
 Dos puntos aprobados por el propietario el 02/11. El 1 es el punto 5 de la Tarea 23, que no entró en el PR #22.
 
@@ -600,3 +600,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.32 | 30/10/2026 | Tarea 22 fusionada (PR #21). Sin tarea activa. |
 | 1.33 | 02/11/2026 | Tarea 23 activa: cuatro arreglos tras la prueba del 02/11. |
 | 1.34 | 02/11/2026 | Tarea 23 fusionada (PR #22, con la regla «lo primero de la mañana»). Tarea 24 activa: quién hizo cada tarea. |
+| 1.35 | 02/11/2026 | Tarea 24 fusionada (PR #23): «hecha por», nada fuera del turno y pausa sola al acabar el turno. Sin tarea activa. |
