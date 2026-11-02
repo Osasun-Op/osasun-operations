@@ -52,6 +52,38 @@ begin
 end;
 $$;
 
+-- Tarea 26: la carga inicial no cuenta las claves propias de cada entorno (AUDITORIA.md §0),
+-- así la huella es la misma en pruebas, en producción y en una base creada solo con las
+-- migraciones. Cambiar una clave común sí la cambia. Los cambios se deshacen dentro del bloque.
+do $$
+declare
+  antes text := (select huella from motor.huella_estructura() where apartado = 'carga inicial');
+  con_entorno text;
+  con_comun text;
+  k text;
+begin
+  begin
+    foreach k in array array['entorno', 'url_proyecto', 'correo_administracion', 'telefono_administracion',
+                             'cuentas_autorizadas', 'operario_por_defecto', 'administracion_por_defecto',
+                             'cierres_sin_correo'] loop
+      insert into public.configuracion (clave, centro_id, valor) values (k, null, '"otro entorno"')
+      on conflict (clave, centro_id) do update set valor = excluded.valor;
+    end loop;
+    con_entorno := (select huella from motor.huella_estructura() where apartado = 'carga inicial');
+    update public.configuracion set valor = '36' where clave = 'stock_objetivo_pct' and centro_id is null;
+    con_comun := (select huella from motor.huella_estructura() where apartado = 'carga inicial');
+    raise exception using errcode = 'P0001', message = 'deshacer';
+  exception when sqlstate 'P0001' then
+    null;
+  end;
+  perform pg_temp.comprobar('Carga inicial: las 8 claves de cada entorno no cambian la huella',
+    con_entorno = antes, con_entorno || ' ≠ ' || antes);
+  perform pg_temp.comprobar('Carga inicial: una clave común (stock_objetivo_pct) sí la cambia',
+    con_comun is distinct from antes
+    and (select huella from motor.huella_estructura() where apartado = 'carga inicial') = antes, con_comun);
+end;
+$$;
+
 -- Casos raros, uno a uno.
 create table public.prueba_sin_rls (x int);
 select pg_temp.comprobar('Tabla de public sin RLS → aviso',
