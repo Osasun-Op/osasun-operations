@@ -44,6 +44,8 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 - Si falta un dato, **lo preguntas**; no lo supones. Lista las preguntas al final de tu entrega.
 - Tus resúmenes de entrega van **en lenguaje de negocio**: qué has hecho, qué cambia, qué riesgo hay y qué decisión se necesita.
 
+- **Producción (desde el 02/11/2026):** cuando el propietario fusione un PR tuyo con migraciones o funciones del servidor, pásalas a producción siguiendo `docs/AUDITORIA.md` §5 y cuéntalo en un comentario de ese PR. En producción nunca ejecutas pruebas que escriban.
+
 ## 5. Principios técnicos obligatorios
 
 1. **El servidor decide.** Cálculos, permisos, estados y verificaciones viven en Supabase. El navegador solo muestra y solicita.
