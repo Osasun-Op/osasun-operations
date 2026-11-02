@@ -73,6 +73,32 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
+## 7. TAREA 27 (preparada, pendiente de aprobación del propietario): tiendas, primera parte — acceso, personas, horario y tareas del día, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` **E2-8** (bloque 1 de tiendas), con el detalle punto a punto en `AGENTE_COORDINADOR.md` (puntos 1 a 28). Es la primera de tres tareas; aquí **no** entran la bolsa, el seguimiento del reparto, el cierre de caja, las muestras, el material, las incidencias de tienda, los atascados, el panel ni el resumen del día (Tareas 28 y 29). **Reutiliza** el motor que ya existe (centros, plantillas por centro, jornadas, tareas con elementos, «hecha por», avisos de Administración, acceso con Google y cuentas autorizadas): nada al lado. Si para las tiendas hay que cambiar cómo funciona algo del almacén, te detienes y lo preguntas: **el almacén no puede cambiar**.
+
+1. **Acceso de tienda:** cada tienda entra con **su cuenta de Gmail** (cuentas autorizadas, con su centro). Rol nuevo de tienda: solo ve lo suyo y no ve nada de Administración. Donosti, Rentería y Durango (inactiva) sin acceso ni tareas por ahora.
+2. **Personas de cada tienda:** una lista de nombres por tienda, con cuándo trabajan (entre semana, sábados; en Bilbao, mañana o tarde). **Al empezar el turno**, la tienda elige el nombre de quien está; ese nombre es el «hecha por» de lo que se haga en el turno. Administración añade y quita nombres (funciones para su panel).
+3. **Horario por tienda:** L–V 11:00–13:30 y 17:00–20:30; Bilbao, tarde 16:30–20:30. Sábados igual, pero cierran a las 19:30, salvo Bilbao (20:30). Domingos, nada. Configurable por tienda, no fijo en el código.
+4. **Festivos:** Administración marca un día «cerrado» para una tienda o para todas (y lo quita); ese día no se genera nada. Si no marca nada, día normal.
+5. **El día de la tienda:** la tienda ve **todas** sus tareas del día en una lista, cada una con su hora orientativa (no una sola tarea como el almacén). **No se pueden marcar antes de su hora.** **Sin avisos ni estados de retraso.** Lo que no se ha hecho al cerrar queda como **no hecho** (no pasa al día siguiente). **Avisos de Administración** para una tienda o para todas: salen al entrar y se marcan como leídos (reutiliza los avisos de la Tarea 22).
+6. **Tareas diarias** (una tarea con sus puntos, que se tocan uno a uno; se da por hecha al tocar el último):
+   - **Apertura de la mañana**, desde las 10:50: fichar en Woffu · abrir · cartelería · Glovo · barrido y puesta a punto.
+   - **Apertura de la tarde**, desde 10 minutos antes de abrir (16:50; Bilbao 16:20): fichar · abrir · cartelería · Glovo.
+   - **Cierre de la mañana**, desde las 13:20: ventas y stock de la plantilla al día (todo en verde) · incidencias del turno registradas.
+   - **Cierre del día**, desde 10 minutos antes de cerrar (20:20; sábados 19:20; Bilbao siempre 20:20): ventas del día en la plantilla (todo en verde) · suelo fregado · efectivo contado y en la bolsa para mañana · incidencias de la tarde registradas. (El cierre de caja en la app se añade en la Tarea 28.)
+7. **Semanales de esta tarea:** **limpieza de cristales** el jueves por la tarde y **vídeo de la semana** el viernes por la mañana. En **Bilbao**, todas las semanales alternan por semanas entre el turno de mañana y el de tarde (di en el PR qué regla usas, por ejemplo semana par/impar).
+8. **Vídeo de la semana**, con este texto aprobado por el propietario: «Busca y mira un vídeo sobre nuestro sector: cannabis y CBD, cultivos y variedades, extracciones o la cultura cannábica. También sobre los ingredientes de nuestra crema, lo que se te ocurra pero tiene que estar relacionado con lo que vendemos. Pega el enlace de YouTube y escribe en una línea qué has aprendido. Quedará en la lista de vídeos que ven todas las tiendas, para recomendarlo a compañeros y clientes.»
+   - Se termina con un **enlace de YouTube** (se comprueba que lo es) y **una línea** de lo aprendido, o con **«Hoy no he podido»**, que la cierra sin enlace y no pasa al día siguiente.
+   - **Sábado:** sale a quien trabaje ese día si **esa persona** no ha compartido vídeo esa semana. Cada persona, como mucho uno por semana. Si la persona del viernes no pudo, el sábado no le vuelve a salir a ella.
+   - **Lista de vídeos:** la ven todas las tiendas (y Administración): enlace, lo aprendido, tienda, persona y fecha, los más nuevos primero.
+9. **Contratos:** las funciones nuevas para las pantallas de la tablet y para Administración van en `CONTRATOS.md` (versión nueva con nota para Lovable). Solo se añade: lo del almacén no cambia de forma.
+10. **Datos de pruebas:** los nombres de las personas y las cuentas de Gmail de las tiendas son datos personales: te los da el propietario en el mensaje de encargo y los cargas en pruebas **de base a base**, nunca en el repositorio, en las migraciones ni en el PR. Para las pruebas automáticas, nombres inventados.
+
+**Entrega:** Pull Request **«Tarea 27 — Tiendas: acceso, personas y tareas del día»**, con «Qué he leído y qué existía ya», pruebas en verde (incluida una prueba de que el almacén sigue igual), una llamada real que responde bien, registros sin errores nuevos y cómo deshacer. Al fusionarlo, a producción según `AUDITORIA.md` §5.
+
+---
+
 ## 7. TAREA 26 (fusionada en el PR #25; falta el punto 3, producción): la huella sin las claves de cada entorno y `catalogo` igual en los dos
 
 **Contexto:** respuestas del propietario a las dudas del PR #24 (02/11/2026).
@@ -639,3 +665,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.36 | 02/11/2026 | Tarea 25 activa: montar producción. |
 | 1.37 | 02/11/2026 | Tarea 25 fusionada (PR #24): producción montada. Tarea 26 activa: huella sin las claves de cada entorno y `catalogo` igual en los dos. |
 | 1.38 | 02/11/2026 | Tarea 26 fusionada (PR #25). Falta pasar la migración a producción (punto 3). |
+| 1.39 | 02/11/2026 | Tarea 27 preparada (tiendas, primera parte), pendiente de aprobación del propietario. |
