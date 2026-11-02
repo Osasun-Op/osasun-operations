@@ -53,7 +53,7 @@ Al generar la jornada se revisan las tareas no terminadas (pendiente, en curso o
 - Una copia que tampoco se hace vuelve a pasar al siguiente día trabajado (salta el fin de semana).
 
 ### 2.3 Qué tarea toca ahora (`tarea_activa`) ✅
-Solo tareas disponibles (su hora o su turno ya ha llegado), no bloqueadas y con su requisito hecho (`motor.requisitos_hechos`: ninguna de las tareas que pide está por hacer). Orden:
+Solo dentro de un turno de la persona (`horarios`; Tarea 24): fuera de él no se elige nada, salvo la tarea en curso, que se puede terminar. Al generarse el cierre de cada turno, lo no obligatorio que quedó en curso se pausa solo (`motor.pausar_fin_de_turno`). Solo tareas disponibles (su hora o su turno ya ha llegado), no bloqueadas y con su requisito hecho (`motor.requisitos_hechos`: ninguna de las tareas que pide está por hacer). Orden:
 
 1. La tarea **en curso** (solo puede haber una).
 2. **«Llama a Administración»** por un problema sin resolver cuya nueva llamada ha llegado (§6.6).
