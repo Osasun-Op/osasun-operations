@@ -190,3 +190,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
   4. **Apertura = una sola tarea** con sus puntos dentro para tocar uno a uno (fichar en Woffu, abrir, cartelería, Glovo, barrido y puesta a punto); se da por hecha al tocar el último. Los avisos salen antes, al entrar, y se marcan como leídos.
   5. La apertura de la mañana se puede empezar **desde las 10:50** (10 minutos antes de abrir).
   6. **Apertura de la tarde** igual: una sola tarea (fichar, abrir, cartelería, Glovo), desde 10 minutos antes (16:50; Bilbao 16:20).
+  7. **Recibir la bolsa:** al salir el reparto, la tarea «Recibe la bolsa del reparto» (con la hora de salida). **Enseña lo que trae la bolsa** (para poder saber si falta algo). Un toque: **«Bolsa recibida y reposición actualizada»** (la meten en su plantilla diaria al recibirla) y **«Falta algo»** para decir qué falta.
