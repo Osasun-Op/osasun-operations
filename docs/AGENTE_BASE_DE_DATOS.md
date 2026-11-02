@@ -67,18 +67,19 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 24** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.39** (§8 «Hoy») y `CONTRATOS.md` §4.3. El PR lleva «Qué he leído y qué existía ya».
+**Tarea 24** (sección 7). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **v1.39** (§6.4 y §8 «Hoy») y `CONTRATOS.md` §3.2 y §4.3. El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 24 (activa): quién hizo cada tarea en «Hoy», en pruebas
+## 7. TAREA 24 (activa): quién hizo cada tarea y nada fuera del turno, en pruebas
 
-Es el punto 5 de la Tarea 23, que se añadió después de empezarla y no entró en el PR #22.
+Dos puntos aprobados por el propietario el 02/11. El 1 es el punto 5 de la Tarea 23, que no entró en el PR #22.
 
 1. En `estado_actual().hoy`, por tarea hecha, **`hecha_por`** (nombre de la persona). El caso que lo pide: «Prepara el reparto» se cierra sola cuando alguien guarda el reparto; el 02/11 la cerró Asier desde su cuenta a las 08:27 y en el panel no se veía. **Reutiliza** lo que ya se guarda (`repartos.pegado_por`, `registro_eventos.persona_id` de `tarea_terminada`); no añadas un registro nuevo. Solo se añade el campo (`null` en las no hechas).
-2. Prueba (la del 02/11: «Prepara el reparto» hecha por Asier; una tarea normal, por Eder). `CONTRATOS.md` a la 1.10, con su nota para Lovable. Lista de `docs/AUDITORIA.md` pasada en pruebas.
+2. **Fuera de su turno, ninguna tarea** (aprobado por el propietario el 02/11). El 02/11 el operario terminó el recuento de la mañana a las 13:04 (su turno acaba a las 13:00) y le salió «Producción para el stock (+35 %)». Hoy `motor.elegir_tarea` solo mira el horario en la parte de «nunca sin tarea». **Reutiliza esa misma comprobación del horario** (`horarios`, turno en curso) para toda la elección: fuera de su turno, `tarea_activa().tarea` es `null` («Ahora no hay nada pendiente»), salvo la tarea que tenga **en curso**, que la puede terminar. Lo pendiente vuelve a salir al empezar el siguiente turno. Es lo que ya dice `CONTRATOS.md` §3.2 («`tarea` es `null` solo fuera del turno»).
+3. Pruebas: la del 02/11 («Prepara el reparto» hecha por Asier; una tarea normal, por Eder); recuento terminado a las 13:04 → sin tarea hasta las 15:30; una tarea en curso a las 13:00 se puede terminar; las pruebas del orden del día (01, 05, 13, 26) siguen en verde. `CONTRATOS.md` a la 1.10, con su nota para Lovable. Lista de `docs/AUDITORIA.md` pasada en pruebas.
 
-**Entrega:** Pull Request **«Tarea 24 — Quién hizo cada tarea»**, con «Qué he leído y qué existía ya», la lista de `AUDITORIA.md` y las dudas.
+**Entrega:** Pull Request **«Tarea 24 — Quién hizo cada tarea y nada fuera del turno»**, con «Qué he leído y qué existía ya», la lista de `AUDITORIA.md` y las dudas.
 
 ---
 
