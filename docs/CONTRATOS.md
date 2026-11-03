@@ -1,6 +1,14 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.15 · **Fecha:** 03/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.16 · **Fecha:** 03/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.16 (Tarea 30) — para Lovable: incidencias de tienda.** Solo se añade (§9.1 y §9.20). 🧪 = solo en pruebas.
+> 1. **Botón «Incidencia»** en la tableta: las opciones de esa tienda vienen en **`tienda_hoy().opciones_incidencia`** (en las propias: «Material de tienda», «Me quedo sin producto», «Descuadre de stock o de caja», «Comentario de cliente» y «Otros»; en Donosti y Rentería, solo «Otros», un cuadro de texto libre). Pintar solo las que vengan. Sin foto ni urgencia.
+> 2. **«Material de tienda»** es lo de siempre: `pedir_material` (§9.15). Las demás, **`crear_incidencia_tienda`** (§9.20).
+> 3. **«Me quedo sin producto»:** enseñar el botón de **llamar a Administración** (`mi_perfil().telefono_administracion`) y, además, elegir el producto de `productos_tienda()` (nota opcional, por ejemplo el formato): queda apuntado.
+> 4. **`tienda_hoy().incidencias`:** las de la tienda abiertas y las cerradas hoy, con `estado_texto` («Abierta» / «Resuelta por Administración: [nota]»).
+> 5. **Administración:** llegan a `incidencias_tiendas()` (§9.17) como incidencias abiertas, con su `opcion`, y se cierran con `cerrar_incidencia_tienda`. No hay que cambiar nada.
+> 6. El pendiente de §9.11 («Recibe la bolsa» no enseña la lista) ya está en 1.15.
 
 > **Cambios en 1.15 (Tarea 29b) — para Lovable: el aviso de salida solo cuando toca y «Recibe la bolsa» sin lista.** Nada cambia de forma. 🧪 = solo en pruebas.
 > 1. **`tarea_activa().aviso_salida`** (§3.2) solo sale antes de que salga el reparto, dentro del turno y con las bolsas de hoy disponibles. Por la tarde, o con el reparto ya fuera, es `null` (el 03/11 salía a las 19:33).
@@ -208,6 +216,7 @@ Tiendas (Tarea 27, §9; columna «Tienda» = la cuenta de cada tienda):
 | `productos_tienda` | BD | ✔ | ✔ | 🧪 Tarea 28 |
 | `peticiones_tiendas_pendientes` | BD | — (operario ✔) | ✔ | 🧪 Tarea 28 |
 | `descartar_peticion_tienda` · `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` | BD | — | ✔ | 🧪 Tarea 28 |
+| `crear_incidencia_tienda` | BD | ✔ | — | 🧪 Tarea 30 |
 | Todas las del almacén y las de Administración de arriba | — | — (`NO_AUTORIZADO`) | — | 🧪 Tarea 27 |
 
 ## 3. Operario
@@ -796,6 +805,7 @@ Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la c
 - `avisos`: los avisos de Administración sin leer (los de hoy y los de días anteriores que no se leyeron). **Se enseñan al entrar** (antes de la lista); cada uno con «Leído» (`marcar_aviso_leido`). Desde la Tarea 29 cada uno trae **`de`**: «Almacén» o «Administración» (mostrarlo: «Aviso del almacén»).
 - `tareas`: la lista del día, por hora.
 - **Tarea 28:** `reparto` (por dónde va, §9.13), `peticiones` (muestras y material, §9.15) y `pedir_material` (si la tienda puede pedir material, §9.15).
+- **Tarea 30:** `incidencias` y `opciones_incidencia` (§9.20).
 
 ### 9.2 Objeto tarea de la tienda 🧪
 ```json
@@ -961,7 +971,7 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 
 ### 9.17 Administración: `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` · `descartar_peticion_tienda` 🧪 (Tarea 28)
 - **`cierres_caja(desde?, hasta?, tienda_id?)`:** `{ cierres: [{ fecha, tienda_id, tienda, z, ventas, efectivo, glovo, por, guardado_en }] }`, los más nuevos primero (por defecto, la última semana). Lectura preparada para el panel (Tarea 30).
-- **`incidencias_tiendas()`:** `{ incidencias: [{ id, tienda_id, tienda, opcion, texto, fecha, a_las, estado, cerrada_en, nota }] }`: las abiertas primero y las cerradas de la última semana. Hoy, `opcion: "falta_reposicion"` («Falta en la bolsa del reparto del 18/12: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Nombre)»). Es el aviso en la app: mostrarlas en el panel.
+- **`incidencias_tiendas()`:** `{ incidencias: [{ id, tienda_id, tienda, opcion, texto, fecha, a_las, estado, cerrada_en, nota }] }`: las abiertas primero y las cerradas de la última semana. `opcion`: `"falta_reposicion"` (Tarea 28) y, desde la Tarea 30, `"sin_producto"`, `"descuadre"`, `"comentario_cliente"` y `"otros"` (§9.20). Por ejemplo, `"falta_reposicion"` («Falta en la bolsa del reparto del 18/12: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Nombre)»). Es el aviso en la app: mostrarlas en el panel.
 - **`cerrar_incidencia_tienda(incidencia_id, nota?)`:** la cierra al resolverla (`nota`, una línea). **Salida:** `incidencias_tiendas()`. **Errores:** `NO_ENCONTRADO`, `DATOS_NO_VALIDOS`.
 - **`descartar_peticion_tienda(peticion_id, motivo?)`** («No va»): quitar una muestra o un material pendiente que no va a ir. `motivo` opcional (una línea, 120 letras); la tienda ve «No va: [motivo]» o, sin motivo, «No va: lo ha quitado Administración». **Salida:** `{ peticion: {…} }`. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya atendida o descartada), `DATOS_NO_VALIDOS` (motivo demasiado largo).
 - **Dónde:** en «Preparar reparto» / «Preparar envío» (§9.16) y en el panel, sección «Tiendas»: una lista de **peticiones pendientes** de todas las tiendas (`peticiones_tiendas_pendientes('reparto')` y `('envio')`) con el botón «No va» en cada una, para quitarlas sin abrir el reparto.
@@ -974,3 +984,15 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 
 ### 9.19 `tiendas()` 🧪 (Tarea 29)
 Las tiendas activas, para elegir a cuál mandar un aviso (Administración y el operario; una tienda, `NO_AUTORIZADO`): `{ tiendas: [{ id, codigo, nombre }] }`, por nombre. Con «Todas» se manda sin `tienda_id`.
+
+### 9.20 Incidencias de tienda: `crear_incidencia_tienda(id_cliente, opcion, texto?, producto?)` 🧪 (Tarea 30)
+Botón «Incidencia» de la tableta, en cualquier momento (`ESTADO_DEL_SISTEMA.md` E2-8). Sin foto ni urgencia. Todas llegan a **Administración como incidencia abierta** (§9.17). **A Eder no le sale nada.**
+- **`tienda_hoy().opciones_incidencia`:** las opciones de esa tienda, en orden: `[{ opcion, texto, pide, llama }]`. Se activan por tienda en la configuración (`incidencias_tienda`; el material, `pedir_material`), no en el código.
+  - Propias: `material` («Material de tienda», `llama: "pedir_material"`), `sin_producto` («Me quedo sin producto», `pide: "producto"`), `descuadre` («Descuadre de stock o de caja»), `comentario_cliente` («Comentario de cliente») y `otros` («Otros»). Las cuatro últimas, `llama: "crear_incidencia_tienda"`.
+  - Franquicias (Donosti y Rentería): solo `otros`, un cuadro de texto libre.
+  - `pide`: `"texto"` (cuadro para escribir) o `"producto"` (elegir de `productos_tienda()`).
+- **«Me quedo sin producto»:** botón de **llamar a Administración** (`mi_perfil().telefono_administracion`) y, además, `crear_incidencia_tienda({ id_cliente, opcion: "sin_producto", producto, texto? })`. `producto` = la `clave` de `productos_tienda()`; `texto`, nota opcional en una línea (200 letras; por ejemplo, el formato). Queda «Sin producto: V2. Del de 4g (Nombre)».
+- **Descuadre, comentario de cliente y otros:** `crear_incidencia_tienda({ id_cliente, opcion, texto })`, texto obligatorio en una o dos líneas (300 letras). Queda «Descuadre de stock o de caja: …», «Comentario de cliente: …» o el texto tal cual (otros), con el nombre de quien está en el turno.
+- Hay que haber elegido quién está (`SIN_PERSONA`). Repetir con el mismo `id_cliente` no la duplica.
+- **`tienda_hoy().incidencias`:** las de la tienda abiertas y las cerradas hoy (las abiertas primero): `[{ id, opcion, texto, fecha, a_las, estado: "abierta" | "cerrada", estado_texto }]`. Mostrar `estado_texto`: «Abierta» o «Resuelta por Administración: [nota]» (sin nota, «Resuelta por Administración»). Incluye la de «Falta algo» de la reposición. Los avisos van aparte (`avisos`).
+- **Salida:** `tienda_hoy()` actualizado. **Errores:** `DATOS_NO_VALIDOS` (opción que no existe, producto que no está en la lista, sin texto, demasiado largo), `NO_AUTORIZADO` (la tienda no tiene esa opción; el operario y Administración), `SIN_PERSONA`, `SIN_JORNADA` (hoy la tienda no abre).
