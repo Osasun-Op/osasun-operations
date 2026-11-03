@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Auditoría de solo lectura
 
-**Versión:** 1.4 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos (Tareas 19, 20, 25, 26 y 27)
+**Versión:** 1.5 · **Fecha:** 03/11/2026 · **Autor:** agente de base de datos (Tareas 19, 20, 25, 26, 27 y 28)
 
 Las comprobaciones de cada revisión (lista de revisión de `AGENTE_COORDINADOR.md`), siempre las mismas y en el mismo orden. Nada de esto cambia la base de datos ni los archivos.
 
@@ -19,7 +19,7 @@ Las claves públicas no son secretas (no dan permisos por sí solas). Las claves
 
 **Propias de cada entorno** (en `public.configuracion`, nunca en una migración ni en el repositorio): `entorno`, `url_proyecto`, `correo_administracion`, `telefono_administracion`, `cuentas_autorizadas`, `operario_por_defecto`, `administracion_por_defecto` y, en pruebas, `cierres_sin_correo`. Todo lo demás de la configuración lo ponen las migraciones y es igual en los dos. La huella deja fuera esas claves (Tarea 26), así que sus 11 apartados se comparan tal cual entre los dos entornos y una base creada solo con las migraciones.
 
-**Tiendas (Tarea 27):** cada tienda es una cuenta autorizada más (`rol: "tienda"` y su `centro`, en `cuentas_autorizadas`). Los **nombres de cada tienda** (`personas_tienda`), los **días cerrados** (`dias_cerrados`), los turnos y los vídeos son **datos de cada entorno**: los pone Administración desde la app (o, si el propietario lo pide, el agente de base a base), nunca una migración ni el repositorio, y no cuentan en la huella. El horario de cada tienda (`horario_tienda`), `alternar_semanales` y las plantillas de tienda sí los ponen las migraciones: «carga inicial» ordena y distingue por tienda esas filas (desde la Tarea 27).
+**Tiendas (Tareas 27 y 28; solo en pruebas hasta que el propietario lo apruebe, `AGENTE_BASE_DE_DATOS.md` §4):** cada tienda es una cuenta autorizada más (`rol: "tienda"` y su `centro`, en `cuentas_autorizadas`). Los **nombres de cada tienda** (`personas_tienda`), los **días cerrados** (`dias_cerrados`), los turnos, los vídeos y, desde la Tarea 28, las **bolsas** (`bolsas_tienda`), los **cierres de caja** (`cierres_caja`) y las **muestras y el material** (`peticiones_tienda`) son **datos de cada entorno**: los ponen la app (Administración y las tiendas) o, si el propietario lo pide, el agente de base a base, nunca una migración ni el repositorio, y no cuentan en la huella. El horario de cada tienda (`horario_tienda`), `alternar_semanales`, `pedir_material`, `peticiones_por_envio` y las plantillas de tienda sí los ponen las migraciones: «carga inicial» ordena y distingue por tienda esas filas (desde la Tarea 27).
 
 ## 1. La base de datos: `motor.auditoria()`
 
