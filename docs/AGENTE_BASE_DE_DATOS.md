@@ -87,6 +87,20 @@ Ninguna. La Tarea 30 está fusionada (PR #30). La siguiente es la **Tarea 30b** 
 
 ---
 
+## 7. TAREA 30c (preparada; se encarga después de la 30b): pedidos de cliente para recoger en las tiendas que reciben por envío, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` §5 R1b (v1.51, «Recoger en una tienda que recibe por envío»). Reutiliza `guardar_pedido_cliente`, la caja aparte «Pedido de cliente» de las bolsas, la preparación del envío y la pestaña «Envíos» de la Tarea 30b. **El reparto y los pedidos de siempre no cambian.** Solo en pruebas; producción espera.
+
+1. **`guardar_pedido_cliente` con `entrega: "tienda"`** acepta también Donosti, Rentería y Durango (las tiendas que reciben por envío; por configuración, no por código).
+2. **Va en el siguiente envío** a esa tienda (Gipuzkoa para Donosti y Rentería; Durango para Durango): caja aparte «Pedido de cliente · [cliente] · [tienda]» en la preparación del envío, que el operario marca como las demás. Mientras no haya envío, el pedido espera.
+3. **Aviso en «Revisa si toca envío…»** (15:30): «Hay N pedidos de cliente esperando envío a [destino]».
+4. **En la tienda:** el pedido sale en `envios` (Tarea 30b) con lo demás que llega.
+5. **Contratos:** §3.16 y lo que toque de la 30b, con nota para Lovable (la lista de tiendas de «Pedido de cliente»).
+
+**Entrega:** PR **«Tarea 30c — Pedidos de cliente por envío»**, con «Qué he leído y qué existía ya», pruebas en verde (el reparto y los pedidos de siempre igual), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
+
+---
+
 ## 7.0 TAREA 30 (fusionada en el PR #30; solo en pruebas, producción espera): incidencias de tienda, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8 («Incidencias de tienda») y `AGENTE_COORDINADOR.md`, bloque 1, puntos 18 y 24. Es la primera de cuatro tareas pequeñas de la tercera parte de tiendas (30 incidencias · 31 atascados · 32 panel con selector · 33 resumen del día). **Solo en pruebas; producción espera.** Reutiliza lo que ya existe: la tabla `incidencias` con `quien: administracion` (como `falta_reposicion`, Tarea 28), `incidencias_tiendas()` y `cerrar_incidencia_tienda()`, `pedir_material()` y el teléfono de `mi_perfil`. Nada al lado.
@@ -758,3 +772,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.48 | 03/11/2026 | Tarea 29b fusionada (PR #29), solo en pruebas; el pendiente de §9.11 ya está hecho. Sin tarea activa. |
 | 1.49 | 03/11/2026 | Tarea 30 activa (incidencias de tienda), aprobada por el propietario. |
 | 1.50 | 03/11/2026 | Tarea 30 fusionada (PR #30), solo en pruebas. Sin tarea activa. |
+| 1.51 | 03/11/2026 | Tarea 30c preparada (pedidos de cliente para recoger en Donosti, Rentería y Durango, por envío). |

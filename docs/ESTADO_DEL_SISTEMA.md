@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.50 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.51 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -156,6 +156,7 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
   - Va en una **bolsa aparte**: en el Pixel, la tienda tiene su «Bolsa de reposición» y además «Pedido de cliente · [nombre]».
   - Para que no se olvide, el operario tiene **una tarea propia, «Hay un pedido de cliente para dejar en [tienda]»**, que aparece **en cuanto termina la producción del reparto oficial** y se hace entonces, no al preparar las bolsas antes de salir.
 - **Envío por Nacex** (se pegan los datos de envío tal cual: nombre, dirección, teléfono…): al operario le entra **«Prepara el pedido de cliente»**, con la lista y los datos de envío bien escritos, y se activa **«Llevar a Nacex»** ese día. De lunes a jueves, recuento a las 17:55 y salida a las 18:10; el viernes, antes de las 10:45, y lo deja quien sale de reparto. Si ese día ya hay envío a Gipuzkoa o a Durango, va en el mismo viaje.
+- **Recoger en una tienda que recibe por envío** (decisión del propietario, 03/11/2026): **Donosti, Rentería y Durango** también se pueden elegir. El pedido va **en el siguiente envío** a esa tienda (Gipuzkoa para Donosti y Rentería; Durango para Durango), como caja aparte «Pedido de cliente · [cliente] · [tienda]», que el operario marca al preparar el envío. Mientras no haya envío, espera; en «Revisa si toca envío…» (15:30) el operario ve «Hay N pedidos de cliente esperando envío a [destino]», para tenerlo en cuenta. En la tienda sale en su pestaña «Envíos» con lo demás.
 - Los datos del cliente solo se guardan en la base de datos de la app (los ve el personal con cuenta). Nunca en el repositorio.
 - **Orden del día** (decisión del propietario, 28/10/2026): primero lo oficial y después el pedido.
   - **Recoger en tienda:** primero «Producción del reparto», solo con las cajas del reparto oficial. Al terminarla, «Pedido de cliente para [tienda] · [cliente]».
@@ -576,3 +577,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.48 | 03/11/2026 | §6.4: las bolsas justo después de la producción, sin nada en medio; la salida solo con las bolsas hechas; lo que sale hoy al reparto o a Nacex no se mueve en un conflicto. E2-8: la bolsa de la tienda es lo marcado; la lista solo en la reposición; el almacén ve y cancela sus avisos. |
 | 1.49 | 03/11/2026 | E2-8: criterio del propietario: todo se construye igual para todas las tiendas, franquicias incluidas, y luego se quita o esconde por tienda si hace falta; las incidencias, en todas. |
 | 1.50 | 03/11/2026 | E2-8: qué tienen las franquicias (incidencia de texto libre, pestaña «Envíos» para confirmar lo que llega, cierre de caja con Z y nº de ventas; sin material, aperturas, cierres ni cristales) y Durango como tienda propia que recibe por envío. |
+| 1.51 | 03/11/2026 | R1b: pedidos de cliente para recoger en Donosti, Rentería y Durango, en el siguiente envío; aviso en «Revisa si toca envío…». |
