@@ -76,6 +76,22 @@ Ninguna. La Tarea 29 está fusionada (PR #28) y **no se pasa a producción**. La
 
 ---
 
+## 7. TAREA 30 (preparada, pendiente de aprobación del propietario): incidencias de tienda, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8 («Incidencias de tienda») y `AGENTE_COORDINADOR.md`, bloque 1, puntos 18 y 24. Es la primera de cuatro tareas pequeñas de la tercera parte de tiendas (30 incidencias · 31 atascados · 32 panel con selector · 33 resumen del día). **Solo en pruebas; producción espera.** Reutiliza lo que ya existe: la tabla `incidencias` con `quien: administracion` (como `falta_reposicion`, Tarea 28), `incidencias_tiendas()` y `cerrar_incidencia_tienda()`, `pedir_material()` y el teléfono de `mi_perfil`. Nada al lado.
+
+1. **Cinco opciones**, sin foto ni urgencia, con «hecha por» de quien está en el turno:
+   - **Material de tienda** → es lo mismo que `pedir_material` (Tarea 28): no se crea nada nuevo, la pantalla llama a esa función.
+   - **Me quedo sin producto** → la pantalla enseña el botón de llamar a Administración (`telefono_administracion`); **[pendiente del propietario: si además queda apuntado como incidencia]**.
+   - **Descuadre de stock o de caja**, **Comentario de cliente** y **Otros** → incidencia **abierta para Administración**, con texto obligatorio (una línea o dos) y aviso en la app: sale en `incidencias_tiendas()` y se cierra con `cerrar_incidencia_tienda()`. Opciones nuevas del check, solo añadiendo.
+2. **Franquicias:** sin incidencias (no tienen la operativa interna).
+3. **`tienda_hoy()`**: las incidencias de la tienda abiertas y las cerradas de hoy, con su estado («Abierta» / «Resuelta por Administración: [nota]»).
+4. **Contratos:** la función nueva y lo de `tienda_hoy()`, con nota para Lovable. De paso, el pendiente de §9.11 (la pantalla de «Recibe la bolsa» no enseña la lista).
+
+**Entrega:** PR **«Tarea 30 — Incidencias de tienda»**, con «Qué he leído y qué existía ya», pruebas en verde (el almacén igual), una llamada real, registros sin errores y cómo deshacer. **No se pasa a producción.**
+
+---
+
 ## 7.0 TAREA 29 (fusionada en el PR #28; solo en pruebas, producción espera): conflictos al crear una tarea de Administración y avisos del almacén a las tiendas, en pruebas
 
 **Qué pasó (03/11/2026):** a las 10:28 Administración creó «Hay que recoger las cajas de la imprenta» (no urgente, sin hora límite). `crear_tarea_admin` devolvió `CONFLICTO` con las bolsas y la producción del reparto en riesgo, y en la ventana se eligió `{ cede: bolsas, accion: "manana" }` queriendo pasar a mañana **la tarea nueva**. Las bolsas dejaron de salir (`disponible_desde` = mañana 00:00), y al terminar la producción a las 10:48 a Eder le salió directamente la salida. Regla nueva en `ESTADO_DEL_SISTEMA.md` §6.4 (v1.46).
@@ -713,3 +729,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.42 | 03/11/2026 | Tarea 29 preparada (conflictos al crear tareas de Administración, tras las bolsas pasadas a mañana por error); se encarga al terminar la 28. La tercera parte de tiendas pasa a ser la Tarea 30. |
 | 1.43 | 03/11/2026 | Tarea 28 fusionada (PR #27), solo en pruebas. Tarea 29 con un punto más: avisos del almacén a las tiendas. |
 | 1.44 | 03/11/2026 | Tarea 29 fusionada (PR #28), solo en pruebas. Sin tarea activa. |
+| 1.45 | 03/11/2026 | Tarea 30 preparada (incidencias de tienda); la tercera parte de tiendas queda en 30 incidencias · 31 atascados · 32 panel · 33 resumen del día. |
