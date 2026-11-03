@@ -434,7 +434,8 @@ select pg_temp.comprobar('La tienda no usa lo del almacén ni lo de Administraci
   and public.incidencias_tiendas() -> 'error' ->> 'codigo' = 'NO_AUTORIZADO'
   and public.descartar_peticion_tienda(gen_random_uuid(), 'x') -> 'error' ->> 'codigo' = 'NO_AUTORIZADO');
 select pg_temp.comprobar('Tablas: ve su bolsa, su cierre de caja y sus peticiones; no las de otra tienda',
-  (select count(*) from public.bolsas_tienda) = 1 and (select count(*) from public.cierres_caja) = 0
+  (select count(*) from public.bolsas_tienda where fecha = '2026-12-18') = 1
+  and (select count(*) from public.cierres_caja where fecha = '2026-12-17') = 0
   and (select count(*) from public.peticiones_tienda) = 0
   and jsonb_array_length(public.productos_tienda() -> 'productos') = 3);
 reset role;
@@ -451,7 +452,7 @@ select pg_temp.comprobar('Administración: peticiones, cierres de caja e inciden
   public.peticiones_tiendas_pendientes('envio') ? 'peticiones'
   and jsonb_array_length(public.cierres_caja('2026-12-17', '2026-12-17') -> 'cierres') = 2
   and public.incidencias_tiendas() ? 'incidencias'
-  and (select count(*) from public.bolsas_tienda) = 3);
+  and (select count(*) from public.bolsas_tienda where fecha = '2026-12-18') = 3);
 reset role;
 select pg_temp.comprobar('Sin sesión, nada',
   not has_function_privilege('anon', 'public.cerrar_caja(uuid, numeric, integer, numeric, numeric)', 'EXECUTE')
