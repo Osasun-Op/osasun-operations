@@ -74,6 +74,22 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
+## 7. TAREA 29 (preparada; se encarga al terminar la Tarea 28): conflictos al crear una tarea de Administración, en pruebas
+
+**Qué pasó (03/11/2026):** a las 10:28 Administración creó «Hay que recoger las cajas de la imprenta» (no urgente, sin hora límite). `crear_tarea_admin` devolvió `CONFLICTO` con las bolsas y la producción del reparto en riesgo, y en la ventana se eligió `{ cede: bolsas, accion: "manana" }` queriendo pasar a mañana **la tarea nueva**. Las bolsas dejaron de salir (`disponible_desde` = mañana 00:00), y al terminar la producción a las 10:48 a Eder le salió directamente la salida. Regla nueva en `ESTADO_DEL_SISTEMA.md` §6.4 (v1.46).
+
+1. **Sin falsa alarma:** una tarea **no urgente y sin hora límite** no puede poner en riesgo lo primero de la mañana (§6.4: espera a que termine). En ese caso no hay conflicto: se crea y el `encaje` dice cuándo saldrá. El conflicto sigue para las urgentes y las que tienen hora límite.
+2. **El reparto y el envío de hoy no se mueven:** la producción del reparto, las bolsas, la salida y la preparación del envío de hoy **no pueden ser `cede`** con `manana` ni `cancelar` (ni `despues`, si les quita la hora límite). Si llega, `DATOS_NO_VALIDOS` con un mensaje claro. En `obligatorias_en_riesgo`, cada una trae `se_puede_mover: true|false` para que la pantalla solo ofrezca las que sí.
+3. **Opciones para la tarea nueva** en `decision_conflicto`, solo añadiendo: `{ "accion": "nueva_manana" }` (se crea para el siguiente día de trabajo de esa persona; si no lo hay, `SIN_JORNADA`) y `{ "accion": "nueva_despues" }` (se crea sin hora límite y sin urgencia, para después de lo que está en riesgo). `no_crear` sigue igual.
+4. **Prueba** con el caso del 03/11 (no urgente a las 10:28 con producción y bolsas pendientes → se crea sin conflicto; una urgente → conflicto, las bolsas con `se_puede_mover: false`, `nueva_manana` la crea mañana y las bolsas siguen hoy). El almacén, igual en todo lo demás.
+5. **Contratos:** §4.1 con las opciones nuevas y `se_puede_mover`, con nota para Lovable.
+6. **Producción:** esta migración va detrás de la de tiendas (47), así que **espera** con ellas (excepción de tiendas, sección 4); producción no se usa aún. Dilo en el PR.
+7. **Numeración:** la tercera parte de tiendas (incidencias, atascados, panel y resumen del día), que las Tareas 27 y 28 llaman «Tarea 29», pasa a ser la **Tarea 30**.
+
+**Entrega:** Pull Request **«Tarea 29 — Conflictos al crear tareas de Administración»**, con «Qué he leído y qué existía ya», pruebas en verde, una llamada real, registros sin errores nuevos y cómo deshacer.
+
+---
+
 ## 7. TAREA 28 (activa): tiendas, segunda parte — la bolsa, por dónde va el reparto, el cierre de caja, las muestras y el material, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` **E2-8** y `AGENTE_COORDINADOR.md`, bloque 1 (puntos 7 a 10, 12 a 14, 18, 24, 29 y 30). Sigue la Tarea 27 (PR #26): mismas reglas. **Solo en pruebas; producción espera** (excepción de tiendas, sección 4). **El almacén no puede cambiar**: lo que hoy hace Eder (preparar, bolsas, salida, ruta) sigue igual y sin pasos nuevos para él. Reutiliza lo que existe: el reparto y el envío del día, sus bolsas y paradas, las **peticiones especiales** (R1d, Tarea 13), los puntos y la lista del día de la tienda (Tarea 27) y la activación por tienda.
@@ -691,3 +707,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.39 | 02/11/2026 | Tarea 27 activa (tiendas, primera parte), aprobada por el propietario. |
 | 1.40 | 02/11/2026 | Tarea 27 fusionada (PR #26). Lo de tiendas no pasa a producción hasta que el propietario lo apruebe tras probarlo. Sin tarea activa. |
 | 1.41 | 02/11/2026 | Tarea 28 activa (tiendas, segunda parte), aprobada por el propietario. |
+| 1.42 | 03/11/2026 | Tarea 29 preparada (conflictos al crear tareas de Administración, tras las bolsas pasadas a mañana por error); se encarga al terminar la 28. La tercera parte de tiendas pasa a ser la Tarea 30. |

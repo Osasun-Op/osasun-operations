@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.45 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.46 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -240,6 +240,7 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
   - Urgente: entra al terminar lo que tiene entre manos.
   - Con hora límite: va al primer hueco que no ponga en riesgo una obligatoria.
   - Si no cabe sin sacrificar una obligatoria, se avisa a Administración **en el momento de lanzarla** y decide qué cede.
+  - **Conflictos al crear una tarea de Administración** (decisión del propietario, 03/11/2026, tras pasar por error las bolsas a mañana): una tarea **no urgente y sin hora límite** no da conflicto con lo primero de la mañana (espera su turno por esa regla): se crea sin preguntar. **Las tareas del reparto o del envío de hoy** (producción, bolsas, salida, preparación del envío) **nunca se pueden pasar a mañana ni cancelar** desde la ventana de conflicto. Cuando sí hay conflicto, la ventana pregunta **primero por la tarea nueva**: «Para mañana», «Que la haga después» o «No crearla»; mover otra tarea queda aparte y dice claramente cuál se mueve.
 - Nada desaparece en silencio.
 
 ### 6.5 Estados y lo no terminado
@@ -569,3 +570,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.43 | 02/11/2026 | E2-7: producción montada; hasta el cambio, lo aprobado y probado pasa a producción al fusionarlo. |
 | 1.44 | 02/11/2026 | E2-8: bloque 1 de tiendas definido (operativa diaria en la app, prueba en Basauri y Portugalete con tablet). |
 | 1.45 | 02/11/2026 | E2-7: lo de tiendas no pasa a producción hasta probarlo; producción espera desde la Tarea 27. |
+| 1.46 | 03/11/2026 | §6.4: conflictos al crear tareas de Administración (sin falsa alarma con lo de la mañana, el reparto de hoy no se mueve, la ventana pregunta primero por la tarea nueva). |
