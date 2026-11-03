@@ -70,13 +70,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 29b** (sección 7): el aviso de salida solo cuando toca. Lee antes `docs/CONSTITUCION_TECNICA.md` y lo que hiciste en la Tarea 29 (PR #28). **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
-
-**Pendiente para la próxima tarea (solo documento):** en `CONTRATOS.md` §9.11, decir que la pantalla de «Recibe la bolsa» **no enseña** la lista de lo que trae (decisión del propietario, 03/11/2026; `ESTADO_DEL_SISTEMA.md` E2-8): la lista se enseña solo en «Coloca y apunta la reposición» (§9.12). La base de datos no cambia.
+Ninguna. La Tarea 29b está fusionada (PR #29). La siguiente es la **Tarea 30** (incidencias de tienda, sección 7), que se encarga con la frase del propietario.
 
 ---
 
-## 7. TAREA 29b (activa): el aviso de salida solo cuando toca, en pruebas
+## 7.0 TAREA 29b (fusionada en el PR #29; solo en pruebas, producción espera): el aviso de salida solo cuando toca, en pruebas
 
 **Qué pasa (03/11/2026, 19:33):** a Eder le sale `aviso_salida` («Es la hora de salida (10:45) y las bolsas no están listas…») por la tarde. `tarea_activa_de` (Tarea 29, migración `20261103175352`) solo mira que las bolsas estén sin hacer y que haya pasado su hora límite. Hoy las bolsas siguen `pendiente` (se pasaron a mañana por error a las 10:28, `disponible_desde` = mañana) aunque el reparto salió a las 10:48. Arreglo pequeño, solo esto:
 
@@ -757,3 +755,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.45 | 03/11/2026 | Tarea 30 preparada (incidencias de tienda); la tercera parte de tiendas queda en 30 incidencias · 31 atascados · 32 panel · 33 resumen del día. |
 | 1.46 | 03/11/2026 | Tarea 29b activa (aviso de salida solo cuando toca), antes de la 30. |
 | 1.47 | 03/11/2026 | Tarea 30 ajustada (franquicias: solo incidencia de texto libre). Tarea 30b preparada (franquicias y Durango: «Envíos» y cierre de caja corto). |
+| 1.48 | 03/11/2026 | Tarea 29b fusionada (PR #29), solo en pruebas; el pendiente de §9.11 ya está hecho. Sin tarea activa. |
