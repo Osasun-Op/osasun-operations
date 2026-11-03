@@ -6,6 +6,9 @@
 -- y jueves 24/12/2026 (ISO 52, par). Transacción deshecha al final.
 
 begin;
+-- Aísla la prueba de las cuentas y los nombres reales de las tiendas en pruebas. Se deshace al final.
+update public.personas set activo = false where rol = 'tienda';
+update public.personas_tienda set activo = false;
 create temp table _r (n serial, prueba text, ok boolean, detalle text) on commit drop;
 grant all on _r to authenticated, anon;
 grant usage on sequence _r_n_seq to authenticated, anon;
@@ -340,7 +343,7 @@ select pg_temp.comprobar('Tablas: no ve la configuración general (cuentas, corr
   and exists (select 1 from public.configuracion where clave = 'horario_tienda')
   and (select count(*) from public.configuracion where clave = 'horario_tienda') = 1
   and not exists (select 1 from public.pedidos_cliente)
-  and (select count(*) from public.personas_tienda) = 1
+  and (select count(*) from public.personas_tienda where activo) = 1
   and (select count(distinct centro_id) from public.personas_tienda) = 1);
 reset role;
 select pg_temp.comprobar('Las funciones del servidor del reparto rechazan a la tienda',

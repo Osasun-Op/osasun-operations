@@ -1,6 +1,16 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.12 · **Fecha:** 02/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas por ahora (pasa a producción al fusionar su PR).
+**Versión:** 1.13 · **Fecha:** 03/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.13 (Tarea 28) — para Lovable: la tableta de las tiendas (segunda parte).** Solo se añaden campos y funciones (§9.11 a §9.18); lo de antes no cambia. Corrección: lo de tiendas (🧪) no pasa a producción al fusionar, sino cuando lo apruebe el propietario.
+> 1. **«Recibe la bolsa del reparto»** (§9.11): sale sola cuando sale el reparto, en las tiendas con parada, con la hora de salida y **lo que trae la bolsa** (`bolsa`: productos, peticiones y pedidos de cliente). Dos puntos: «Bolsa recibida» (un toque; las demás tiendas lo ven) y «Bolsa de ayer entregada con X € en efectivo» (un toque = X; otra cantidad, con `entregar_efectivo` y el porqué; sin cierre anterior, pide la cantidad).
+> 2. **«Coloca y apunta la reposición»** (§9.12): sale al terminar «Recibe la bolsa», con la misma lista. `apuntar_reposicion(tarea_id)` = «Reposición metida, todo bien»; con `faltan` = «Falta algo» (llega a Administración como incidencia abierta).
+> 3. **Por dónde va el reparto** (§9.13): `tienda_hoy().reparto` con `texto` listo para mostrar («Ha salido a las 10:50» / «Ha pasado por Basauri a las 11:20 (parada 2 de 3)») y las paradas.
+> 4. **Cierre de caja** (§9.14): el «Cierre del día» tiene un punto más, `pide: "cierre_caja"`: Z, nº de ventas, efectivo y Glovo con `cerrar_caja`.
+> 5. **Muestras y material** (§9.15): «Revisa las muestras» (jueves por la mañana; también Donosti y Rentería) con la lista de `productos_tienda()`; material, en cualquier momento, con `pedir_material`. Se ven en `tienda_hoy().peticiones` con su estado («Va en el reparto de hoy»).
+> 6. **Pantalla del almacén y de Administración, «Preparar reparto» y «Preparar envío»** (§9.16): al abrirla, `peticiones_tiendas_pendientes(tipo)` y **poner cada `texto` en la casilla de peticiones especiales de su `destino_id`** (se pueden cambiar o quitar). `guardar_reparto` no cambia: al guardar, las que van quedan atendidas. Para Eder, nada más.
+> 7. **Administración** (§9.17): `cierres_caja`, `incidencias_tiendas` y `cerrar_incidencia_tienda`, y `descartar_peticion_tienda`.
+> 8. **Errores nuevos** (§9.18): `FALTAN_DATOS` (con `pide`) y `MOTIVO_OBLIGATORIO` en el efectivo.
 
 > **Cambios en 1.12 (Tarea 27) — para Lovable: la tableta de las tiendas (primera parte).** Solo se añaden cosas: un rol nuevo (`tienda`), funciones nuevas (§9) y un tipo de elemento nuevo (`punto`). Lo del almacén y lo de Administración que ya existía no cambia.
 > 1. **Entrar:** cada tienda entra con **su cuenta de Google** (una por tienda). `mi_perfil().rol` es **`"tienda"`** y `centro` es su tienda: la pantalla abre la tableta de la tienda. Una tienda **no puede** usar las funciones del almacén ni las de Administración (`NO_AUTORIZADO`), ni ve sus datos.
@@ -175,6 +185,10 @@ Tiendas (Tarea 27, §9; columna «Tienda» = la cuenta de cada tienda):
 | `videos_semana` | BD | ✔ | ✔ | 🧪 Tarea 27 |
 | `personas_tienda` | BD | ✔ (solo la suya) | ✔ | 🧪 Tarea 27 |
 | `guardar_persona_tienda` · `marcar_dia_cerrado` · `dias_cerrados` · `crear_aviso_tienda` · `avisos_tiendas` | BD | — | ✔ | 🧪 Tarea 27 |
+| `entregar_efectivo` · `cerrar_caja` · `apuntar_reposicion` · `revisar_muestras` · `pedir_material` | BD | ✔ | — | 🧪 Tarea 28 |
+| `productos_tienda` | BD | ✔ | ✔ | 🧪 Tarea 28 |
+| `peticiones_tiendas_pendientes` | BD | — (operario ✔) | ✔ | 🧪 Tarea 28 |
+| `descartar_peticion_tienda` · `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` | BD | — | ✔ | 🧪 Tarea 28 |
 | Todas las del almacén y las de Administración de arriba | — | — (`NO_AUTORIZADO`) | — | 🧪 Tarea 27 |
 
 ## 3. Operario
@@ -724,9 +738,9 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 23. **Tarea 16 · Cambiar lo decidido** (decidido por el propietario, 29/10): con la producción ya cerrada no se puede; repetir lo mismo sí. Para cambiarlo, se modifica el reparto.
 24. **Tarea 17 · Dónde va la lista de `SIN_GRANEL`:** en `error.referencias`, como en `REFERENCIA_NO_EXISTE` (los datos del error van junto a `codigo` y `mensaje`).
 
-## 9. Tiendas (Tarea 27) 🧪
+## 9. Tiendas (Tareas 27 y 28) 🧪
 
-Primera parte de la tableta de las tiendas (`AGENTE_BASE_DE_DATOS.md` Tarea 27; `ESTADO_DEL_SISTEMA.md` E2-8). En pruebas; pasa a producción al fusionar su PR.
+La tableta de las tiendas (`AGENTE_BASE_DE_DATOS.md` Tareas 27 y 28; `ESTADO_DEL_SISTEMA.md` E2-8). Solo en pruebas: pasa a producción cuando el propietario lo apruebe (no al fusionar). La segunda parte (Tarea 28) va de §9.11 a §9.18.
 
 **Cómo funciona:**
 - **Una cuenta de Google por tienda** (cuentas autorizadas con `rol: "tienda"` y su tienda; la ficha se crea sola la primera vez, §7.2). `mi_perfil()` devuelve `rol: "tienda"` y `centro: { id, nombre }` de la tienda; con ese rol la pantalla abre la tableta. Durango está inactiva: no tiene cuenta ni tareas.
@@ -757,6 +771,7 @@ Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la c
 - `personas`: los nombres de la tienda; primero los que trabajan hoy y en ese turno (`sugerida: true`). Se pueden elegir todos.
 - `avisos`: los avisos de Administración sin leer (los de hoy y los de días anteriores que no se leyeron). **Se enseñan al entrar** (antes de la lista); cada uno con «Leído» (`marcar_aviso_leido`).
 - `tareas`: la lista del día, por hora.
+- **Tarea 28:** `reparto` (por dónde va, §9.13), `peticiones` (muestras y material, §9.15) y `pedir_material` (si la tienda puede pedir material, §9.15).
 
 ### 9.2 Objeto tarea de la tienda 🧪
 ```json
@@ -770,6 +785,7 @@ Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la c
 }
 ```
 - **`tipo`:** `puntos` (se hace tocando sus puntos uno a uno, §9.4; con el último queda hecha), `simple` («Hecho», §9.5) o `video` (§9.6).
+- **Tarea 28:** `tipo` también `reposicion` (§9.12) y `muestras` (§9.15). Cada punto trae además `pide` (`null`, `"efectivo"` o `"cierre_caja"`), `efectivo_esperado` (solo en el del efectivo) y `datos` (lo apuntado). La tarea trae `bolsa` («Recibe la bolsa» y la reposición, §9.11) y `muestras` («Revisa las muestras»); en las demás, `null`.
 - **`hora`:** orientativa. Antes de esa hora, `se_puede_marcar: false` (mostrarla en gris con «desde las 10:50»). No hay avisos de retraso.
 - **`estado`:** `pendiente`, `hecha` o `cancelada` (el vídeo con «Hoy no he podido», o la tienda cerrada ese día: `motivo`). `hecha_por` y `hora_fin` dicen quién y a qué hora; cada punto, igual (`hecho_por`, `a_las`).
 - **`no_hecha: true`:** la tienda ya ha cerrado y quedó sin hacer. Queda así; **no pasa al día siguiente**.
@@ -781,11 +797,14 @@ Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la c
 | Apertura de la mañana | L–S | 10 min antes de abrir (10:50) | Fichar en Woffu · Abrir · Cartelería · Glovo · Barrido y puesta a punto |
 | Cierre de la mañana | L–S | 10 min antes de cerrar (13:20) | Ventas y stock de la plantilla al día (todo en verde) · Incidencias del turno registradas |
 | Apertura de la tarde | L–S, si hay tarde | 10 min antes (16:50; Bilbao 16:20) | Fichar · Abrir · Cartelería · Glovo |
-| Cierre del día | L–S | 10 min antes del cierre del día | Ventas del día en la plantilla (todo en verde) · Suelo fregado · Efectivo contado y en la bolsa para mañana · Incidencias de la tarde registradas |
+| Cierre del día | L–S | 10 min antes del cierre del día | Ventas del día en la plantilla (todo en verde) · Suelo fregado · **Cierre de caja en la app: Z, nº de ventas, efectivo y Glovo** (Tarea 28, §9.14) · Efectivo contado y en la bolsa para mañana · Incidencias de la tarde registradas |
 | Limpieza de cristales | jueves, tarde | al abrir la tarde | — («Hecho») |
 | Vídeo de la semana | viernes, mañana (y el sábado, §9.6) | al abrir la mañana | — (enlace y una línea) |
+| Recibe la bolsa del reparto (Tarea 28) | cuando sale el reparto, si trae bolsa para la tienda | la hora de salida | Bolsa recibida · Bolsa de ayer entregada con X € en efectivo (§9.11) |
+| Coloca y apunta la reposición (Tarea 28) | al terminar «Recibe la bolsa» | en ese momento | — (§9.12) |
+| Revisa las muestras (Tarea 28) | jueves, mañana | al abrir la mañana | — (§9.15) |
 
-  En **Bilbao** las dos semanales cambian de turno cada semana: semana ISO **par**, por la mañana; **impar**, por la tarde. Donosti y Rentería: solo el vídeo.
+  En **Bilbao** las semanales (cristales, vídeo y muestras) cambian de turno cada semana: semana ISO **par**, por la mañana; **impar**, por la tarde. Donosti y Rentería: el vídeo y las muestras.
 
 ### 9.3 `empezar_turno(persona_id)` 🧪
 Al empezar el turno, la persona toca su nombre (de `tienda_hoy().personas`). Desde ese momento es quien está (`en_turno`) y lo que se marque queda a su nombre. Se puede cambiar en cualquier momento (otra persona entra): vuelve a llamarse con el otro nombre.
@@ -841,3 +860,85 @@ Cierra el aviso (`tienda_hoy().avisos[].id`) y anota quién lo leyó (el de `en_
 | `YA_COMPARTIDO` | Mostrar el mensaje; ofrecer «Hoy no he podido» o dejarlo. |
 | `FECHA_PASADA` | Mostrar junto a la fecha y dejar corregir. |
 | `SIN_JORNADA` | En la tienda: «Hoy la tienda no abre.». En `crear_aviso_tienda`: mostrar el mensaje. |
+
+### 9.11 «Recibe la bolsa del reparto» 🧪 (Tarea 28)
+Sale sola en `tienda_hoy().tareas` **cuando sale el reparto**, en las tiendas que llevan algo en él (productos, peticiones o pedidos de cliente). Las franquicias no la tienen. Una al día.
+- **Cuándo sale el reparto** (sin que quien reparte haga nada nuevo): si sale el operario, cuando empieza su «Salida del reparto»; si sale Administración, a la hora de salida (10:45, o la retrasada) con las bolsas listas.
+- `hora` = la hora de salida; `porque` empieza por «El reparto ha salido a las HH:MM.».
+- **`bolsa`** (en esta tarea y en la de reposición): lo que trae la bolsa, para ver si falta algo:
+```json
+{
+  "reparto_id": "…", "fecha": "2026-12-18", "salida": "10:50", "recibida_a_las": null, "recibida_por": null,
+  "efectivo": { "esperado": 85.50, "de_fecha": "2026-12-17", "entregado": null, "motivo": null },
+  "productos": [ { "clave": "producto:V2|4g", "producto": "V2", "formato": "4g", "cantidad": 3 } ],
+  "peticiones": [ { "clave": "peticion:Muestra: 2x V2 4g", "texto": "Muestra: 2x V2 4g" } ],
+  "pedidos": [ { "clave": "pedido:…", "pedido_id": "…", "cliente": "…", "lineas": [ { "producto": "BZ1", "formato": "4g", "cantidad": 1 } ] } ],
+  "reposicion": null
+}
+```
+  Un producto que viene de otra tienda (R1e) trae además `de: [{ origen_id, origen, cantidad }]`.
+- **Dos puntos** (`puntos`):
+  1. **«Bolsa recibida»**: un toque con `marcar_punto`. La bolsa consta como recibida a esa hora, por quien está (`recibida_a_las`, `recibida_por`), y las demás tiendas lo ven (§9.13).
+  2. **«Bolsa de ayer entregada con X € en efectivo»** (`pide: "efectivo"`, `efectivo_esperado: X`): X es el efectivo del último cierre de caja de la tienda (§9.14).
+     - **Un toque** (`marcar_punto`) = entrega X.
+     - **Otra cantidad:** `entregar_efectivo({ elemento_id, cantidad, motivo })`, con el porqué (por ejemplo, «Monedas para cambio»). Sin porqué: `MOTIVO_OBLIGATORIO`.
+     - **Sin cierre anterior** (`efectivo_esperado: null`, texto «Bolsa de ayer entregada: di cuánto efectivo»): hay que decir la cantidad; un toque responde `FALTAN_DATOS` con `pide: "efectivo"`.
+- Con los dos puntos, la tarea queda hecha y sale «Coloca y apunta la reposición».
+- **`entregar_efectivo(elemento_id, cantidad?, motivo?)`:** euros con dos decimales como máximo; `motivo`, una línea (200 letras). **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `TODAVIA_NO`, `SIN_PERSONA`, `ESTADO_NO_VALIDO`, `FALTAN_DATOS`, `MOTIVO_OBLIGATORIO`, `DATOS_NO_VALIDOS`.
+
+### 9.12 «Coloca y apunta la reposición» · `apuntar_reposicion(tarea_id, faltan?, nota?)` 🧪 (Tarea 28)
+Sale al terminar «Recibe la bolsa» (`tipo: "reposicion"`), con la misma `bolsa` (lo que tenía que llegar).
+- **«Reposición metida, todo bien»:** `apuntar_reposicion({ tarea_id })`.
+- **«Falta algo»:** `apuntar_reposicion({ tarea_id, faltan: [{ clave, cantidad? }], nota? })`, eligiendo de la lista (`clave` de `bolsa.productos`, `bolsa.peticiones` o `bolsa.pedidos`) y cuántas (de 1 a lo que traía; sin `cantidad`, todas). `nota`, una línea (200 letras).
+  - Llega a **Administración como incidencia abierta** (§9.17, `incidencias_tiendas`), que la cierra al resolverla. **A Eder no le sale nada.**
+- En los dos casos la tarea queda hecha y `bolsa.reposicion` dice `{ resultado: "bien" | "falta", a_las, por, faltan, incidencia_id }`.
+- **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya apuntada), `SIN_PERSONA`, `DATOS_NO_VALIDOS` («Elige de la lista lo que falta.», cantidad fuera de rango, repetida).
+
+### 9.13 Por dónde va el reparto: `tienda_hoy().reparto` 🧪 (Tarea 28)
+`null` si hoy la tienda no tiene parada en el reparto. Si la tiene:
+```json
+{
+  "salido": true, "salida": "10:50",
+  "texto": "Ha pasado por Basauri a las 11:20 (parada 2 de 3)",
+  "paradas": [ { "tienda_id": "…", "tienda": "Bilbao", "parada": 1, "pasado_a_las": null },
+               { "tienda_id": "…", "tienda": "Basauri", "parada": 2, "pasado_a_las": "11:20" } ],
+  "total": 3, "tu_parada": 3,
+  "ultima": { "tienda": "Basauri", "a_las": "11:20", "parada": 2 }
+}
+```
+- Antes de salir: `salido: false` y `texto: null`. Al salir: «Ha salido a las HH:MM». Cada vez que una tienda marca «Bolsa recibida»: «Ha pasado por [tienda] a las HH:MM (parada N de M)». Mostrar `texto` tal cual.
+- Las paradas van en el orden del reparto (BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU), solo las que llevan algo ese día.
+
+### 9.14 Cierre de caja: `cerrar_caja(elemento_id, z, ventas, efectivo, glovo)` 🧪 (Tarea 28)
+En el «Cierre del día», el punto «Cierre de caja en la app: Z, nº de ventas, efectivo y Glovo» trae `pide: "cierre_caja"`. No se marca con un toque (`FALTAN_DATOS`, `pide: "cierre_caja"`): se apunta con `cerrar_caja`.
+- `z`, `efectivo` y `glovo` en euros (dos decimales como máximo; Glovo 0 si no hay); `ventas`, el número de ventas (entero).
+- Se guarda por tienda y día; **el efectivo es la X de la bolsa del día siguiente** (§9.11). Se puede corregir (volver a llamar) mientras el «Cierre del día» siga abierto. El punto queda hecho, con sus datos en `datos`.
+- **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `TODAVIA_NO`, `SIN_PERSONA`, `ESTADO_NO_VALIDO`, `DATOS_NO_VALIDOS`.
+
+### 9.15 Muestras y material: `productos_tienda()` · `revisar_muestras(tarea_id, muestras?)` · `pedir_material(id_cliente, texto)` 🧪 (Tarea 28)
+- **«Revisa las muestras»** (`tipo: "muestras"`): jueves por la mañana (en Bilbao alterna por semanas, como las demás semanales); también en Donosti y Rentería. Comprobar que están en buen estado y elegir qué hay que traer nuevo.
+  - **`productos_tienda()`:** `{ productos: [{ clave, producto, formato, categoria }], leidos_en }`, la lista de la última lectura de la hoja (la del último reparto, envío o lista de stock), en el orden de la hoja. Para elegir como en el reparto (− y +).
+  - **`revisar_muestras({ tarea_id, muestras: [{ producto, formato, cantidad }] })`**: cantidad de 1 a 99. Lista vacía = están bien y no hace falta nada. La tarea queda hecha; lo elegido sale en `muestras` de la tarea, con su estado.
+- **Pedir material de tienda** (bolsas, rollos de TPV…), en cualquier momento: **`pedir_material({ id_cliente, texto })`** (80 letras). Solo si `tienda_hoy().pedir_material` es `true` (en esta tarea, no en las franquicias). Hay que haber elegido quién está (`SIN_PERSONA`).
+- **`tienda_hoy().peticiones`:** las muestras y el material de la tienda (pendientes y los de la última semana): `[{ id, tipo: "muestra" | "material", detalle, texto, estado, estado_texto, pedida_por, fecha, a_las }]`. Mostrar `estado_texto`: «Pendiente: irá en el siguiente reparto» (o «envío»), «Va en el reparto de hoy / de mañana / del 18/12» o «No va: [motivo]».
+- **Salida** (`revisar_muestras`, `pedir_material`): `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `TODAVIA_NO`, `SIN_PERSONA`, `ESTADO_NO_VALIDO`, `SIN_JORNADA`, `NO_AUTORIZADO` (material en una franquicia), `DATOS_NO_VALIDOS` (producto que no está en la lista, cantidad, texto).
+
+### 9.16 «Preparar reparto» y «Preparar envío»: `peticiones_tiendas_pendientes(tipo?)` 🧪 (Tarea 28)
+Para la pantalla que ya existe (operario y Administración). Las muestras y el material de las tiendas van en su **siguiente reparto o envío como peticiones especiales** (R1d), ya puestos:
+- Al abrir «Preparar reparto» (`tipo: "reparto"`, por defecto) o «Preparar envío» (`"envio"`), llamar a `peticiones_tiendas_pendientes(tipo)`: `{ peticiones: [{ id, destino_id, destino, tienda_id, tienda, tipo, texto, detalle, pedida_por, creada_en }] }`.
+- **Poner cada `texto` como una línea más en la casilla «Peticiones especiales para [destino]» de su `destino_id`.** Las de Donosti y Rentería van en la casilla de **Gipuzkoa** (envío), con el nombre de la tienda delante («Donosti · Muestra: 1x BZ1 4g»).
+- Se pueden cambiar o quitar como cualquier línea. `guardar_reparto` **no cambia**: al guardarlo, las líneas que siguen igual (sin contar mayúsculas) quedan **atendidas** con ese reparto (la tienda ve «Va en el reparto de hoy»). Las que se han quitado o cambiado siguen pendientes y vuelven a salir la próxima vez; Administración puede descartarlas (§9.17).
+- Nada cambia en las bolsas ni en la salida: en las bolsas salen como cualquier petición especial («Además, mete:»).
+
+### 9.17 Administración: `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` · `descartar_peticion_tienda` 🧪 (Tarea 28)
+- **`cierres_caja(desde?, hasta?, tienda_id?)`:** `{ cierres: [{ fecha, tienda_id, tienda, z, ventas, efectivo, glovo, por, guardado_en }] }`, los más nuevos primero (por defecto, la última semana). Lectura preparada para el panel (Tarea 29).
+- **`incidencias_tiendas()`:** `{ incidencias: [{ id, tienda_id, tienda, opcion, texto, fecha, a_las, estado, cerrada_en, nota }] }`: las abiertas primero y las cerradas de la última semana. Hoy, `opcion: "falta_reposicion"` («Falta en la bolsa del reparto del 18/12: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Nombre)»). Es el aviso en la app: mostrarlas en el panel.
+- **`cerrar_incidencia_tienda(incidencia_id, nota?)`:** la cierra al resolverla (`nota`, una línea). **Salida:** `incidencias_tiendas()`. **Errores:** `NO_ENCONTRADO`, `DATOS_NO_VALIDOS`.
+- **`descartar_peticion_tienda(peticion_id, motivo)`:** quitar una muestra o un material pendiente que no va a ir; la tienda ve «No va: [motivo]». **Salida:** `{ peticion: {…} }`. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya atendida o descartada), `DATOS_NO_VALIDOS` (falta el porqué).
+- Las pendientes, con `peticiones_tiendas_pendientes` (§9.16).
+
+### 9.18 Errores nuevos (Tarea 28) 🧪
+| Código | Qué hace la pantalla |
+| --- | --- |
+| `FALTAN_DATOS` | `error.pide` dice qué: `"efectivo"` → pedir la cantidad y llamar a `entregar_efectivo`; `"cierre_caja"` → pedir Z, nº de ventas, efectivo y Glovo y llamar a `cerrar_caja`. |
+| `MOTIVO_OBLIGATORIO` | En el efectivo: pedir el porqué de la otra cantidad y repetir `entregar_efectivo` con `motivo`. |

@@ -8,6 +8,9 @@
 -- Cuentas y nombres inventados (@osasun.invalid). Transacción deshecha al final.
 
 begin;
+-- Aísla la prueba de las cuentas y los nombres reales de las tiendas en pruebas. Se deshace al final.
+update public.personas set activo = false where rol = 'tienda';
+update public.personas_tienda set activo = false;
 -- Aísla la prueba de las jornadas reales del operario de pruebas. Se deshace al final.
 update public.tareas set estado = 'hecha'
  where estado in ('pendiente', 'en_curso', 'bloqueada')
