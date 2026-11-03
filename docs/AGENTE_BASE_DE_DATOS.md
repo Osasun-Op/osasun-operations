@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 29b está fusionada (PR #29). La siguiente es la **Tarea 30** (incidencias de tienda, sección 7), que se encarga con la frase del propietario.
+**Tarea 30** (sección 7): incidencias de tienda. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.50: incidencias y «Qué tienen las franquicias») y lo que hiciste en las Tareas 27 y 28. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
@@ -87,7 +87,7 @@ Ninguna. La Tarea 29b está fusionada (PR #29). La siguiente es la **Tarea 30** 
 
 ---
 
-## 7. TAREA 30 (preparada, pendiente de aprobación del propietario): incidencias de tienda, en pruebas
+## 7. TAREA 30 (activa): incidencias de tienda, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8 («Incidencias de tienda») y `AGENTE_COORDINADOR.md`, bloque 1, puntos 18 y 24. Es la primera de cuatro tareas pequeñas de la tercera parte de tiendas (30 incidencias · 31 atascados · 32 panel con selector · 33 resumen del día). **Solo en pruebas; producción espera.** Reutiliza lo que ya existe: la tabla `incidencias` con `quien: administracion` (como `falta_reposicion`, Tarea 28), `incidencias_tiendas()` y `cerrar_incidencia_tienda()`, `pedir_material()` y el teléfono de `mi_perfil`. Nada al lado.
 
@@ -756,3 +756,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.46 | 03/11/2026 | Tarea 29b activa (aviso de salida solo cuando toca), antes de la 30. |
 | 1.47 | 03/11/2026 | Tarea 30 ajustada (franquicias: solo incidencia de texto libre). Tarea 30b preparada (franquicias y Durango: «Envíos» y cierre de caja corto). |
 | 1.48 | 03/11/2026 | Tarea 29b fusionada (PR #29), solo en pruebas; el pendiente de §9.11 ya está hecho. Sin tarea activa. |
+| 1.49 | 03/11/2026 | Tarea 30 activa (incidencias de tienda), aprobada por el propietario. |
