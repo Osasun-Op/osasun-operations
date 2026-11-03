@@ -70,9 +70,22 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 29 está fusionada (PR #28) y **no se pasa a producción**. La siguiente de tiendas es la Tarea 30 (tercera parte), que el coordinador partirá en tareas pequeñas.
+**Tarea 29b** (sección 7): el aviso de salida solo cuando toca. Lee antes `docs/CONSTITUCION_TECNICA.md` y lo que hiciste en la Tarea 29 (PR #28). **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
 
 **Pendiente para la próxima tarea (solo documento):** en `CONTRATOS.md` §9.11, decir que la pantalla de «Recibe la bolsa» **no enseña** la lista de lo que trae (decisión del propietario, 03/11/2026; `ESTADO_DEL_SISTEMA.md` E2-8): la lista se enseña solo en «Coloca y apunta la reposición» (§9.12). La base de datos no cambia.
+
+---
+
+## 7. TAREA 29b (activa): el aviso de salida solo cuando toca, en pruebas
+
+**Qué pasa (03/11/2026, 19:33):** a Eder le sale `aviso_salida` («Es la hora de salida (10:45) y las bolsas no están listas…») por la tarde. `tarea_activa_de` (Tarea 29, migración `20261103175352`) solo mira que las bolsas estén sin hacer y que haya pasado su hora límite. Hoy las bolsas siguen `pendiente` (se pasaron a mañana por error a las 10:28, `disponible_desde` = mañana) aunque el reparto salió a las 10:48. Arreglo pequeño, solo esto:
+
+1. `aviso_salida` solo si **todo** esto se cumple: el reparto de hoy **aún no ha salido** (la «Salida del reparto» del operario no ha empezado ni terminado; si sale Administración, la misma señal de «ha salido» de la Tarea 28), el operario está **en su turno** (`motor.en_turno`), las bolsas son de hoy y **ya están disponibles** (`disponible_desde <= ahora`) y ha pasado su hora límite. En cualquier otro caso, `null`.
+2. **`retrasar_salida`**: si el reparto ya ha salido, `ESTADO_NO_VALIDO` («El reparto ya ha salido.») sin mover ninguna hora.
+3. **Prueba** con el caso de hoy (bolsas pendientes con `disponible_desde` mañana, salida hecha a las 10:48, a las 19:33 → `aviso_salida: null`, y `retrasar_salida` → `ESTADO_NO_VALIDO`), más el caso normal (10:46, bolsas sin hacer, sin salir → el aviso sale).
+4. **Solo en pruebas; producción espera** (excepción de tiendas). De paso, el pendiente de `CONTRATOS.md` §9.11 (la pantalla de «Recibe la bolsa» no enseña la lista), si te cabe en el mismo PR.
+
+**Entrega:** PR **«Tarea 29b — Aviso de salida solo cuando toca»**, con «Qué he leído y qué existía ya», pruebas en verde, una llamada real, registros sin errores y cómo deshacer.
 
 ---
 
@@ -730,3 +743,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.43 | 03/11/2026 | Tarea 28 fusionada (PR #27), solo en pruebas. Tarea 29 con un punto más: avisos del almacén a las tiendas. |
 | 1.44 | 03/11/2026 | Tarea 29 fusionada (PR #28), solo en pruebas. Sin tarea activa. |
 | 1.45 | 03/11/2026 | Tarea 30 preparada (incidencias de tienda); la tercera parte de tiendas queda en 30 incidencias · 31 atascados · 32 panel · 33 resumen del día. |
+| 1.46 | 03/11/2026 | Tarea 29b activa (aviso de salida solo cuando toca), antes de la 30. |
