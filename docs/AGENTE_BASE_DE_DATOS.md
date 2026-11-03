@@ -97,11 +97,23 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
    - **Material de tienda** → es lo mismo que `pedir_material` (Tarea 28): no se crea nada nuevo, la pantalla llama a esa función.
    - **Me quedo sin producto** → la pantalla enseña el botón de llamar a Administración (`telefono_administracion`) y **además queda apuntado** (decisión del propietario, 03/11/2026): la tienda elige el producto de `productos_tienda()` (nota opcional, por ejemplo el formato) y se crea una incidencia **abierta para Administración** «Sin producto: [producto]», que sale en `incidencias_tiendas()`. Así queda constancia de qué se acaba en tienda.
    - **Descuadre de stock o de caja**, **Comentario de cliente** y **Otros** → incidencia **abierta para Administración**, con texto obligatorio (una línea o dos) y aviso en la app: sale en `incidencias_tiendas()` y se cierra con `cerrar_incidencia_tienda()`. Opciones nuevas del check, solo añadiendo.
-2. **Todas las tiendas igual, franquicias incluidas** (decisión del propietario, 03/11/2026): las incidencias se construyen y se activan para todas; si más adelante hay que quitar o esconder algo a una tienda, se hace con la activación por tienda (configuración, no código), como `pedir_material`.
+2. **Franquicias** (decisión del propietario, 03/11/2026): las incidencias se construyen igual para todas, pero en Donosti y Rentería **solo está la opción de texto libre** (lo que en las propias es «Otros»): llega a Administración como incidencia abierta. Las demás opciones, desactivadas para ellas por configuración por tienda (no código), como `pedir_material`.
 3. **`tienda_hoy()`**: las incidencias de la tienda abiertas y las cerradas de hoy, con su estado («Abierta» / «Resuelta por Administración: [nota]»).
 4. **Contratos:** la función nueva y lo de `tienda_hoy()`, con nota para Lovable. De paso, el pendiente de §9.11 (la pantalla de «Recibe la bolsa» no enseña la lista).
 
 **Entrega:** PR **«Tarea 30 — Incidencias de tienda»**, con «Qué he leído y qué existía ya», pruebas en verde (el almacén igual), una llamada real, registros sin errores y cómo deshacer. **No se pasa a producción.**
+
+---
+
+## 7. TAREA 30b (preparada; se encarga después de la 30): franquicias — «Envíos» y cierre de caja, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, «Qué tienen las franquicias» (v1.50). Reutiliza la reposición de la Tarea 28 (lista de lo marcado, «Todo bien» / «Falta algo» → incidencia para Administración) y el cierre de caja (`cerrar_caja`, `cierres_caja`). Solo en pruebas; producción espera.
+
+1. **«Envíos» para las tiendas que reciben por envío** (configuración por tienda; hoy Donosti y Rentería, y **Durango**, que es tienda propia pero recibe por envío en vez de bolsa): al día siguiente de guardar y sacar el envío que las lleva, `tienda_hoy()` trae `envios` con lo que les llega (lo **marcado** al meterlo en la caja, como `bolsa` en la Tarea 29). **No es una tarea con hora**: sigue ahí hasta que la confirman con «Todo bien» o «Falta algo» (eligiendo qué y cuánto; llega a Administración como incidencia abierta, como la reposición). Para ellas no hay «Recibe la bolsa» ni reposición.
+2. **Cierre de caja de las franquicias:** tarea «Cierre de caja» 10 minutos antes de cerrar (20:20 entre semana; 13:20 el sábado, que cierran por la tarde), con **solo la Z y el número de ventas** (sin efectivo ni Glovo). Se guarda en `cierres_caja` igual que las propias.
+3. **Contratos:** `envios` en `tienda_hoy()`, la función de confirmar y el cierre corto, con nota para Lovable.
+
+**Entrega:** PR **«Tarea 30b — Franquicias: envíos y cierre de caja»**, con «Qué he leído y qué existía ya», pruebas en verde (el almacén y las tiendas propias igual), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
 
 ---
 
@@ -744,3 +756,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.44 | 03/11/2026 | Tarea 29 fusionada (PR #28), solo en pruebas. Sin tarea activa. |
 | 1.45 | 03/11/2026 | Tarea 30 preparada (incidencias de tienda); la tercera parte de tiendas queda en 30 incidencias · 31 atascados · 32 panel · 33 resumen del día. |
 | 1.46 | 03/11/2026 | Tarea 29b activa (aviso de salida solo cuando toca), antes de la 30. |
+| 1.47 | 03/11/2026 | Tarea 30 ajustada (franquicias: solo incidencia de texto libre). Tarea 30b preparada (franquicias y Durango: «Envíos» y cierre de caja corto). |
