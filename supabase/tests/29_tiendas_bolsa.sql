@@ -136,26 +136,26 @@ begin
     pg_temp.tarea(motor.tienda_hoy_de(bilbao, pg_temp.a('2026-12-17', '16:35')), 'revisa_muestras') ->> 'hora' = '16:30'
     and (select motor.hora_texto(t2.disponible_desde) from public.tareas t2
           where t2.jornada_id = motor.generar_jornada(bilbao, '2026-12-24') and t2.clave = 'revisa_muestras') = '11:00');
-  perform pg_temp.comprobar('La lista de productos para elegir: la de la última lectura de la hoja, con su categoría',
+  perform pg_temp.comprobar('La lista para las muestras: cada producto una vez (sin formato), de la última lectura de la hoja, con su categoría',
     (select string_agg(x ->> 'clave' || ':' || (x ->> 'categoria'), ' ' order by n)
        from jsonb_array_elements(motor.productos_tienda_de() -> 'productos') with ordinality a(x, n))
-    = 'V2|4g:Indoor V2|10g:Indoor BZ1|4g:Invernadero CREMA|:Otros', (motor.productos_tienda_de())::text);
-  r := motor.revisar_muestras_de(basauri, (t ->> 'id')::uuid, '[{"producto": "XX", "formato": "4g", "cantidad": 1}]', pg_temp.a('2026-12-17', '11:06'));
+    = 'V2:Indoor BZ1:Invernadero CREMA:Otros', (motor.productos_tienda_de())::text);
+  r := motor.revisar_muestras_de(basauri, (t ->> 'id')::uuid, '[{"producto": "XX", "cantidad": 1}]', pg_temp.a('2026-12-17', '11:06'));
   perform pg_temp.comprobar('Muestras: solo de la lista', r -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS', r::text);
-  r := motor.revisar_muestras_de(basauri, (t ->> 'id')::uuid, '[{"producto": "v2", "formato": "4g", "cantidad": 0}]', pg_temp.a('2026-12-17', '11:06'));
-  perform pg_temp.comprobar('Muestras: con cantidad (de 1 a 99)', r -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS', r::text);
-  r := motor.revisar_muestras_de(basauri, (t ->> 'id')::uuid, '[{"producto": "v2", "formato": "4g", "cantidad": 2}]', pg_temp.a('2026-12-17', '11:07'));
+  r := motor.revisar_muestras_de(basauri, (t ->> 'id')::uuid, '[{"producto": "v2", "cantidad": 0}]', pg_temp.a('2026-12-17', '11:06'));
+  perform pg_temp.comprobar('Muestras: la cantidad, de 1 a 99', r -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS', r::text);
+  r := motor.revisar_muestras_de(basauri, (t ->> 'id')::uuid, '[{"producto": "v2", "cantidad": 2}]', pg_temp.a('2026-12-17', '11:07'));
   t := pg_temp.tarea(r, 'revisa_muestras');
   perform pg_temp.comprobar('Elegidas: la tarea queda hecha por quien está y la muestra, pendiente para el siguiente reparto',
     t ->> 'estado' = 'hecha' and t ->> 'hecha_por' = 'Ane Prueba'
-    and t -> 'muestras' = '[{"producto": "V2", "formato": "4g", "cantidad": 2, "estado": "pendiente"}]'::jsonb
-    and r -> 'peticiones' -> 0 ->> 'texto' = 'Muestra: 2x V2 4g'
+    and t -> 'muestras' = '[{"producto": "V2", "formato": "", "cantidad": 2, "estado": "pendiente"}]'::jsonb
+    and r -> 'peticiones' -> 0 ->> 'texto' = 'Muestra: V2 x2'
     and r -> 'peticiones' -> 0 ->> 'estado_texto' = 'Pendiente: irá en el siguiente reparto', r::text);
 
   r := motor.revisar_muestras_de(donosti, (pg_temp.tarea(motor.tienda_hoy_de(donosti, pg_temp.a('2026-12-17', '11:10')), 'revisa_muestras') ->> 'id')::uuid,
-                                 '[{"producto": "BZ1", "formato": "4g", "cantidad": 1}]', pg_temp.a('2026-12-17', '11:10'));
-  perform pg_temp.comprobar('Franquicia: su muestra va en el envío a Gipuzkoa, con el nombre de la tienda delante',
-    r -> 'peticiones' -> 0 ->> 'texto' = 'Donosti · Muestra: 1x BZ1 4g'
+                                 '[{"producto": "BZ1"}]', pg_temp.a('2026-12-17', '11:10'));
+  perform pg_temp.comprobar('Franquicia: su muestra (sin cantidad = 1) va en el envío a Gipuzkoa, con el nombre de la tienda delante',
+    r -> 'peticiones' -> 0 ->> 'texto' = 'Donosti · Muestra: BZ1'
     and r -> 'peticiones' -> 0 ->> 'estado_texto' = 'Pendiente: irá en el siguiente envío', r::text);
 
   r := motor.pedir_material_de(basauri, '00000000-0000-4000-d000-000000000001', '  Rollos  de TPV ', pg_temp.a('2026-12-17', '18:00'));
@@ -233,10 +233,10 @@ begin
   -- Preparar el reparto: las peticiones de las tiendas, ya puestas.
   v_pet := motor.peticiones_pendientes_de('reparto');
   perform pg_temp.comprobar('Al preparar el reparto: las peticiones pendientes de las tiendas que van en él, con su línea',
-    pg_temp.texto_pet(v_pet) = 'Material: Rollos de TPV [Basauri] | Muestra: 2x V2 4g [Basauri]', v_pet::text);
+    pg_temp.texto_pet(v_pet) = 'Material: Rollos de TPV [Basauri] | Muestra: V2 x2 [Basauri]', v_pet::text);
   r := motor.peticiones_pendientes_de('envio');
   perform pg_temp.comprobar('Y al preparar el envío, las de las franquicias, en la casilla de Gipuzkoa',
-    pg_temp.texto_pet(r) = 'Donosti · Muestra: 1x BZ1 4g [Gipuzkoa (envío a Rentería)]', r::text);
+    pg_temp.texto_pet(r) = 'Donosti · Muestra: BZ1 [Gipuzkoa (envío a Rentería)]', r::text);
 
   r := pg_temp.guardar(j, 'h29-a', pg_temp.a('2026-12-18', '08:40'));
   v_rep := (r ->> 'reparto_id')::uuid;
@@ -253,12 +253,12 @@ begin
     (select string_agg(e.producto || '@' || c.codigo, ', ' order by c.codigo, e.producto)
        from public.tarea_elementos e join public.centros_trabajo c on c.id = e.destino_id
       where e.tarea_id = v_bolsas and e.tipo = 'peticion')
-      = 'Material: Rollos de TPV@BASAURI, Muestra: 2x V2 4g@BASAURI, Cajas vacías@BILBAO'
+      = 'Material: Rollos de TPV@BASAURI, Muestra: V2 x2@BASAURI, Cajas vacías@BILBAO'
     and (select count(*) from public.tarea_elementos where tarea_id = v_bolsas and tipo = 'caja_bolsa') = 4, r::text);
   r := motor.tienda_hoy_de(basauri, pg_temp.a('2026-12-18', '08:45'));
   perform pg_temp.comprobar('Al guardarlo quedan atendidas y la tienda lo ve («Va en el reparto de hoy»)',
     (select string_agg(x ->> 'detalle' || ': ' || (x ->> 'estado_texto'), ' | ' order by x ->> 'detalle') from jsonb_array_elements(r -> 'peticiones') x)
-      = '2x V2 4g: Va en el reparto de hoy | Rollos de TPV: Va en el reparto de hoy'
+      = 'Rollos de TPV: Va en el reparto de hoy | V2 x2: Va en el reparto de hoy'
     and jsonb_array_length(motor.peticiones_pendientes_de('reparto') -> 'peticiones') = 0, r::text);
   perform public.servidor_guardar_peticiones(admin, v_rep, v_lista - 2, pg_temp.a('2026-12-18', '08:42'));
   perform pg_temp.comprobar('Si Administración la quita de la casilla, vuelve a pendiente (irá en el siguiente)',
@@ -269,12 +269,13 @@ begin
     (select count(*) from public.peticiones_tienda where centro_id = pg_temp.d('BASAURI') and estado = 'atendida' and reparto_id = v_rep) = 2);
   r := motor.descartar_peticion_tienda_de(admin, (select id from public.peticiones_tienda where tipo = 'material'), 'x', pg_temp.a('2026-12-18', '08:44'));
   perform pg_temp.comprobar('Una atendida ya no se descarta', r -> 'error' ->> 'codigo' = 'ESTADO_NO_VALIDO', r::text);
-  r := motor.descartar_peticion_tienda_de(admin, (select id from public.peticiones_tienda where centro_id = pg_temp.d('DONOSTI')), '', pg_temp.a('2026-12-18', '08:44'));
-  perform pg_temp.comprobar('Descartar pide el porqué', r -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS', r::text);
   r := motor.descartar_peticion_tienda_de(admin, (select id from public.peticiones_tienda where centro_id = pg_temp.d('DONOSTI')),
-                                         'Ya tienen de la semana pasada', pg_temp.a('2026-12-18', '08:44'));
-  perform pg_temp.comprobar('Administración descarta una pendiente: la tienda ve por qué',
-    r -> 'peticion' ->> 'estado_texto' = 'No va: Ya tienen de la semana pasada'
+                                         repeat('x', 121), pg_temp.a('2026-12-18', '08:44'));
+  perform pg_temp.comprobar('El motivo de «No va», en una línea (120 letras)', r -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS', r::text);
+  r := motor.descartar_peticion_tienda_de(admin, (select id from public.peticiones_tienda where centro_id = pg_temp.d('DONOSTI')),
+                                         '  ', pg_temp.a('2026-12-18', '08:44'));
+  perform pg_temp.comprobar('«No va» sin motivo: la tienda ve «No va: lo ha quitado Administración» y ya no sale al preparar',
+    r -> 'peticion' ->> 'estado_texto' = 'No va: lo ha quitado Administración'
     and jsonb_array_length(motor.peticiones_pendientes_de('envio') -> 'peticiones') = 0, r::text);
 
   -- Antes de salir
@@ -320,7 +321,7 @@ begin
   perform pg_temp.comprobar('Enseña lo que trae la bolsa: productos y peticiones',
     (select string_agg(x ->> 'cantidad' || 'x ' || (x ->> 'producto') || ' ' || (x ->> 'formato'), ', ') from jsonb_array_elements(t -> 'bolsa' -> 'productos') x)
       = '3x V2 4g, 1x BZ1 4g'
-    and (select string_agg(x ->> 'texto', ', ') from jsonb_array_elements(t -> 'bolsa' -> 'peticiones') x) = 'Muestra: 2x V2 4g, Material: Rollos de TPV'
+    and (select string_agg(x ->> 'texto', ', ') from jsonb_array_elements(t -> 'bolsa' -> 'peticiones') x) = 'Muestra: V2 x2, Material: Rollos de TPV'
     and t -> 'bolsa' -> 'pedidos' = '[]'::jsonb and t -> 'bolsa' ->> 'salida' = '10:50', t::text);
   perform pg_temp.comprobar('Todas las tiendas con parada: «Ha salido a las 10:50»',
     r -> 'reparto' ->> 'texto' = 'Ha salido a las 10:50'
@@ -435,7 +436,7 @@ select pg_temp.comprobar('La tienda no usa lo del almacén ni lo de Administraci
 select pg_temp.comprobar('Tablas: ve su bolsa, su cierre de caja y sus peticiones; no las de otra tienda',
   (select count(*) from public.bolsas_tienda) = 1 and (select count(*) from public.cierres_caja) = 0
   and (select count(*) from public.peticiones_tienda) = 0
-  and jsonb_array_length(public.productos_tienda() -> 'productos') = 4);
+  and jsonb_array_length(public.productos_tienda() -> 'productos') = 3);
 reset role;
 select pg_temp.como('00000000-0000-4000-a000-000000000001');  -- operario
 select pg_temp.comprobar('El operario ve las peticiones pendientes para preparar; no usa lo de la tienda ni los cierres de caja',

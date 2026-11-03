@@ -7,9 +7,9 @@
 > 2. **«Coloca y apunta la reposición»** (§9.12): sale al terminar «Recibe la bolsa», con la misma lista. `apuntar_reposicion(tarea_id)` = «Reposición metida, todo bien»; con `faltan` = «Falta algo» (llega a Administración como incidencia abierta).
 > 3. **Por dónde va el reparto** (§9.13): `tienda_hoy().reparto` con `texto` listo para mostrar («Ha salido a las 10:50» / «Ha pasado por Basauri a las 11:20 (parada 2 de 3)») y las paradas.
 > 4. **Cierre de caja** (§9.14): el «Cierre del día» tiene un punto más, `pide: "cierre_caja"`: Z, nº de ventas, efectivo y Glovo con `cerrar_caja`.
-> 5. **Muestras y material** (§9.15): «Revisa las muestras» (jueves por la mañana; también Donosti y Rentería) con la lista de `productos_tienda()`; material, en cualquier momento, con `pedir_material`. Se ven en `tienda_hoy().peticiones` con su estado («Va en el reparto de hoy»).
-> 6. **Pantalla del almacén y de Administración, «Preparar reparto» y «Preparar envío»** (§9.16): al abrirla, `peticiones_tiendas_pendientes(tipo)` y **poner cada `texto` en la casilla de peticiones especiales de su `destino_id`** (se pueden cambiar o quitar). `guardar_reparto` no cambia: al guardar, las que van quedan atendidas. Para Eder, nada más.
-> 7. **Administración** (§9.17): `cierres_caja`, `incidencias_tiendas` y `cerrar_incidencia_tienda`, y `descartar_peticion_tienda`.
+> 5. **Muestras y material** (§9.15): «Revisa las muestras» (jueves por la mañana; también Donosti y Rentería) con la lista de `productos_tienda()`: **solo el producto, sin formato** (al tocarlo cuenta 1; − y + para cambiar la cantidad); material, en cualquier momento, con `pedir_material`. Se ven en `tienda_hoy().peticiones` con su estado («Va en el reparto de hoy»).
+> 6. **Pantalla del almacén y de Administración, «Preparar reparto» y «Preparar envío»** (§9.16): al abrirla, `peticiones_tiendas_pendientes(tipo)` y **poner cada `texto` en la casilla de peticiones especiales de su `destino_id`** (se pueden cambiar o quitar). Junto a cada una, **solo para Administración**, un botón **«No va»** (`descartar_peticion_tienda`). `guardar_reparto` no cambia: al guardar, las que van quedan atendidas. Para Eder, nada más.
+> 7. **Administración** (§9.17): `cierres_caja`, `incidencias_tiendas` y `cerrar_incidencia_tienda`; y en «Tiendas», la lista de peticiones pendientes (`peticiones_tiendas_pendientes`) con «No va» (`descartar_peticion_tienda`, motivo opcional).
 > 8. **Errores nuevos** (§9.18): `FALTAN_DATOS` (con `pide`) y `MOTIVO_OBLIGATORIO` en el efectivo.
 
 > **Cambios en 1.12 (Tarea 27) — para Lovable: la tableta de las tiendas (primera parte).** Solo se añaden cosas: un rol nuevo (`tienda`), funciones nuevas (§9) y un tipo de elemento nuevo (`punto`). Lo del almacén y lo de Administración que ya existía no cambia.
@@ -871,7 +871,7 @@ Sale sola en `tienda_hoy().tareas` **cuando sale el reparto**, en las tiendas qu
   "reparto_id": "…", "fecha": "2026-12-18", "salida": "10:50", "recibida_a_las": null, "recibida_por": null,
   "efectivo": { "esperado": 85.50, "de_fecha": "2026-12-17", "entregado": null, "motivo": null },
   "productos": [ { "clave": "producto:V2|4g", "producto": "V2", "formato": "4g", "cantidad": 3 } ],
-  "peticiones": [ { "clave": "peticion:Muestra: 2x V2 4g", "texto": "Muestra: 2x V2 4g" } ],
+  "peticiones": [ { "clave": "peticion:Muestra: V2 x2", "texto": "Muestra: V2 x2" } ],
   "pedidos": [ { "clave": "pedido:…", "pedido_id": "…", "cliente": "…", "lineas": [ { "producto": "BZ1", "formato": "4g", "cantidad": 1 } ] } ],
   "reposicion": null
 }
@@ -917,25 +917,29 @@ En el «Cierre del día», el punto «Cierre de caja en la app: Z, nº de ventas
 
 ### 9.15 Muestras y material: `productos_tienda()` · `revisar_muestras(tarea_id, muestras?)` · `pedir_material(id_cliente, texto)` 🧪 (Tarea 28)
 - **«Revisa las muestras»** (`tipo: "muestras"`): jueves por la mañana (en Bilbao alterna por semanas, como las demás semanales); también en Donosti y Rentería. Comprobar que están en buen estado y elegir qué hay que traer nuevo.
-  - **`productos_tienda()`:** `{ productos: [{ clave, producto, formato, categoria }], leidos_en }`, la lista de la última lectura de la hoja (la del último reparto, envío o lista de stock), en el orden de la hoja. Para elegir como en el reparto (− y +).
-  - **`revisar_muestras({ tarea_id, muestras: [{ producto, formato, cantidad }] })`**: cantidad de 1 a 99. Lista vacía = están bien y no hace falta nada. La tarea queda hecha; lo elegido sale en `muestras` de la tarea, con su estado.
+  - **Las muestras se piden por producto, sin formato** (son de ~1 g; decisión del propietario, 03/11/2026).
+  - **`productos_tienda()`:** `{ productos: [{ clave, producto, categoria }], leidos_en }`, cada producto una vez, de la última lectura de la hoja (la del último reparto, envío o lista de stock), en el orden de la hoja.
+  - **Elegir:** tocar el producto = 1; con − y + se cambia la cantidad (de 1 a 99).
+  - **`revisar_muestras({ tarea_id, muestras: [{ producto, cantidad? }] })`**: sin `cantidad`, 1. Lista vacía = están bien y no hace falta nada. La tarea queda hecha; lo elegido sale en `muestras` de la tarea (`{ producto, formato: "", cantidad, estado }`).
+  - En la casilla del reparto llega como «Muestra: V2» o, con más de una, «Muestra: V2 x2».
 - **Pedir material de tienda** (bolsas, rollos de TPV…), en cualquier momento: **`pedir_material({ id_cliente, texto })`** (80 letras). Solo si `tienda_hoy().pedir_material` es `true` (en esta tarea, no en las franquicias). Hay que haber elegido quién está (`SIN_PERSONA`).
 - **`tienda_hoy().peticiones`:** las muestras y el material de la tienda (pendientes y los de la última semana): `[{ id, tipo: "muestra" | "material", detalle, texto, estado, estado_texto, pedida_por, fecha, a_las }]`. Mostrar `estado_texto`: «Pendiente: irá en el siguiente reparto» (o «envío»), «Va en el reparto de hoy / de mañana / del 18/12» o «No va: [motivo]».
-- **Salida** (`revisar_muestras`, `pedir_material`): `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `TODAVIA_NO`, `SIN_PERSONA`, `ESTADO_NO_VALIDO`, `SIN_JORNADA`, `NO_AUTORIZADO` (material en una franquicia), `DATOS_NO_VALIDOS` (producto que no está en la lista, cantidad, texto).
+- **Salida** (`revisar_muestras`, `pedir_material`): `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `TODAVIA_NO`, `SIN_PERSONA`, `ESTADO_NO_VALIDO`, `SIN_JORNADA`, `NO_AUTORIZADO` (material en una franquicia), `DATOS_NO_VALIDOS` (producto que no está en la lista, cantidad, producto repetido, texto).
 
 ### 9.16 «Preparar reparto» y «Preparar envío»: `peticiones_tiendas_pendientes(tipo?)` 🧪 (Tarea 28)
 Para la pantalla que ya existe (operario y Administración). Las muestras y el material de las tiendas van en su **siguiente reparto o envío como peticiones especiales** (R1d), ya puestos:
 - Al abrir «Preparar reparto» (`tipo: "reparto"`, por defecto) o «Preparar envío» (`"envio"`), llamar a `peticiones_tiendas_pendientes(tipo)`: `{ peticiones: [{ id, destino_id, destino, tienda_id, tienda, tipo, texto, detalle, pedida_por, creada_en }] }`.
-- **Poner cada `texto` como una línea más en la casilla «Peticiones especiales para [destino]» de su `destino_id`.** Las de Donosti y Rentería van en la casilla de **Gipuzkoa** (envío), con el nombre de la tienda delante («Donosti · Muestra: 1x BZ1 4g»).
-- Se pueden cambiar o quitar como cualquier línea. `guardar_reparto` **no cambia**: al guardarlo, las líneas que siguen igual (sin contar mayúsculas) quedan **atendidas** con ese reparto (la tienda ve «Va en el reparto de hoy»). Las que se han quitado o cambiado siguen pendientes y vuelven a salir la próxima vez; Administración puede descartarlas (§9.17).
+- **Poner cada `texto` como una línea más en la casilla «Peticiones especiales para [destino]» de su `destino_id`.** Las de Donosti y Rentería van en la casilla de **Gipuzkoa** (envío), con el nombre de la tienda delante («Donosti · Muestra: BZ1»).
+- `guardar_reparto` **no cambia**: al guardarlo, las líneas que siguen igual (sin contar mayúsculas) quedan **atendidas** con ese reparto (la tienda ve «Va en el reparto de hoy»). Las que se han quitado o cambiado **siguen pendientes** y vuelven a salir la próxima vez (decisión del propietario, 03/11/2026: así ninguna se pierde sin que nadie lo decida).
+- **Botón «No va»** (solo si quien prepara es Administración), junto a cada línea que viene de una tienda: `descartar_peticion_tienda({ peticion_id: id })`, con `motivo` opcional. La petición deja de salir y la tienda ve «No va: [motivo]» (sin motivo, «No va: lo ha quitado Administración»). Quitar la línea de la casilla al pulsarlo. Para mandar otra cosa (por ejemplo, 1 en vez de 2): «No va» en la original y escribir la nueva en la casilla. El operario no tiene el botón: deja las líneas como vienen.
 - Nada cambia en las bolsas ni en la salida: en las bolsas salen como cualquier petición especial («Además, mete:»).
 
 ### 9.17 Administración: `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` · `descartar_peticion_tienda` 🧪 (Tarea 28)
 - **`cierres_caja(desde?, hasta?, tienda_id?)`:** `{ cierres: [{ fecha, tienda_id, tienda, z, ventas, efectivo, glovo, por, guardado_en }] }`, los más nuevos primero (por defecto, la última semana). Lectura preparada para el panel (Tarea 29).
 - **`incidencias_tiendas()`:** `{ incidencias: [{ id, tienda_id, tienda, opcion, texto, fecha, a_las, estado, cerrada_en, nota }] }`: las abiertas primero y las cerradas de la última semana. Hoy, `opcion: "falta_reposicion"` («Falta en la bolsa del reparto del 18/12: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Nombre)»). Es el aviso en la app: mostrarlas en el panel.
 - **`cerrar_incidencia_tienda(incidencia_id, nota?)`:** la cierra al resolverla (`nota`, una línea). **Salida:** `incidencias_tiendas()`. **Errores:** `NO_ENCONTRADO`, `DATOS_NO_VALIDOS`.
-- **`descartar_peticion_tienda(peticion_id, motivo)`:** quitar una muestra o un material pendiente que no va a ir; la tienda ve «No va: [motivo]». **Salida:** `{ peticion: {…} }`. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya atendida o descartada), `DATOS_NO_VALIDOS` (falta el porqué).
-- Las pendientes, con `peticiones_tiendas_pendientes` (§9.16).
+- **`descartar_peticion_tienda(peticion_id, motivo?)`** («No va»): quitar una muestra o un material pendiente que no va a ir. `motivo` opcional (una línea, 120 letras); la tienda ve «No va: [motivo]» o, sin motivo, «No va: lo ha quitado Administración». **Salida:** `{ peticion: {…} }`. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya atendida o descartada), `DATOS_NO_VALIDOS` (motivo demasiado largo).
+- **Dónde:** en «Preparar reparto» / «Preparar envío» (§9.16) y en el panel, sección «Tiendas»: una lista de **peticiones pendientes** de todas las tiendas (`peticiones_tiendas_pendientes('reparto')` y `('envio')`) con el botón «No va» en cada una, para quitarlas sin abrir el reparto.
 
 ### 9.18 Errores nuevos (Tarea 28) 🧪
 | Código | Qué hace la pantalla |
