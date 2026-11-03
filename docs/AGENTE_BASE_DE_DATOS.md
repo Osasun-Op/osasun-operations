@@ -70,11 +70,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 28** (sección 7): tiendas, segunda parte (la bolsa, por dónde va el reparto, el cierre de caja, las muestras y el material). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` **E2-8**, los puntos del bloque 1 en `AGENTE_COORDINADOR.md` y lo que hiciste en la Tarea 27 (PR #26). **Solo en pruebas: no se pasa a producción** (excepción de tiendas, sección 4). El PR lleva «Qué he leído y qué existía ya».
+Ninguna. La Tarea 28 está fusionada (PR #27) y **no se pasa a producción**. La siguiente, la 29 (sección 7), se encarga con la frase del propietario.
 
 ---
 
-## 7. TAREA 29 (preparada; se encarga al terminar la Tarea 28): conflictos al crear una tarea de Administración, en pruebas
+## 7. TAREA 29 (preparada; se encarga al terminar la Tarea 28): conflictos al crear una tarea de Administración y avisos del almacén a las tiendas, en pruebas
 
 **Qué pasó (03/11/2026):** a las 10:28 Administración creó «Hay que recoger las cajas de la imprenta» (no urgente, sin hora límite). `crear_tarea_admin` devolvió `CONFLICTO` con las bolsas y la producción del reparto en riesgo, y en la ventana se eligió `{ cede: bolsas, accion: "manana" }` queriendo pasar a mañana **la tarea nueva**. Las bolsas dejaron de salir (`disponible_desde` = mañana 00:00), y al terminar la producción a las 10:48 a Eder le salió directamente la salida. Regla nueva en `ESTADO_DEL_SISTEMA.md` §6.4 (v1.46).
 
@@ -84,13 +84,14 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 4. **Prueba** con el caso del 03/11 (no urgente a las 10:28 con producción y bolsas pendientes → se crea sin conflicto; una urgente → conflicto, las bolsas con `se_puede_mover: false`, `nueva_manana` la crea mañana y las bolsas siguen hoy). El almacén, igual en todo lo demás.
 5. **Contratos:** §4.1 con las opciones nuevas y `se_puede_mover`, con nota para Lovable.
 6. **Producción:** esta migración va detrás de la de tiendas (47), así que **espera** con ellas (excepción de tiendas, sección 4); producción no se usa aún. Dilo en el PR.
-7. **Numeración:** la tercera parte de tiendas (incidencias, atascados, panel y resumen del día), que las Tareas 27 y 28 llaman «Tarea 29», pasa a ser la **Tarea 30**.
+7. **Avisos del almacén a las tiendas** (decisión del propietario, 03/11/2026): el operario también puede **mandar avisos** a una tienda o a todas, igual que Administración (para que metan algo en una bolsa, preparen algo…). Reutiliza `crear_aviso_tienda` y los avisos de la Tarea 27: no se hace nada al lado. Solo **mandar**: no gestiona personas, días cerrados ni nada más del panel. En la tienda, el aviso dice de quién viene («Almacén» o «Administración»); Administración los ve en `avisos_tiendas()` con quién lo mandó y los puede cancelar. Contratos con nota para Lovable.
+8. **Numeración:** la tercera parte de tiendas (incidencias, atascados, panel y resumen del día), que las Tareas 27 y 28 llaman «Tarea 29», pasa a ser la **Tarea 30**.
 
-**Entrega:** Pull Request **«Tarea 29 — Conflictos al crear tareas de Administración»**, con «Qué he leído y qué existía ya», pruebas en verde, una llamada real, registros sin errores nuevos y cómo deshacer.
+**Entrega:** Pull Request **«Tarea 29 — Conflictos al crear tareas de Administración y avisos del almacén»**, con «Qué he leído y qué existía ya», pruebas en verde, una llamada real, registros sin errores nuevos y cómo deshacer.
 
 ---
 
-## 7. TAREA 28 (activa): tiendas, segunda parte — la bolsa, por dónde va el reparto, el cierre de caja, las muestras y el material, en pruebas
+## 7.0 TAREA 28 (fusionada en el PR #27; solo en pruebas, producción espera): tiendas, segunda parte — la bolsa, por dónde va el reparto, el cierre de caja, las muestras y el material, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` **E2-8** y `AGENTE_COORDINADOR.md`, bloque 1 (puntos 7 a 10, 12 a 14, 18, 24, 29 y 30). Sigue la Tarea 27 (PR #26): mismas reglas. **Solo en pruebas; producción espera** (excepción de tiendas, sección 4). **El almacén no puede cambiar**: lo que hoy hace Eder (preparar, bolsas, salida, ruta) sigue igual y sin pasos nuevos para él. Reutiliza lo que existe: el reparto y el envío del día, sus bolsas y paradas, las **peticiones especiales** (R1d, Tarea 13), los puntos y la lista del día de la tienda (Tarea 27) y la activación por tienda.
 
@@ -708,3 +709,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.40 | 02/11/2026 | Tarea 27 fusionada (PR #26). Lo de tiendas no pasa a producción hasta que el propietario lo apruebe tras probarlo. Sin tarea activa. |
 | 1.41 | 02/11/2026 | Tarea 28 activa (tiendas, segunda parte), aprobada por el propietario. |
 | 1.42 | 03/11/2026 | Tarea 29 preparada (conflictos al crear tareas de Administración, tras las bolsas pasadas a mañana por error); se encarga al terminar la 28. La tercera parte de tiendas pasa a ser la Tarea 30. |
+| 1.43 | 03/11/2026 | Tarea 28 fusionada (PR #27), solo en pruebas. Tarea 29 con un punto más: avisos del almacén a las tiendas. |
