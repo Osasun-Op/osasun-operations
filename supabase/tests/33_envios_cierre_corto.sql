@@ -1,8 +1,9 @@
 -- Prueba 33 · Franquicias y Durango: «Envíos» y cierre de caja corto (Tarea 30b; ESTADO_DEL_SISTEMA.md E2-8
--- v1.50). El miércoles 16/12/2026 sale el envío a Gipuzkoa («Salida a Nacex» a las 18:10); el jueves 17/12,
--- Rentería lo ve en «Envíos» con lo marcado y lo confirma («Falta algo» → Administración); el jueves sale otro
--- y el viernes lo confirma con «Todo bien». Donosti no tiene «Envíos» (el envío a Gipuzkoa va entero a
--- Rentería). Cierre de caja corto en las franquicias (20:20; el sábado, 13:20). Las propias y el almacén, igual.
+-- v1.50). El miércoles 16/12/2026 se prepara el envío a Gipuzkoa (17:00); el jueves 17/12, Rentería lo ve en
+-- «Envíos» con lo marcado y lo confirma («Falta algo» → Administración; desaparece en el momento); el jueves se
+-- prepara otro y el viernes lo confirma con «Todo bien»; el viernes, con el reparto y saliendo Administración,
+-- otro que se ve el sábado. Donosti no tiene «Envíos» (el envío a Gipuzkoa va entero a Rentería). Cierre de
+-- caja corto en las franquicias (20:20; el sábado, 13:20). Las propias y el almacén, igual.
 -- Cuentas y nombres inventados (@osasun.invalid). Transacción deshecha al final.
 
 begin;
@@ -79,11 +80,10 @@ insert into public.personas_tienda (id, centro_id, nombre, cuando, turno) values
   ('00000000-0000-4000-c000-000000000006', pg_temp.d('RENTERIA'), 'Maite Prueba', 'siempre', null);
 
 -- ---------------------------------------------------------------------------
--- Miércoles 16/12: el envío a Gipuzkoa se guarda, se prepara (se marca) y sale
+-- Miércoles 16/12: el envío a Gipuzkoa se guarda y se prepara (se mete en la caja)
 -- ---------------------------------------------------------------------------
 do $$
 declare
-  op constant uuid := '00000000-0000-4000-a000-000000000001';
   renteria constant uuid := '00000000-0000-4000-b000-000000000005';
   r jsonb;
   v_env uuid;
@@ -96,16 +96,14 @@ begin
   -- El operario mete en la caja 3 de las 4 V2 y la petición; la BZ1 no la marca.
   update public.tarea_elementos set cantidad_hecha = 3 where tarea_id = v_env and tipo = 'caja_bolsa' and producto = 'V2';
   update public.tarea_elementos set estado = 'hecho', cantidad_hecha = cantidad where tarea_id = v_env and tipo = 'peticion';
+  perform pg_temp.comprobar('Sin terminar de preparar el envío, Rentería no lo ve (ni el día siguiente)',
+    motor.tienda_hoy_de(renteria, pg_temp.a('2026-12-17', '11:05')) -> 'envios' = '[]'::jsonb);
   update public.tareas set estado = 'hecha', iniciada_en = pg_temp.a('2026-12-16', '16:00'), terminada_en = pg_temp.a('2026-12-16', '17:00')
    where id = v_env;
   insert into _v values ('tareas_almacen', (select jsonb_agg(jsonb_build_array(clave, estado) order by clave) from public.tareas where jornada_id = j));
-  perform pg_temp.comprobar('Antes de salir, Rentería no ve el envío (ni el día siguiente)',
-    motor.tienda_hoy_de(renteria, pg_temp.a('2026-12-17', '11:05')) -> 'envios' = '[]'::jsonb
-    and exists (select 1 from public.tareas where jornada_id = j and clave = 'nacex_salida'));
-  update public.tareas set estado = 'en_curso', iniciada_en = pg_temp.a('2026-12-16', '18:10')
-   where jornada_id = j and clave = 'nacex_salida';
-  perform pg_temp.comprobar('El mismo día de la salida, todavía no',
-    motor.tienda_hoy_de(renteria, pg_temp.a('2026-12-16', '19:00')) -> 'envios' = '[]'::jsonb);
+  perform pg_temp.comprobar('Preparado: el mismo día, todavía no (sin esperar a «Salida a Nacex»)',
+    motor.tienda_hoy_de(renteria, pg_temp.a('2026-12-16', '19:00')) -> 'envios' = '[]'::jsonb
+    and (select estado from public.tareas where jornada_id = j and clave = 'nacex_salida') = 'pendiente');
 end;
 $$;
 
@@ -117,7 +115,6 @@ declare
   basauri constant uuid := '00000000-0000-4000-b000-000000000001';
   donosti constant uuid := '00000000-0000-4000-b000-000000000003';
   renteria constant uuid := '00000000-0000-4000-b000-000000000005';
-  admin constant uuid := '00000000-0000-4000-a000-000000000002';
   r jsonb;
   e jsonb;
   v_id uuid;
@@ -125,10 +122,10 @@ begin
   r := motor.tienda_hoy_de(renteria, pg_temp.a('2026-12-17', '11:05'));
   e := r -> 'envios' -> 0;
   v_id := (e ->> 'id')::uuid;
-  perform pg_temp.comprobar('Al día siguiente, Rentería ve el envío en «Envíos», con su número',
+  perform pg_temp.comprobar('Al día siguiente de prepararlo, Rentería lo ve en «Envíos», con su número y la hora de preparado',
     jsonb_array_length(r -> 'envios') = 1 and (r ->> 'envios_sin_confirmar')::int = 1
-    and e ->> 'fecha' = '2026-12-16' and e ->> 'salida' = '18:10' and e ->> 'destino' = 'Gipuzkoa (envío a Rentería)'
-    and e -> 'confirmado' = 'null'::jsonb, r::text);
+    and e ->> 'fecha' = '2026-12-16' and e ->> 'preparado' = '17:00' and e ->> 'destino' = 'Gipuzkoa (envío a Rentería)'
+    and not e ? 'salida' and not e ? 'confirmado', r::text);
   perform pg_temp.comprobar('Trae lo marcado al meterlo en la caja: 3x V2 4g y la petición; la BZ1 sin marcar no aparece',
     e -> 'productos' = '[{"clave": "producto:V2|4g", "producto": "V2", "formato": "4g", "cantidad": 3}]'::jsonb
     and e -> 'peticiones' -> 0 ->> 'texto' = 'Donosti · Muestra: V2' and e -> 'pedidos' = '[]'::jsonb, e::text);
@@ -152,10 +149,12 @@ begin
     and pg_temp.err(motor.confirmar_envio_de(donosti, v_id, null, null, pg_temp.a('2026-12-17', '11:10'))) = 'NO_ENCONTRADO');
   r := motor.confirmar_envio_de(renteria, v_id, '[{"clave": "producto:V2|4g", "cantidad": 1}]', 'La caja venía abierta',
                                 pg_temp.a('2026-12-17', '11:15'));
-  perform pg_temp.comprobar('«Falta algo»: queda confirmado y sale de la cuenta de la pestaña',
-    (r ->> 'envios_sin_confirmar')::int = 0 and r -> 'envios' -> 0 -> 'confirmado' ->> 'resultado' = 'falta'
-    and r -> 'envios' -> 0 -> 'confirmado' ->> 'por' = 'Maite Prueba' and r -> 'envios' -> 0 -> 'confirmado' ->> 'a_las' = '11:15'
-    and r -> 'envios' -> 0 -> 'confirmado' -> 'faltan' = '[{"clave": "producto:V2|4g", "texto": "V2 4g", "cantidad": 1}]'::jsonb, r::text);
+  perform pg_temp.comprobar('«Falta algo»: desaparece de «Envíos» en el momento y de la cuenta de la pestaña',
+    r -> 'envios' = '[]'::jsonb and (r ->> 'envios_sin_confirmar')::int = 0, r::text);
+  perform pg_temp.comprobar('… queda apuntado lo que falta, quién y cuándo',
+    (select reposicion = 'falta' and reposicion_por = 'Maite Prueba' and reposicion_en = pg_temp.a('2026-12-17', '11:15')
+            and faltan = '[{"clave": "producto:V2|4g", "texto": "V2 4g", "cantidad": 1}]'::jsonb and incidencia_id is not null
+       from public.bolsas_tienda where id = v_id));
   perform pg_temp.comprobar('… y llega a Administración como incidencia abierta (y la tienda la ve en sus incidencias)',
     exists (select 1 from jsonb_array_elements(motor.incidencias_tiendas_de(pg_temp.a('2026-12-17', '11:20')) -> 'incidencias') x
              where x ->> 'tienda' = 'Rentería' and x ->> 'opcion' = 'falta_envio' and x ->> 'estado' = 'abierta'
@@ -164,8 +163,6 @@ begin
   perform pg_temp.comprobar('Confirmar otra vez: ESTADO_NO_VALIDO, sin otra incidencia',
     pg_temp.err(motor.confirmar_envio_de(renteria, v_id, null, null, pg_temp.a('2026-12-17', '11:20'))) = 'ESTADO_NO_VALIDO'
     and (select count(*) from public.incidencias where opcion = 'falta_envio') = 1);
-  perform pg_temp.comprobar('El día siguiente ya no sale el confirmado',
-    motor.tienda_hoy_de(renteria, pg_temp.a('2026-12-18', '11:00')) -> 'envios' = '[]'::jsonb);
 end;
 $$;
 
@@ -177,22 +174,50 @@ declare
   renteria constant uuid := '00000000-0000-4000-b000-000000000005';
   r jsonb;
   v_env uuid;
-  j uuid := motor.generar_jornada('00000000-0000-4000-a000-000000000001', '2026-12-17');
 begin
   r := pg_temp.envio('2026-12-17', 'h33-b');
   v_env := (r -> 'tareas' ->> 'bolsas')::uuid;
   update public.tarea_elementos set estado = 'hecho', cantidad_hecha = cantidad where tarea_id = v_env and tipo = 'caja_bolsa';
-  update public.tareas set estado = 'hecha', iniciada_en = pg_temp.a('2026-12-17', '18:10'), terminada_en = pg_temp.a('2026-12-17', '18:25')
-   where jornada_id = j and clave = 'nacex_salida';
+  update public.tareas set estado = 'hecha', iniciada_en = pg_temp.a('2026-12-17', '16:00'), terminada_en = pg_temp.a('2026-12-17', '16:45')
+   where id = v_env;
   perform motor.empezar_turno_tienda_de(renteria, '00000000-0000-4000-c000-000000000006', pg_temp.a('2026-12-18', '10:55'));
   r := motor.tienda_hoy_de(renteria, pg_temp.a('2026-12-18', '11:00'));
   perform pg_temp.comprobar('El viernes sale el envío del jueves, con todo lo marcado',
     jsonb_array_length(r -> 'envios') = 1 and r -> 'envios' -> 0 ->> 'fecha' = '2026-12-17'
     and jsonb_array_length(r -> 'envios' -> 0 -> 'productos') = 2 and (r ->> 'envios_sin_confirmar')::int = 1, r::text);
-  r := motor.confirmar_envio_de(renteria, (r -> 'envios' -> 0 ->> 'id')::uuid, null, null, pg_temp.a('2026-12-18', '11:05'));
-  perform pg_temp.comprobar('«Todo bien»: confirmado, sin incidencia',
-    r -> 'envios' -> 0 -> 'confirmado' ->> 'resultado' = 'bien' and (r ->> 'envios_sin_confirmar')::int = 0
+  v_env := (r -> 'envios' -> 0 ->> 'id')::uuid;
+  r := motor.confirmar_envio_de(renteria, v_env, null, null, pg_temp.a('2026-12-18', '11:05'));
+  perform pg_temp.comprobar('«Todo bien»: desaparece en el momento, sin incidencia',
+    r -> 'envios' = '[]'::jsonb and (r ->> 'envios_sin_confirmar')::int = 0
+    and (select reposicion = 'bien' and incidencia_id is null from public.bolsas_tienda where id = v_env)
     and (select count(*) from public.incidencias where opcion = 'falta_envio') = 1, r::text);
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Viernes 18/12, envío con el reparto: cuenta al prepararlo, salga quien salga
+-- (sin «Lleva en el reparto lo que va a Nacex», que solo existe si sale el operario)
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  renteria constant uuid := '00000000-0000-4000-b000-000000000005';
+  r jsonb;
+  v_env uuid;
+  j uuid := motor.generar_jornada('00000000-0000-4000-a000-000000000001', '2026-12-18');
+begin
+  update public.jornadas set sale = 'administracion' where id = j;
+  r := pg_temp.envio('2026-12-18', 'h33-c');
+  v_env := (r -> 'tareas' ->> 'bolsas')::uuid;
+  update public.tarea_elementos set estado = 'hecho', cantidad_hecha = cantidad where tarea_id = v_env and tipo = 'caja_bolsa';
+  update public.tareas set estado = 'hecha', iniciada_en = pg_temp.a('2026-12-18', '09:30'), terminada_en = pg_temp.a('2026-12-18', '10:20')
+   where id = v_env;
+  perform motor.empezar_turno_tienda_de(renteria, '00000000-0000-4000-c000-000000000006', pg_temp.a('2026-12-19', '10:55'));
+  r := motor.tienda_hoy_de(renteria, pg_temp.a('2026-12-19', '11:00'));
+  perform pg_temp.comprobar('Viernes, sale Administración: el sábado Rentería ve el envío, preparado a las 10:20',
+    (select clave from public.tareas where id = v_env) = 'preparar_envio_viernes'
+    and not exists (select 1 from public.tareas where jornada_id = j and clave = 'nacex_viernes' and not retirada_por_condicion)
+    and jsonb_array_length(r -> 'envios') = 1 and r -> 'envios' -> 0 ->> 'fecha' = '2026-12-18'
+    and r -> 'envios' -> 0 ->> 'preparado' = '10:20', r::text);
 end;
 $$;
 
@@ -253,8 +278,7 @@ begin
   perform pg_temp.comprobar('El almacén sigue igual: las tareas del envío y ninguna incidencia para Eder',
     (select jsonb_agg(jsonb_build_array(clave, estado) order by clave) from public.tareas
       where jornada_id = motor.generar_jornada(op, '2026-12-16'))
-      = (select jsonb_agg(jsonb_build_array(x ->> 0, case when x ->> 0 = 'nacex_salida' then 'en_curso' else x ->> 1 end) order by x ->> 0)
-           from jsonb_array_elements((select v from _v where k = 'tareas_almacen')) x)
+      = (select v from _v where k = 'tareas_almacen')
     and not exists (select 1 from public.incidencias where persona_id = op and opcion = 'falta_envio'));
 end;
 $$;
@@ -264,7 +288,7 @@ select pg_temp.como('00000000-0000-4000-b000-000000000005');  -- Rentería
 select pg_temp.comprobar('La tienda: confirmar_envio y cerrar_caja sin efectivo ni Glovo; ve solo sus envíos',
   public.confirmar_envio(gen_random_uuid()) -> 'error' ->> 'codigo' = 'NO_ENCONTRADO'
   and public.cerrar_caja(gen_random_uuid(), 1, 1) -> 'error' ->> 'codigo' = 'NO_ENCONTRADO'
-  and (select count(*) from public.bolsas_tienda) = 2);
+  and (select count(*) from public.bolsas_tienda) = 3);
 reset role;
 select pg_temp.como('00000000-0000-4000-a000-000000000001');  -- operario
 select pg_temp.comprobar('El operario no confirma envíos',

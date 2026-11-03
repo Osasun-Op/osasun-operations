@@ -4,7 +4,7 @@
 
 > **Cambios en 1.17 (Tarea 30b) — para Lovable: «Envíos» y el cierre de caja corto de las franquicias.** Solo se añade (§9.1, §9.14, §9.21). 🧪 = solo en pruebas.
 > 1. **Pestaña «Envíos»** arriba, junto a «Avisos», en las tiendas que reciben por envío (hoy **Rentería y Durango**; Donosti no, porque el envío a Gipuzkoa va entero a Rentería, que es quien lo confirma): `tienda_hoy().envios` y, para el número de la pestaña, `tienda_hoy().envios_sin_confirmar`. Enseñar la pestaña solo si hay algo en `envios` o `envios_sin_confirmar > 0`.
-> 2. Cada envío sale **desde el día siguiente** a su salida, con **lo marcado al meterlo en la caja** (como la bolsa), y **sigue ahí hasta confirmarlo** con `confirmar_envio`: «Todo bien» o «Falta algo» (eligiendo qué y cuánto, como la reposición; llega a Administración como incidencia abierta). No es una tarea con hora.
+> 2. Cada envío sale **desde el día siguiente a prepararlo** (cuando el operario termina «Prepara el envío aprobado», entre semana o el viernes, vaya quien vaya al reparto), con **lo marcado al meterlo en la caja** (como la bolsa) y la hora de preparado (`preparado`). **Sigue ahí hasta confirmarlo** con `confirmar_envio`: «Todo bien» o «Falta algo» (eligiendo qué y cuánto, como la reposición; llega a Administración como incidencia abierta). **Al confirmarlo desaparece en el momento.** No es una tarea con hora.
 > 3. **Cierre de caja corto** (Donosti y Rentería): tarea «Cierre de caja» 10 minutos antes de cerrar con un punto `pide: "cierre_caja_corto"`: pedir solo **la Z y el nº de ventas** y llamar a `cerrar_caja({ elemento_id, z, ventas })`. Las propias (Durango incluida) siguen con su «Cierre del día» completo (`pide: "cierre_caja"`).
 > 4. `cierres_caja()` trae `efectivo` y `glovo` vacíos (`null`) en los cierres cortos.
 
@@ -1008,18 +1008,17 @@ Botón «Incidencia» de la tableta, en cualquier momento (`ESTADO_DEL_SISTEMA.m
 
 ### 9.21 «Envíos»: `tienda_hoy().envios` · `confirmar_envio(envio_id, faltan?, nota?)` 🧪 (Tarea 30b)
 Para las tiendas que **reciben por envío** en lugar de bolsa del reparto (configuración `recibe_envio` por tienda: hoy **Rentería**, que recibe el envío a Gipuzkoa entero y lo reparte con Donosti, y **Durango**, con el suyo; decisión del propietario, 03/11/2026). Para ellas no hay «Recibe la bolsa» ni reposición. **A Eder no le sale nada nuevo:** se usa lo que ya marca al preparar el envío.
-- **Cuándo sale:** desde el **día siguiente** a la salida del envío (cuando el operario empieza o termina «Salida a Nacex»; el viernes, «Lleva en el reparto lo que va a Nacex»). **No es una tarea con hora:** sigue en `envios` hasta que se confirma. Se miran los envíos de la última semana.
-- **`tienda_hoy().envios`:** los que quedan por confirmar (los más antiguos primero) y los confirmados hoy:
+- **Cuándo sale:** desde el **día siguiente** a prepararlo, es decir, cuando el operario termina «Prepara el envío aprobado» (todo metido en la caja), entre semana por la tarde o el viernes por la mañana, **vaya quien vaya al reparto** (propietario, 03/11/2026). **No es una tarea con hora:** sigue en `envios` hasta que se confirma; **al confirmarlo desaparece en el momento**. Se miran los envíos de la última semana sin confirmar.
+- **`tienda_hoy().envios`:** los que quedan por confirmar, los más antiguos primero:
 ```json
 [ {
-  "id": "…", "reparto_id": "…", "fecha": "2026-12-16", "salida": "18:10", "destino": "Gipuzkoa (envío a Rentería)",
+  "id": "…", "reparto_id": "…", "fecha": "2026-12-16", "preparado": "17:00", "destino": "Gipuzkoa (envío a Rentería)",
   "productos": [ { "clave": "producto:V2|4g", "producto": "V2", "formato": "4g", "cantidad": 3 } ],
   "peticiones": [ { "clave": "peticion:Donosti · Muestra: V2", "texto": "Donosti · Muestra: V2" } ],
-  "pedidos": [],
-  "confirmado": null
+  "pedidos": []
 } ]
 ```
-  Lo que trae es **lo marcado al meterlo en la caja** (como `bolsa`, §9.11): lo que no se ha marcado no aparece. `confirmado`, cuando ya está: `{ resultado: "bien" | "falta", a_las, por, faltan, incidencia_id }`.
+  `preparado`: la hora a la que se terminó de preparar (mostrar «Preparado a las 17:00»). Lo que trae es **lo marcado al meterlo en la caja** (como `bolsa`, §9.11): lo que no se ha marcado no aparece. El envío a Gipuzkoa es uno para las dos tiendas, calculado con lo que hay en Donosti y Rentería juntas.
 - **`tienda_hoy().envios_sin_confirmar`:** cuántos quedan por confirmar (el número de la pestaña).
 - **«Todo bien»:** `confirmar_envio({ envio_id })`.
 - **«Falta algo»:** `confirmar_envio({ envio_id, faltan: [{ clave, cantidad? }], nota? })`, como en la reposición (§9.12): `clave` de `productos`, `peticiones` o `pedidos`, de 1 a lo que traía (sin `cantidad`, todas); `nota`, una línea (200 letras). Llega a **Administración como incidencia abierta** (`incidencias_tiendas()`, `opcion: "falta_envio"`, «Falta en el envío del 16/12: 1x V2 4g. La caja venía abierta (Nombre)»), y la tienda la ve en `tienda_hoy().incidencias`.
