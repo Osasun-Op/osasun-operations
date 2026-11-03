@@ -85,10 +85,10 @@ begin
     pg_temp.dia(basauri, '2026-12-14') = 'apertura_manana@10:50 cierre_manana@13:20 apertura_tarde@16:50 cierre_dia@20:20',
     pg_temp.dia(basauri, '2026-12-14'));
   v_j := motor.generar_jornada(basauri, '2026-12-14');
-  perform pg_temp.comprobar('Cada tarea con sus puntos (5, 2, 4 y 4) y sin pasar al día siguiente',
+  perform pg_temp.comprobar('Cada tarea con sus puntos (5, 2, 4 y 5, con el cierre de caja de la Tarea 28) y sin pasar al día siguiente',
     (select string_agg(t.clave || ':' || (select count(*) from public.tarea_elementos e where e.tarea_id = t.id and e.tipo = 'punto'), ' '
                        order by t.disponible_desde)
-       from public.tareas t where t.jornada_id = v_j) = 'apertura_manana:5 cierre_manana:2 apertura_tarde:4 cierre_dia:4'
+       from public.tareas t where t.jornada_id = v_j) = 'apertura_manana:5 cierre_manana:2 apertura_tarde:4 cierre_dia:5'
     and not exists (select 1 from public.tareas where jornada_id = v_j and no_terminada <> 'nada'));
   perform pg_temp.comprobar('Bilbao: apertura de la tarde 16:20; cierre del día 20:20 también el sábado',
     pg_temp.dia(bilbao, '2026-12-14') = 'apertura_manana@10:50 cierre_manana@13:20 apertura_tarde@16:20 cierre_dia@20:20'
@@ -138,7 +138,7 @@ begin
   perform motor.marcar_dia_cerrado_de(admin, '2026-12-17', (select id from public.centros_trabajo where codigo = 'PORTU'),
                                       false, null, pg_temp.a('2026-12-01', '10:00'));
   perform pg_temp.comprobar('Y al quitarlo, vuelven a estar pendientes',
-    (select count(*) from public.tareas where jornada_id = v_j and estado = 'pendiente') = 5);
+    (select count(*) from public.tareas where jornada_id = v_j and estado = 'pendiente') = 6);  -- con «Revisa las muestras» (Tarea 28)
   r := motor.marcar_dia_cerrado_de(admin, '2026-11-01', null, true, null, pg_temp.a('2026-12-01', '10:00'));
   perform pg_temp.comprobar('No se marca un día pasado', r -> 'error' ->> 'codigo' = 'FECHA_PASADA', r::text);
 end;
@@ -209,7 +209,7 @@ begin
     (pg_temp.tarea(r, 'cierre_manana') ->> 'no_hecha')::boolean and not (pg_temp.tarea(r, 'apertura_manana') ->> 'no_hecha')::boolean, r::text);
   perform pg_temp.comprobar('Y no pasa al día siguiente: el martes, solo las 4 del martes',
     pg_temp.tareas(motor.tienda_hoy_de(basauri, pg_temp.a('2026-12-15', '10:40'))) is null  -- el martes está cerrado (fiesta local)
-    and pg_temp.dia('00000000-0000-4000-b000-000000000001', '2026-12-17') like 'apertura_manana@10:50 cierre_manana@13:20 apertura_tarde@16:50 limpieza_cristales@17:00 cierre_dia@20:20');
+    and pg_temp.dia('00000000-0000-4000-b000-000000000001', '2026-12-17') like 'apertura_manana@10:50 revisa_muestras@11:00 cierre_manana@13:20 apertura_tarde@16:50 limpieza_cristales@17:00 cierre_dia@20:20');
   r := motor.terminar_tarea_tienda_de(basauri, (pg_temp.tarea(motor.tienda_hoy_de(basauri, pg_temp.a('2026-12-14', '13:25')), 'cierre_manana') ->> 'id')::uuid,
                                       pg_temp.a('2026-12-14', '13:25'));
   perform pg_temp.comprobar('Una tarea con puntos no se cierra con «Hecho»: se tocan sus puntos', r -> 'error' ->> 'codigo' = 'NO_ENCONTRADO', r::text);
