@@ -82,7 +82,7 @@ Ninguna. La Tarea 29 está fusionada (PR #28) y **no se pasa a producción**. La
 
 1. **Cinco opciones**, sin foto ni urgencia, con «hecha por» de quien está en el turno:
    - **Material de tienda** → es lo mismo que `pedir_material` (Tarea 28): no se crea nada nuevo, la pantalla llama a esa función.
-   - **Me quedo sin producto** → la pantalla enseña el botón de llamar a Administración (`telefono_administracion`); **[pendiente del propietario: si además queda apuntado como incidencia]**.
+   - **Me quedo sin producto** → la pantalla enseña el botón de llamar a Administración (`telefono_administracion`) y **además queda apuntado** (decisión del propietario, 03/11/2026): la tienda elige el producto de `productos_tienda()` (nota opcional, por ejemplo el formato) y se crea una incidencia **abierta para Administración** «Sin producto: [producto]», que sale en `incidencias_tiendas()`. Así queda constancia de qué se acaba en tienda.
    - **Descuadre de stock o de caja**, **Comentario de cliente** y **Otros** → incidencia **abierta para Administración**, con texto obligatorio (una línea o dos) y aviso en la app: sale en `incidencias_tiendas()` y se cierra con `cerrar_incidencia_tienda()`. Opciones nuevas del check, solo añadiendo.
 2. **Franquicias:** sin incidencias (no tienen la operativa interna).
 3. **`tienda_hoy()`**: las incidencias de la tienda abiertas y las cerradas de hoy, con su estado («Abierta» / «Resuelta por Administración: [nota]»).
