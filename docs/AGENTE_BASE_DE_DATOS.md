@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 30b** (sección 7): franquicias y Durango, «Envíos» y cierre de caja corto. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.50, «Qué tienen las franquicias» y Durango) y lo que hiciste en las Tareas 28 y 29. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
+Ninguna. La Tarea 30b está fusionada (PR #31). La siguiente es la **Tarea 30c** (pedidos de cliente por envío, sección 7), que se encarga con la frase del propietario.
 
 ---
 
@@ -94,7 +94,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 1. **`guardar_pedido_cliente` con `entrega: "tienda"`** acepta también Donosti, Rentería y Durango (las tiendas que reciben por envío; por configuración, no por código).
 2. **Va en el siguiente envío** a esa tienda (Gipuzkoa para Donosti y Rentería; Durango para Durango): caja aparte «Pedido de cliente · [cliente] · [tienda]» en la preparación del envío, que el operario marca como las demás. Mientras no haya envío, el pedido espera.
 3. **Aviso en «Revisa si toca envío…»** (15:30): «Hay N pedidos de cliente esperando envío a [destino]».
-4. **En la tienda:** el pedido sale en `envios` (Tarea 30b) con lo demás que llega.
+4. **En la tienda:** el pedido sale en `envios` (Tarea 30b) con lo demás que llega. **Los de Donosti van en el envío a Gipuzkoa y salen en «Envíos» de Rentería**, que es quien lo recibe y confirma (decisión del propietario en el PR #31); el texto de la caja dice para qué tienda es.
 5. **Contratos:** §3.16 y lo que toque de la 30b, con nota para Lovable (la lista de tiendas de «Pedido de cliente»).
 
 **Entrega:** PR **«Tarea 30c — Pedidos de cliente por envío»**, con «Qué he leído y qué existía ya», pruebas en verde (el reparto y los pedidos de siempre igual), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
@@ -117,7 +117,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
-## 7. TAREA 30b (activa): franquicias — «Envíos» y cierre de caja, en pruebas
+## 7.0 TAREA 30b (fusionada en el PR #31; solo en pruebas, producción espera): franquicias — «Envíos» y cierre de caja, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, «Qué tienen las franquicias» (v1.50). Reutiliza la reposición de la Tarea 28 (lista de lo marcado, «Todo bien» / «Falta algo» → incidencia para Administración) y el cierre de caja (`cerrar_caja`, `cierres_caja`). Solo en pruebas; producción espera.
 
@@ -774,3 +774,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.50 | 03/11/2026 | Tarea 30 fusionada (PR #30), solo en pruebas. Sin tarea activa. |
 | 1.51 | 03/11/2026 | Tarea 30c preparada (pedidos de cliente para recoger en Donosti, Rentería y Durango, por envío). |
 | 1.52 | 03/11/2026 | Tarea 30b activa (aprobada por el propietario): Durango mantiene su cierre del día completo; el número de envíos sin confirmar en `tienda_hoy()`. |
+| 1.53 | 03/11/2026 | Tarea 30b fusionada (PR #31), solo en pruebas. Tarea 30c ajustada: los pedidos de Donosti salen en «Envíos» de Rentería. Sin tarea activa. |
