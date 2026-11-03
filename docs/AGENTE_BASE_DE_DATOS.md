@@ -72,6 +72,8 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 Ninguna. La Tarea 29 está fusionada (PR #28) y **no se pasa a producción**. La siguiente de tiendas es la Tarea 30 (tercera parte), que el coordinador partirá en tareas pequeñas.
 
+**Pendiente para la próxima tarea (solo documento):** en `CONTRATOS.md` §9.11, decir que la pantalla de «Recibe la bolsa» **no enseña** la lista de lo que trae (decisión del propietario, 03/11/2026; `ESTADO_DEL_SISTEMA.md` E2-8): la lista se enseña solo en «Coloca y apunta la reposición» (§9.12). La base de datos no cambia.
+
 ---
 
 ## 7.0 TAREA 29 (fusionada en el PR #28; solo en pruebas, producción espera): conflictos al crear una tarea de Administración y avisos del almacén a las tiendas, en pruebas

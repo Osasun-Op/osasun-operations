@@ -56,6 +56,14 @@ Aunque la tarea ya esté aprobada, **antes de enviarla** (a Lovable o al agente 
 1. Vuelve a leer lo que vas a mandar contra las últimas decisiones apuntadas (`ESTADO_DEL_SISTEMA.md` y las notas de esta sesión), sobre todo **lo último que se ha decidido**, que es lo que más fácil se queda fuera o mal puesto.
 2. Enseña al propietario **en pocas líneas qué va en el encargo** y espera su «sí». Solo entonces lo envías.
 
+### Cuando cambia una decisión sobre algo ya construido (03/11/2026)
+El propietario puede afinar algo después de que un agente ya lo haya hecho (por ejemplo, «Recibe la bolsa» sin la lista). En ese momento, **los cuatro sitios a la vez**:
+1. `ESTADO_DEL_SISTEMA.md` (la decisión, con su fecha);
+2. `CONTRATOS.md`: si lo que cambia afecta a lo que dice el contrato, se deja apuntado en la «Tarea activa» del agente de base de datos (es su documento) para la próxima tarea, o se le encarga ya si las pantallas pueden equivocarse;
+3. Lovable, si ya lo tiene hecho o en marcha: corrección corta;
+4. mis notas de esta sesión.
+Nunca solo uno de ellos.
+
 ### Encargos cortos y concretos (petición del propietario, 03/11/2026)
 Con agentes de IA, un encargo largo se cumple peor: se mezclan cosas, se olvidan detalles y la revisión cuesta más. Mejor **dos encargos cortos que uno largo**. Criterio:
 - **Un solo objetivo** por encargo, que se pueda probar de una vez (una pantalla o un recorrido, una regla, un arreglo).
@@ -250,3 +258,4 @@ Antes de aceptar una funcionalidad nueva: ¿resuelve un problema real? ¿se pued
 - Tarea 21 de Lovable hecha y revisada: `lineaTienda` usa el `texto` tal cual (sin repetir el nombre de la tienda); prueba nueva con una petición de Donosti en la casilla de Gipuzkoa. Solo `PrepararReparto.tsx` y su prueba. Sin publicar. Segunda parte de la tableta lista para que la pruebe el propietario.
 - PR #28 (Tarea 29) revisado el 03/11: todo correcto (51 migraciones, «Sin avisos», registros limpios; funciones del almacén rehechas conservando lo de antes; respuestas del propietario aplicadas en el commit 979156f). ESTADO v1.48 actualizado con sus reglas nuevas. **Fusionado el 03/11 con la confirmación del propietario.** Después, tres encargos cortos a Lovable: (1) ventana de conflictos; (2) `aviso_salida` con «Retrasar 15/30 min» en la pantalla de Eder; (3) avisos de Eder a las tiendas (mandar, ver y cancelar los suyos).
 - Tarea 22 de Lovable hecha y revisada (commit `5831553`): ventana de conflicto en «Nueva tarea»: primero «¿Qué hacemos con «[tarea]»?» (Para mañana · Que la haga después · No crearla); aparte, «O mover otra tarea» solo con `se_puede_mover: true` y el título en cada botón; «Creada para el miércoles 04/11»; sin conflicto, el `encaje`. Solo `Administracion.tsx` y su prueba; 95 pruebas; sin publicar. **Tarea 23 de Lovable** enviada (aviso de salida sin bolsas con «Retrasar 15/30 min» en Chromebook y Pixel), con el visto bueno previo del propietario («manda la siguiente»).
+- 03/11: el agente de BD avisa de que `CONTRATOS.md` §9.11 aún dice que «Recibe la bolsa» trae la lista, aunque ESTADO (v1.48) y la tableta ya no la enseñan. Causa: al cambiar la decisión actualicé ESTADO y Lovable, pero no dejé el cambio del contrato al agente. Arreglo apuntado en su «Tarea activa» y regla nueva en la sección 5 («Cuando cambia una decisión sobre algo ya construido»).
