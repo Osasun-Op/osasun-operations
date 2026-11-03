@@ -229,6 +229,7 @@ declare
   v_pet jsonb;
   v_salida timestamptz;
   v_despues timestamptz;
+  v_ped uuid;
 begin
   -- Preparar el reparto: las peticiones de las tiendas, ya puestas.
   v_pet := motor.peticiones_pendientes_de('reparto');
@@ -244,7 +245,11 @@ begin
   insert into public.pedidos_cliente (id_cliente, cliente, entrega, destino_id, lineas, fecha_objetivo, jornada_id, reparto_id,
                                       registrado_por, registrado_en)
   values (gen_random_uuid(), 'Cliente Prueba', 'tienda', pg_temp.d('PORTU'), '[{"producto": "BZ1", "formato": "4g", "cantidad": 1}]',
-          '2026-12-18', j, v_rep, admin, pg_temp.a('2026-12-18', '08:30'));
+          '2026-12-18', j, v_rep, admin, pg_temp.a('2026-12-18', '08:30'))
+  returning id into v_ped;
+  -- Su bolsa aparte, dentro de la tarea de bolsas (como hace servidor_asignar_pedidos).
+  insert into public.tarea_elementos (tarea_id, tipo, lote, producto, formato, destino_id, cantidad, orden_sugerido)
+  values (v_bolsas, 'caja_bolsa', 'pedido:' || v_ped, 'BZ1', '4g', pg_temp.d('PORTU'), 1, 90);
   -- Lo que pone Administración en las casillas: lo de siempre (Bilbao) y lo que ha salido ya puesto.
   v_lista := jsonb_build_array(jsonb_build_object('destino_id', pg_temp.d('BILBAO'), 'texto', 'Cajas vacías'))
              || (select jsonb_agg(jsonb_build_object('destino_id', x -> 'destino_id', 'texto', x -> 'texto')) from jsonb_array_elements(v_pet -> 'peticiones') x);
@@ -254,7 +259,7 @@ begin
        from public.tarea_elementos e join public.centros_trabajo c on c.id = e.destino_id
       where e.tarea_id = v_bolsas and e.tipo = 'peticion')
       = 'Material: Rollos de TPV@BASAURI, Muestra: V2 x2@BASAURI, Cajas vacías@BILBAO'
-    and (select count(*) from public.tarea_elementos where tarea_id = v_bolsas and tipo = 'caja_bolsa') = 4, r::text);
+    and (select count(*) from public.tarea_elementos where tarea_id = v_bolsas and tipo = 'caja_bolsa' and lote = 'reparto') = 4, r::text);
   r := motor.tienda_hoy_de(basauri, pg_temp.a('2026-12-18', '08:45'));
   perform pg_temp.comprobar('Al guardarlo quedan atendidas y la tienda lo ve («Va en el reparto de hoy»)',
     (select string_agg(x ->> 'detalle' || ': ' || (x ->> 'estado_texto'), ' | ' order by x ->> 'detalle') from jsonb_array_elements(r -> 'peticiones') x)
@@ -290,6 +295,10 @@ begin
     motor.tienda_hoy_de(donosti, pg_temp.a('2026-12-18', '10:40')) -> 'reparto' = 'null'::jsonb);
 
   -- El operario hace sus bolsas y sale como siempre (a las 10:50).
+  -- Lo que marca como metido en cada bolsa (todo, menos 1 BZ1 de Basauri).
+  update public.tarea_elementos e set estado = 'hecho', cantidad_hecha = e.cantidad, terminado_en = pg_temp.a('2026-12-18', '10:39')
+   where e.tarea_id = v_bolsas and e.tipo in ('caja_bolsa', 'peticion')
+     and not (e.destino_id = pg_temp.d('BASAURI') and e.producto = 'BZ1');
   update public.tareas set estado = 'hecha', iniciada_en = pg_temp.a('2026-12-18', '09:00'), terminada_en = pg_temp.a('2026-12-18', '10:40')
    where jornada_id = j and clave in ('produccion_reparto', 'bolsas');
   -- Si saliera Administración (sin «Salida del reparto»): a la hora de salida, con las bolsas listas.
@@ -318,9 +327,9 @@ begin
     and pg_temp.punto(r, 'recibe_bolsa', 2) ->> 'texto' = 'Bolsa de ayer entregada con 85,50 € en efectivo'
     and pg_temp.punto(r, 'recibe_bolsa', 2) ->> 'pide' = 'efectivo'
     and (pg_temp.punto(r, 'recibe_bolsa', 2) ->> 'efectivo_esperado')::numeric = 85.50, t::text);
-  perform pg_temp.comprobar('Enseña lo que trae la bolsa: productos y peticiones',
+  perform pg_temp.comprobar('Enseña lo que trae la bolsa: lo marcado como metido (el BZ1 sin marcar no aparece)',
     (select string_agg(x ->> 'cantidad' || 'x ' || (x ->> 'producto') || ' ' || (x ->> 'formato'), ', ') from jsonb_array_elements(t -> 'bolsa' -> 'productos') x)
-      = '3x V2 4g, 1x BZ1 4g'
+      = '3x V2 4g'
     and (select string_agg(x ->> 'texto', ', ') from jsonb_array_elements(t -> 'bolsa' -> 'peticiones') x) = 'Muestra: V2 x2, Material: Rollos de TPV'
     and t -> 'bolsa' -> 'pedidos' = '[]'::jsonb and t -> 'bolsa' ->> 'salida' = '10:50', t::text);
   perform pg_temp.comprobar('Todas las tiendas con parada: «Ha salido a las 10:50»',
@@ -329,6 +338,7 @@ begin
   r := motor.tienda_hoy_de(portu, pg_temp.a('2026-12-18', '10:56'));
   perform pg_temp.comprobar('Portugalete: su pedido de cliente en la bolsa y, sin cierre de caja anterior, pide la cantidad',
     pg_temp.tarea(r, 'recibe_bolsa') -> 'bolsa' -> 'pedidos' -> 0 ->> 'cliente' = 'Cliente Prueba'
+    and pg_temp.tarea(r, 'recibe_bolsa') -> 'bolsa' -> 'pedidos' -> 0 -> 'lineas' = '[{"producto": "BZ1", "formato": "4g", "cantidad": 1}]'::jsonb
     and pg_temp.punto(r, 'recibe_bolsa', 2) ->> 'texto' = 'Bolsa de ayer entregada: di cuánto efectivo'
     and pg_temp.punto(r, 'recibe_bolsa', 2) -> 'efectivo_esperado' = 'null'::jsonb, r::text);
   perform pg_temp.comprobar('La franquicia no tiene «Recibe la bolsa»',
@@ -363,7 +373,7 @@ begin
   t := pg_temp.tarea(r, 'reposicion');
   perform pg_temp.comprobar('Después, «Coloca y apunta la reposición», con la lista de lo que tenía que llegar',
     t ->> 'hora' = '11:22' and t ->> 'tipo' = 'reposicion'
-    and jsonb_array_length(t -> 'bolsa' -> 'productos') = 2 and jsonb_array_length(t -> 'bolsa' -> 'peticiones') = 2, t::text);
+    and jsonb_array_length(t -> 'bolsa' -> 'productos') = 1 and jsonb_array_length(t -> 'bolsa' -> 'peticiones') = 2, t::text);
 
   r := motor.tienda_hoy_de(portu, pg_temp.a('2026-12-18', '11:40'));
   perform motor.marcar_punto_de(portu, (pg_temp.punto(r, 'recibe_bolsa', 1) ->> 'id')::uuid, pg_temp.a('2026-12-18', '11:40'));

@@ -1,6 +1,19 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.13 · **Fecha:** 03/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.14 · **Fecha:** 03/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.14 (Tarea 29) — para Lovable: la ventana de conflicto al crear una tarea de Administración y los avisos del almacén a las tiendas** (`ESTADO_DEL_SISTEMA.md` §6.4 v1.46 y E2-8 v1.47). Solo se añade; lo que ya funciona sigue igual. 🧪 = solo en pruebas.
+> 1. **Sin falsa alarma** (§4.1): una tarea **no urgente y sin hora límite** ya no da `CONFLICTO`; se crea y el `encaje` dice cuándo saldrá («Cuando termine lo del reparto, las obligatorias y lo que tiene hora.»).
+> 2. **La ventana de conflicto pregunta primero por la tarea nueva** (§4.1): tres botones, «Para mañana» (`{ "accion": "nueva_manana" }`), «Que la haga después» (`{ "accion": "nueva_despues" }`) y «No crearla» (`{ "accion": "no_crear" }`). Mover otra tarea queda aparte, con su nombre bien a la vista («Pasar «X» a mañana»…).
+> 3. **Lo del reparto y el envío de hoy no se mueve:** en `obligatorias_en_riesgo`, cada una trae **`se_puede_mover`**; ofrecer mover (`despues`, `manana`, `cancelar`) **solo las que tienen `true`**. Si llega una con `false`, `DATOS_NO_VALIDOS`.
+> 4. **Avisos del almacén a las tiendas** (§9.9): el operario también puede mandar avisos con `crear_aviso_tienda` (a una tienda o a todas); para elegir la tienda, **`tiendas()`** (§9.19). Solo mandar: no gestiona personas, días cerrados ni cancela. Cada aviso trae **`de`: «Almacén» o «Administración»**, en la tienda (`tienda_hoy().avisos`) y en `avisos_tiendas()`.
+> 5. **Numeración:** la tercera parte de tiendas (incidencias, atascados, panel y resumen del día), que antes se llamaba «Tarea 29», es la **Tarea 30**.
+> 6. **Respuestas del propietario en el PR #28** (03/11/2026):
+>    - **No se mueve nada de lo que sale hoy** (§4.1): además de lo del reparto, los pedidos de cliente (para la tienda y por Nacex) y lo de Nacex traen `se_puede_mover: false`.
+>    - **Bolsas justo después de la producción del reparto** (§3.2): con la producción hecha, solo salen las bolsas (y los pedidos de cliente para la tienda) hasta terminarlas; lo urgente y lo que tiene hora esperan. La salida no sale sin las bolsas.
+>    - **`tarea_activa().aviso_salida`** (§3.2): si llega la hora de salida y las bolsas no están, la pantalla muestra el aviso con «Retrasar 15 min» y «Retrasar 30 min» (`retrasar_salida`, §3.6). `null` si no hace falta.
+>    - **La bolsa de la tienda** (§9.11): trae lo que el operario ha marcado como metido en ella; lo que no se ha marcado no aparece.
+>    - **El operario ve y cancela sus avisos a las tiendas** (§9.9): `avisos_tiendas()` le da los que ha mandado él, y `cancelar_aviso_almacen` cancela solo esos.
 
 > **Cambios en 1.13 (Tarea 28) — para Lovable: la tableta de las tiendas (segunda parte).** Solo se añaden campos y funciones (§9.11 a §9.18); lo de antes no cambia. Corrección: lo de tiendas (🧪) no pasa a producción al fusionar, sino cuando lo apruebe el propietario.
 > 1. **«Recibe la bolsa del reparto»** (§9.11): sale sola cuando sale el reparto, en las tiendas con parada, con la hora de salida y **lo que trae la bolsa** (`bolsa`: productos, peticiones y pedidos de cliente). Dos puntos: «Bolsa recibida» (un toque; las demás tiendas lo ven) y «Bolsa de ayer entregada con X € en efectivo» (un toque = X; otra cantidad, con `entregar_efectivo` y el porqué; sin cierre anterior, pide la cantidad).
@@ -171,7 +184,7 @@
 | `guardar_pedido_cliente` | Servidor | ✔ | ✔ | ✅ Tarea 12 |
 | `pedidos_cliente_abiertos` · `aplazar_pedido_nacex` | BD | ✔ | ✔ | ✅ Tarea 12 |
 | `iniciar_incidencia` · `terminar_incidencia` (las de antes) | BD | ✔ | — | ✅ Tarea 4 |
-| `crear_tarea_admin` · `cancelar_tarea` · `estado_actual` | BD | — | ✔ | ✅ Tarea 4 |
+| `crear_tarea_admin` · `cancelar_tarea` · `estado_actual` | BD | — | ✔ | ✅ Tarea 4 (🧪 Tarea 29: conflictos, §4.1) |
 | `historico_dia` · `historico_dias` | BD | — | ✔ | ✅ Tarea 13 |
 | `cierre` · `cierres_recientes` | BD | — | ✔ | ✅ Tarea 4 |
 | `generar_jornada` · `generar_cierre` · `enviar_correo` | Internas | — | — | ✅ |
@@ -184,7 +197,8 @@ Tiendas (Tarea 27, §9; columna «Tienda» = la cuenta de cada tienda):
 | `tienda_hoy` · `empezar_turno` · `marcar_punto` · `terminar_tarea_tienda` · `compartir_video` · `marcar_aviso_leido` | BD | ✔ | — | 🧪 Tarea 27 |
 | `videos_semana` | BD | ✔ | ✔ | 🧪 Tarea 27 |
 | `personas_tienda` | BD | ✔ (solo la suya) | ✔ | 🧪 Tarea 27 |
-| `guardar_persona_tienda` · `marcar_dia_cerrado` · `dias_cerrados` · `crear_aviso_tienda` · `avisos_tiendas` | BD | — | ✔ | 🧪 Tarea 27 |
+| `guardar_persona_tienda` · `marcar_dia_cerrado` · `dias_cerrados` · `avisos_tiendas` | BD | — | ✔ | 🧪 Tarea 27 |
+| `crear_aviso_tienda` · `tiendas` | BD | — (operario ✔, Tarea 29) | ✔ | 🧪 Tareas 27 y 29 |
 | `entregar_efectivo` · `cerrar_caja` · `apuntar_reposicion` · `revisar_muestras` · `pedir_material` | BD | ✔ | — | 🧪 Tarea 28 |
 | `productos_tienda` | BD | ✔ | ✔ | 🧪 Tarea 28 |
 | `peticiones_tiendas_pendientes` | BD | — (operario ✔) | ✔ | 🧪 Tarea 28 |
@@ -228,6 +242,8 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 - **Fin del turno** ✅ Tarea 24 (opción B del propietario): al generarse el cierre del turno, lo **no obligatorio** que quedó en curso pasa a `pendiente`, con lo hecho guardado y una pausa «Fin del turno» a la hora de fin del turno (los minutos trabajados se paran ahí). En el siguiente turno vuelve a salir por su prioridad; al final del día sigue su regla (el +35 % se recalcula, lo de Administración pasa a mañana). Las obligatorias siguen en curso. Fuera del turno, lo que tenía entre manos se puede marcar o terminar (`terminar_elemento`, `terminar_tarea`), pero no vuelve a ponerse en curso.
 - **Nunca sin tarea** (v1.17): si dentro del turno no queda nada disponible, se adelantan las tareas fijas de la tarde de ese día (minis el lunes, resinas el martes, control de materiales el jueves) y después «Orden y limpieza», que **no se gasta** (al terminarla vuelve a salir). Lo ligado a su hora (recuento, revisión del envío, Nacex, salida) espera a su hora.
 - **Lo primero de la mañana** ✅ Tarea 23: mientras falten ese día la revisión inicial, «Prepara el reparto», la producción del reparto, las bolsas y la preparación del envío del viernes (las que haya), y antes del turno de tarde, solo salen esas, lo urgente (mercancía, problemas, urgentes de Administración), lo que tiene hora fija, lo de Administración con hora límite y los pedidos de tienda. Lo demás (Administración sin hora, arrastradas, +35 %, compras, incidencias, fijas de la tarde) espera; en los huecos sale «Orden y limpieza». (`motor.lo_primero_pendiente`, `motor.va_antes_que_lo_primero`.)
+- **Bolsas justo después de la producción** (Tarea 29 🧪, propietario, 03/11/2026): con la producción del reparto hecha y las bolsas sin terminar, solo salen **las bolsas** (y los pedidos de cliente para la tienda, que van en ellas). Lo urgente, lo de Administración con hora y lo que tiene hora fija **esperan a que termine las bolsas**; solo las para un problema que abre el operario. «Salida del reparto» no sale hasta que las bolsas están hechas.
+- **`aviso_salida`** (Tarea 29 🧪): si es la hora de salida y las bolsas aún no están, `{ "texto": "Es la hora de salida (10:45) y las bolsas no están listas: retrasa la salida.", "hora_salida": "10:45", "minutos": [15, 30] }`. Mostrarlo bien a la vista, con un botón por cada valor de `minutos` («Retrasar 15 min», «Retrasar 30 min») que llama a `retrasar_salida` (§3.6). Al retrasar, desaparece hasta la nueva hora. `null` en los demás casos.
 - `reparto_de_hoy`: el reparto aceptado hoy (`null` si no hay). Con él, el botón de arriba dice «Modificar reparto» (abre la lista con `reparto_de_hoy_detalle`); sin él, «Preparar reparto».
 - `reparto_de_hoy.paradas` ✅ Tarea 16 (R1e): `[{ origen_id, origen, destino_id, destino, producto, formato, cantidad, texto }]`, lo que quien hace la ruta recoge en una tienda para dejarlo en otra («Recoge 2 BZ1 4g en Algorta y déjalas en Portugalete»). Mostrarlo en «Salida del reparto» si sale el operario. Lista vacía si no hay. (También en `estado_actual().reparto_de_hoy`, para el panel si sale Administración.)
 - **Al recargar** la pantalla recupera de aquí todo lo abierto: `incidencias_abiertas` (número para «Cerrar incidencias»), `incidencia_en_curso` (la que tiene su tarea en curso, con `minutos`; `null` si no hay) y `problemas_abiertos` (con la tarea bloqueada; el siguiente paso es `problema_llamada` o `resolver_problema`).
@@ -535,7 +551,7 @@ En «Producción del reparto», una referencia que hay que hacer y **no tiene gr
 
 ### 3.21 Avisos para el almacén ✅ (Tarea 22)
 - **`crear_aviso_almacen(id_cliente, fecha, texto, contacto?)`** (solo Administración) → `{ aviso: { id, fecha, texto, contacto, estado, creado_por, cerrado_en, nota } }`. Para el operario por defecto, el día `fecha` (hoy o un día que viene en que trabaje el almacén). No crea tarea. Repetir con el mismo `id_cliente` devuelve el mismo. **Errores:** `DATOS_NO_VALIDOS` (sin texto o fecha pasada), `SIN_JORNADA` (ese día no trabaja el almacén), `NO_AUTORIZADO` (el operario).
-- **`cancelar_aviso_almacen(aviso_id)`** (solo Administración) → `{ aviso }`, cerrado con la nota «Cancelado por Administración». Repetir no cambia nada.
+- **`cancelar_aviso_almacen(aviso_id)`** (Administración) → `{ aviso }`, cerrado con la nota «Cancelado por Administración». Repetir no cambia nada. Desde la Tarea 29 🧪 el operario la usa solo para sus avisos a las tiendas (§9.9).
 - El operario lo ve desde su día en `tarea_activa().avisos` y en `incidencias_abiertas()`, y lo cierra con `cerrar_incidencia`. Consta en el cierre del turno (sin el contacto, que solo está en la base de datos).
 
 ## 4. Administración ✅ (Tarea 4)
@@ -551,12 +567,15 @@ En «Producción del reparto», una referencia que hay que hacer y **no tiene gr
 | `urgente` | no | `false` por defecto. |
 | `porque` | no | |
 | `confirmar` | no | `false` = solo comprobar conflicto. |
-| `decision_conflicto` | si hay conflicto | `{ "cede": "<tarea_id>", "accion": "despues|manana|cancelar" }` o `{ "accion": "no_crear" }` |
+| `decision_conflicto` | si hay conflicto | Para la tarea nueva (Tarea 29 🧪): `{ "accion": "nueva_manana" }`, `{ "accion": "nueva_despues" }` o `{ "accion": "no_crear" }`. Para mover otra: `{ "cede": "<tarea_id>", "accion": "despues|manana|cancelar" }` (solo las de `se_puede_mover: true`) |
 
 - **No urgente y sin hora límite** ✅ Tarea 23: no sale mientras falte lo primero de la mañana (revisión inicial, «Prepara el reparto», la producción del reparto, las bolsas y la preparación del envío del viernes, las que haya), por la regla general de `tarea_activa` (§3.2), que vale para todas las tareas, no solo las de Administración. Las urgentes y las que tienen hora límite, como siempre.
 - **Ventana** (`PLAN_TECNICO.md` §2.4): desde ahora (o el inicio del día elegido) hasta la hora de `antes_de` o, si no hay hora, hasta el final del turno en que empieza.
 - Solo hay conflicto si **no cabe y alguna obligatoria que vence en la ventana queda en riesgo** (§6.4). Las que **ya vencieron** sin hacerse no están en riesgo (ya llegan tarde), pero **su duración cuenta** como tiempo ocupado (`vencidas_min`). Si no cabe pero no hay ninguna obligatoria en riesgo, **se crea** y el `encaje` lo avisa («No le da tiempo entera (faltan unos N min): lo que no termine pasa al día siguiente»), con `minutos_que_faltan`.
-- Con conflicto, no la crea y devuelve `CONFLICTO` con `conflicto: { disponible_min, necesario_min, vencidas_min, minutos_que_faltan, obligatorias_en_riesgo: [{ tarea_id, titulo, vence, duracion_min }] }`. Administración repite la llamada con `decision_conflicto`:
+- **Sin falsa alarma** (Tarea 29 🧪, §6.4, 03/11/2026): una tarea **no urgente y sin hora límite** no da conflicto (espera a lo primero de la mañana, que va siempre antes): se crea y el `encaje` lo dice. El conflicto queda para las urgentes y las que tienen hora límite.
+- Con conflicto, no la crea y devuelve `CONFLICTO` con `conflicto: { disponible_min, necesario_min, vencidas_min, minutos_que_faltan, obligatorias_en_riesgo: [{ tarea_id, titulo, vence, duracion_min, se_puede_mover }] }`. **`se_puede_mover`** (Tarea 29 🧪): `false` en lo que sale hoy del almacén, al reparto o a Nacex (producción del reparto, bolsas, salida, preparación del envío, pedidos de cliente para la tienda y por Nacex, «Lleva en el reparto lo que va a Nacex» y la salida a Nacex: el envío a Nacex es tan prioritario como el reparto), que **nunca se pasan a mañana, se dejan para después ni se cancelan**; con ellas, `DATOS_NO_VALIDOS` («… es del reparto o del envío de hoy…»). **La ventana pregunta primero por la tarea nueva** (§6.4) y, aparte, deja mover una de las que tienen `se_puede_mover: true`, diciendo cuál. Administración repite la llamada con `decision_conflicto`:
+  - `nueva_manana` (Tarea 29 🧪): la tarea nueva se crea para **el siguiente día de trabajo** de esa persona, igual (urgente y con su hora límite a la misma hora, si las tenía); `decision.fecha` dice el día. Si no tiene ninguno en las dos semanas siguientes, `SIN_JORNADA`.
+  - `nueva_despues` (Tarea 29 🧪): la tarea nueva se crea hoy **sin hora límite ni urgencia**: sale después de lo que está en riesgo.
   - `despues`: la que cede pierde su hora límite (se hace después de la nueva).
   - `manana`: la que cede deja de salir hoy y pasa al día siguiente como arrastrada.
   - `cancelar`: la que cede queda cancelada con su motivo.
@@ -769,7 +788,7 @@ Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la c
 - `turno`: `manana`, `tarde` o `null` (fuera de los dos; cuenta desde 1 hora antes de empezar hasta media hora después de acabar).
 - `en_turno`: quién está ahora (el último nombre elegido hoy); `null` si nadie ha empezado. **Si es `null`, o su `turno` no es el `turno` de ahora, la pantalla pide primero «¿Quién eres?»** con `personas` y llama a `empezar_turno`.
 - `personas`: los nombres de la tienda; primero los que trabajan hoy y en ese turno (`sugerida: true`). Se pueden elegir todos.
-- `avisos`: los avisos de Administración sin leer (los de hoy y los de días anteriores que no se leyeron). **Se enseñan al entrar** (antes de la lista); cada uno con «Leído» (`marcar_aviso_leido`).
+- `avisos`: los avisos de Administración sin leer (los de hoy y los de días anteriores que no se leyeron). **Se enseñan al entrar** (antes de la lista); cada uno con «Leído» (`marcar_aviso_leido`). Desde la Tarea 29 cada uno trae **`de`**: «Almacén» o «Administración» (mostrarlo: «Aviso del almacén»).
 - `tareas`: la lista del día, por hora.
 - **Tarea 28:** `reparto` (por dónde va, §9.13), `peticiones` (muestras y material, §9.15) y `pedir_material` (si la tienda puede pedir material, §9.15).
 
@@ -846,11 +865,11 @@ Cierra el aviso (`tienda_hoy().avisos[].id`) y anota quién lo leyó (el de `en_
   - **Salida:** `{ dias: [{ fecha, tienda_id, tienda, motivo }] }`, de hoy a un año («Todas las tiendas» cuando `tienda_id` es `null`).
   - **Errores:** `FECHA_PASADA` («Elige hoy o un día que viene.»), `DATOS_NO_VALIDOS`.
 - **`dias_cerrados(desde?, hasta?)`:** la misma lista (por defecto, de hoy a un año).
-- **`crear_aviso_tienda(id_cliente, fecha, texto, tienda_id?)`:** un aviso para una tienda o, sin `tienda_id`, para todas, para ese día (hoy o uno que viene). A la tienda le sale al entrar (§9.1). Repetir con el mismo `id_cliente` no lo duplica.
+- **`crear_aviso_tienda(id_cliente, fecha, texto, tienda_id?)`:** un aviso para una tienda o, sin `tienda_id`, para todas, para ese día (hoy o uno que viene). A la tienda le sale al entrar (§9.1). Repetir con el mismo `id_cliente` no lo duplica. **Desde la Tarea 29 también el operario** (en el almacén: «Aviso a una tienda», para que metan algo en una bolsa, preparen algo…): solo mandar; la tienda se elige con `tiendas()` (§9.19).
   - **Salida:** `{ avisos: [aviso], sin_aviso: [{ tienda, motivo }] }`. `sin_aviso`: las tiendas que no lo reciben («Todavía no ha entrado con su cuenta» o «Ese día no abre»).
   - **Errores:** `DATOS_NO_VALIDOS` (falta el texto, fecha pasada, tienda no válida), `SIN_JORNADA` (para una sola tienda que no puede recibirlo; `error.sin_aviso` dice por qué).
-- **`avisos_tiendas()`:** `{ avisos: [{ id, fecha, texto, tienda_id, tienda, estado, leido, cerrado_en, nota, creado_por }] }`, de la última semana y los que vienen, los más nuevos primero. `nota` dice quién lo leyó («Leído por …»).
-- **Cancelar un aviso:** `cancelar_aviso_almacen(aviso_id)` (§3.21), la misma de los avisos del almacén.
+- **`avisos_tiendas()`:** `{ avisos: [{ id, fecha, texto, tienda_id, tienda, estado, leido, cerrado_en, nota, creado_por, de }] }`, de la última semana y los que vienen, los más nuevos primero. `nota` dice quién lo leyó («Leído por …»); `creado_por`, el nombre de quien lo mandó, y `de` (Tarea 29), «Almacén» o «Administración». Administración los ve todos; **el operario, solo los que ha mandado él** (Tarea 29 🧪).
+- **Cancelar un aviso:** `cancelar_aviso_almacen(aviso_id)` (§3.21), la misma de los avisos del almacén. Administración, todos (también los que manda el almacén). **El operario, solo los suyos a las tiendas** (Tarea 29 🧪), con la nota «Cancelado por el almacén»; uno que no ha mandado él da `NO_AUTORIZADO` («Solo puedes cancelar los avisos a las tiendas que has mandado tú.»).
 
 ### 9.10 Errores nuevos 🧪
 | Código | Qué hace la pantalla |
@@ -865,7 +884,7 @@ Cierra el aviso (`tienda_hoy().avisos[].id`) y anota quién lo leyó (el de `en_
 Sale sola en `tienda_hoy().tareas` **cuando sale el reparto**, en las tiendas que llevan algo en él (productos, peticiones o pedidos de cliente). Las franquicias no la tienen. Una al día.
 - **Cuándo sale el reparto** (sin que quien reparte haga nada nuevo): si sale el operario, cuando empieza su «Salida del reparto»; si sale Administración, a la hora de salida (10:45, o la retrasada) con las bolsas listas.
 - `hora` = la hora de salida; `porque` empieza por «El reparto ha salido a las HH:MM.».
-- **`bolsa`** (en esta tarea y en la de reposición): lo que trae la bolsa, para ver si falta algo:
+- **`bolsa`** (en esta tarea y en la de reposición): lo que trae la bolsa, para ver si falta algo. Desde la Tarea 29 🧪 (propietario, 03/11/2026) es **lo que el operario ha marcado como metido en la bolsa** de esa tienda (cajas, peticiones y pedidos de cliente); lo que no se ha marcado no aparece:
 ```json
 {
   "reparto_id": "…", "fecha": "2026-12-18", "salida": "10:50", "recibida_a_las": null, "recibida_por": null,
@@ -876,7 +895,7 @@ Sale sola en `tienda_hoy().tareas` **cuando sale el reparto**, en las tiendas qu
   "reposicion": null
 }
 ```
-  Un producto que viene de otra tienda (R1e) trae además `de: [{ origen_id, origen, cantidad }]`.
+  Desde la Tarea 29 ya no trae `de` (lo que viene de otra tienda no va en la bolsa del almacén).
 - **Dos puntos** (`puntos`):
   1. **«Bolsa recibida»**: un toque con `marcar_punto`. La bolsa consta como recibida a esa hora, por quien está (`recibida_a_las`, `recibida_por`), y las demás tiendas lo ven (§9.13).
   2. **«Bolsa de ayer entregada con X € en efectivo»** (`pide: "efectivo"`, `efectivo_esperado: X`): X es el efectivo del último cierre de caja de la tienda (§9.14).
@@ -935,7 +954,7 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 - Nada cambia en las bolsas ni en la salida: en las bolsas salen como cualquier petición especial («Además, mete:»).
 
 ### 9.17 Administración: `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` · `descartar_peticion_tienda` 🧪 (Tarea 28)
-- **`cierres_caja(desde?, hasta?, tienda_id?)`:** `{ cierres: [{ fecha, tienda_id, tienda, z, ventas, efectivo, glovo, por, guardado_en }] }`, los más nuevos primero (por defecto, la última semana). Lectura preparada para el panel (Tarea 29).
+- **`cierres_caja(desde?, hasta?, tienda_id?)`:** `{ cierres: [{ fecha, tienda_id, tienda, z, ventas, efectivo, glovo, por, guardado_en }] }`, los más nuevos primero (por defecto, la última semana). Lectura preparada para el panel (Tarea 30).
 - **`incidencias_tiendas()`:** `{ incidencias: [{ id, tienda_id, tienda, opcion, texto, fecha, a_las, estado, cerrada_en, nota }] }`: las abiertas primero y las cerradas de la última semana. Hoy, `opcion: "falta_reposicion"` («Falta en la bolsa del reparto del 18/12: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Nombre)»). Es el aviso en la app: mostrarlas en el panel.
 - **`cerrar_incidencia_tienda(incidencia_id, nota?)`:** la cierra al resolverla (`nota`, una línea). **Salida:** `incidencias_tiendas()`. **Errores:** `NO_ENCONTRADO`, `DATOS_NO_VALIDOS`.
 - **`descartar_peticion_tienda(peticion_id, motivo?)`** («No va»): quitar una muestra o un material pendiente que no va a ir. `motivo` opcional (una línea, 120 letras); la tienda ve «No va: [motivo]» o, sin motivo, «No va: lo ha quitado Administración». **Salida:** `{ peticion: {…} }`. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya atendida o descartada), `DATOS_NO_VALIDOS` (motivo demasiado largo).
@@ -946,3 +965,6 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 | --- | --- |
 | `FALTAN_DATOS` | `error.pide` dice qué: `"efectivo"` → pedir la cantidad y llamar a `entregar_efectivo`; `"cierre_caja"` → pedir Z, nº de ventas, efectivo y Glovo y llamar a `cerrar_caja`. |
 | `MOTIVO_OBLIGATORIO` | En el efectivo: pedir el porqué de la otra cantidad y repetir `entregar_efectivo` con `motivo`. |
+
+### 9.19 `tiendas()` 🧪 (Tarea 29)
+Las tiendas activas, para elegir a cuál mandar un aviso (Administración y el operario; una tienda, `NO_AUTORIZADO`): `{ tiendas: [{ id, codigo, nombre }] }`, por nombre. Con «Todas» se manda sin `tienda_id`.

@@ -147,13 +147,19 @@ begin
     and not exists (select 1 from public.tareas where id_cliente = c4)
     and (select count(*) from public.registro_eventos where tipo = 'conflicto_decidido' and datos ->> 'id_cliente' = c4::text) = 1, r::text);
   c4 := gen_random_uuid();
+  -- Tarea 29 (§6.4, 03/11/2026): las bolsas del reparto de hoy ya no pueden ceder; la tarea nueva, «que la haga después».
   r := pg_temp.crear(c4, 'Ordenar estantería', '{"tipo": "antes_de", "fecha": "2026-11-10", "hora": "10:45"}', 20,
                      '2026-11-10 09:30+01', false, true, jsonb_build_object('cede', v_bolsas, 'accion', 'despues'));
-  perform pg_temp.comprobar('Decisión «cede las bolsas, después»: se crea la nueva, las bolsas pierden la hora y queda en el registro',
-    (r ->> 'tarea_id') is not null and r -> 'decision' ->> 'accion' = 'despues'
-    and (select hora_limite is null and motivo_no_hecha like 'Cede ante «Ordenar estantería»%' from public.tareas where id = v_bolsas)
-    and exists (select 1 from public.registro_eventos where tipo = 'conflicto_decidido' and tarea_id = v_bolsas
-                and datos ->> 'accion' = 'despues' and datos ->> 'nueva' = r ->> 'tarea_id'), r::text);
+  perform pg_temp.comprobar('Decisión «cede las bolsas»: no se puede (son del reparto de hoy); las bolsas no cambian',
+    r -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS'
+    and (select hora_limite is not null and motivo_no_hecha is null from public.tareas where id = v_bolsas), r::text);
+  r := pg_temp.crear(c4, 'Ordenar estantería', '{"tipo": "antes_de", "fecha": "2026-11-10", "hora": "10:45"}', 20,
+                     '2026-11-10 09:30+01', false, true, '{"accion": "nueva_despues"}');
+  perform pg_temp.comprobar('Decisión «que la haga después» (nueva_despues): se crea la nueva sin hora límite y queda en el registro',
+    (r ->> 'tarea_id') is not null and r -> 'decision' ->> 'accion' = 'nueva_despues'
+    and (select hora_limite is null and not urgente from public.tareas where id = (r ->> 'tarea_id')::uuid)
+    and exists (select 1 from public.registro_eventos where tipo = 'conflicto_decidido' and datos ->> 'id_cliente' = c4::text
+                and datos ->> 'accion' = 'nueva_despues' and datos ->> 'nueva' = r ->> 'tarea_id'), r::text);
   r := pg_temp.crear(gen_random_uuid(), 'Revisar caducidades', '{"tipo": "antes_de", "fecha": "2026-11-10", "hora": "10:45"}', 60,
                      '2026-11-10 09:30+01', false, true, jsonb_build_object('cede', v_t, 'accion', 'manana'));
   perform pg_temp.comprobar('Decisión «pasa a mañana»: la que cede ya no sale hoy y se arrastrará',
@@ -167,20 +173,21 @@ begin
   -- No cabe, pero no hay obligatorias en riesgo: se crea y se avisa (corrección del PR #4).
   r := pg_temp.crear(gen_random_uuid(), 'Revisar facturas', '{"tipo": "antes_de", "fecha": "2026-11-10", "hora": "17:00"}', 120,
                      '2026-11-10 16:00+01');
-  -- A las 16:00 siguen pendientes, ya vencidas, la producción (30 cajas), el recuento de la mañana (15) y tres
-  -- de Administración de las 10:45 (20 + 60 + 60) = 185 min: no están en riesgo, pero ocupan tiempo.
-  perform pg_temp.comprobar('No cabe (185 vencidas + 120 > 60 min) pero sin obligatorias en riesgo: se crea y avisa de lo que falta',
-    (r ->> 'tarea_id') is not null and r -> 'conflicto' = 'null'::jsonb and (r ->> 'minutos_que_faltan')::int = 245
-    and r ->> 'encaje' like '%No le da tiempo entera (faltan unos 245 min)%', r::text);
+  -- A las 16:00 siguen pendientes, ya vencidas, la producción (30 cajas), las bolsas (6), el recuento de la mañana (15) y
+  -- dos de Administración de las 10:45 (60 + 60) = 171 min: no están en riesgo, pero ocupan tiempo. («Ordenar estantería»
+  -- ya no tiene hora límite: Tarea 29.)
+  perform pg_temp.comprobar('No cabe (171 vencidas + 120 > 60 min) pero sin obligatorias en riesgo: se crea y avisa de lo que falta',
+    (r ->> 'tarea_id') is not null and r -> 'conflicto' = 'null'::jsonb and (r ->> 'minutos_que_faltan')::int = 231
+    and r ->> 'encaje' like '%No le da tiempo entera (faltan unos 231 min)%', r::text);
   -- Revisión del PR #5: las vencidas no están «en riesgo», pero su duración se resta del tiempo disponible.
   -- (Ahora también cuenta «Revisar facturas», 120 min, que vence a las 17:00.)
   r := motor.conflicto(j, '2026-11-10 16:00+01', '2026-11-10 17:00+01', 30);
-  perform pg_temp.comprobar('Vencidas: ocupan tiempo (185 min) pero no están en riesgo; sin obligatorias que venzan en la ventana no hay conflicto',
-    (r ->> 'vencidas_min')::int = 185 and (r ->> 'necesario_min')::int = 335 and (r ->> 'disponible_min')::int = 60
+  perform pg_temp.comprobar('Vencidas: ocupan tiempo (171 min) pero no están en riesgo; sin obligatorias que venzan en la ventana no hay conflicto',
+    (r ->> 'vencidas_min')::int = 171 and (r ->> 'necesario_min')::int = 321 and (r ->> 'disponible_min')::int = 60
     and not (r ->> 'hay_conflicto')::boolean and r -> 'obligatorias_en_riesgo' = '[]'::jsonb, r::text);
   r := motor.conflicto(j, '2026-11-10 16:00+01', '2026-11-10 18:30+01', 10);
   perform pg_temp.comprobar('Vencidas: por el tiempo que ocupan, una tarea de 10 min pone en riesgo el recuento de las 18:30 (sin contarlas: 145 ≤ 150, cabía)',
-    (r ->> 'hay_conflicto')::boolean and (r ->> 'necesario_min')::int = 330 and (r ->> 'disponible_min')::int = 150
+    (r ->> 'hay_conflicto')::boolean and (r ->> 'necesario_min')::int = 316 and (r ->> 'disponible_min')::int = 150
     and jsonb_array_length(r -> 'obligatorias_en_riesgo') = 1
     and r -> 'obligatorias_en_riesgo' -> 0 ->> 'vence' = '18:30', r::text);
 
