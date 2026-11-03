@@ -64,7 +64,8 @@ begin
   update public.tareas set hora_limite = '2026-11-03 10:45:00+01' where jornada_id = j and clave = 'admin:limite';
   perform pg_temp.toca('Escalón 5: con la misma hora límite, primero la obligatoria', '09:00', 'produccion_reparto');
 
-  perform pg_temp.toca('Escalón 4 antes que 5: la salida de las 10:45 ya vencida', '10:46', 'salida_reparto');
+  -- Tarea 29 (03/11/2026): la salida no sale sin las bolsas hechas; sigue lo del reparto.
+  perform pg_temp.toca('La salida de las 10:45 ya vencida no sale sin las bolsas: sigue la producción', '10:46', 'produccion_reparto');
 
   insert into public.tareas (jornada_id, clave, origen, titulo, disponible_desde, urgente, duracion_min, no_terminada, creada_por)
   values (j, 'admin:urgente', 'administracion', 'Mira el pedido de Bilbao', '2026-11-03 10:40:00+01', true, 5, 'arrastrar', adm);

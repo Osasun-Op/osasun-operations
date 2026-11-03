@@ -157,6 +157,42 @@ begin
     and (select not urgente and hora_limite is null and jornada_id = j from public.tareas where id = (r ->> 'tarea_id')::uuid), r::text);
   r := pg_temp.crear(gen_random_uuid(), 'Otra urgente', true, '2026-12-01 10:50+01', '{"accion": "no_crear"}');
   perform pg_temp.comprobar('no_crear sigue igual', r ->> 'decision' = 'no_crear' and not (r ->> 'creada')::boolean, r::text);
+
+  -- 5. Lo que sale hoy, al reparto o a Nacex, no cede (respuesta del propietario en el PR #28).
+  perform pg_temp.comprobar('No ceden: producción, bolsas, salida, pedidos de cliente (tienda y Nacex), envío y Nacex; el recuento sí',
+    motor.es_del_reparto('produccion_reparto') and motor.es_del_reparto('bolsas') and motor.es_del_reparto('salida_reparto')
+    and motor.es_del_reparto('pedido_tienda:' || gen_random_uuid()) and motor.es_del_reparto('preparar_envio')
+    and motor.es_del_reparto('preparar_envio_viernes') and motor.es_del_reparto('pedido_nacex:' || gen_random_uuid())
+    and motor.es_del_reparto('pedido_nacex_viernes:' || gen_random_uuid()) and motor.es_del_reparto('nacex_viernes')
+    and motor.es_del_reparto('nacex_salida')
+    and not motor.es_del_reparto('recuento_manana') and not motor.es_del_reparto('admin:x'));
+
+  -- 6. Las bolsas, siempre después de la producción: nada en medio; la salida, solo con las bolsas.
+  insert into public.tareas (jornada_id, clave, origen, titulo, disponible_desde, urgente, duracion_min, no_terminada)
+  values (j, 'admin:urgente_bolsas', 'administracion', 'Mira el pedido de Bilbao', '2026-12-01 10:41+01', true, 5, 'arrastrar');
+  perform pg_temp.comprobar('Con la producción hecha, una urgente espera: siguen las bolsas',
+    motor.tarea_activa_de(op, '2026-12-01 10:42+01') -> 'tarea' ->> 'id' = v_bolsas.id::text
+    and motor.tarea_activa_de(op, '2026-12-01 10:42+01') -> 'aviso_salida' = 'null'::jsonb,
+    (motor.tarea_activa_de(op, '2026-12-01 10:42+01'))::text);
+  r := motor.tarea_activa_de(op, '2026-12-01 10:46+01');
+  perform pg_temp.comprobar('Llega la hora de salida sin las bolsas: no sale la salida; siguen las bolsas, con el aviso para retrasar 15 o 30 min',
+    r -> 'tarea' ->> 'id' = v_bolsas.id::text
+    and r -> 'aviso_salida' ->> 'texto' = 'Es la hora de salida (10:45) y las bolsas no están listas: retrasa la salida.'
+    and r -> 'aviso_salida' -> 'minutos' = '[15, 30]'::jsonb, r::text);
+  r := motor.retrasar_salida_de(op, gen_random_uuid(), 15, '2026-12-01 10:47+01');
+  perform pg_temp.comprobar('«Retrasar 15 min»: la salida pasa a las 11:00 y el aviso desaparece hasta esa hora',
+    r ->> 'nueva_hora_salida' = '11:00' and r -> 'tarea_activa' -> 'aviso_salida' = 'null'::jsonb
+    and r -> 'tarea_activa' -> 'tarea' ->> 'id' = v_bolsas.id::text
+    and motor.tarea_activa_de(op, '2026-12-01 11:01+01') -> 'aviso_salida' ->> 'hora_salida' = '11:00', r::text);
+  update public.tareas set estado = 'hecha', iniciada_en = '2026-12-01 10:40+01', terminada_en = '2026-12-01 10:55+01'
+   where id = v_bolsas.id;
+  perform pg_temp.comprobar('Con las bolsas hechas, entra lo que esperaba (la urgente)',
+    motor.tarea_activa_de(op, '2026-12-01 10:56+01') -> 'tarea' ->> 'clave' = 'admin:urgente_bolsas'
+    and motor.tarea_activa_de(op, '2026-12-01 10:56+01') -> 'aviso_salida' = 'null'::jsonb);
+  update public.tareas set estado = 'hecha', terminada_en = '2026-12-01 10:58+01' where jornada_id = j and clave = 'admin:urgente_bolsas';
+  perform pg_temp.comprobar('Y a la hora retrasada (11:00), la salida del reparto',
+    motor.tarea_activa_de(op, '2026-12-01 11:00+01') -> 'tarea' ->> 'clave' = 'salida_reparto',
+    motor.tarea_activa_de(op, '2026-12-01 11:00+01') -> 'tarea' ->> 'titulo');
 end;
 $$;
 
@@ -165,24 +201,36 @@ select pg_temp.como('00000000-0000-4000-a000-000000000001');  -- operario
 select pg_temp.comprobar('El operario ve las tiendas para elegir a cuál mandar el aviso',
   public.tiendas() -> 'tiendas' @> '[{"codigo": "BASAURI", "nombre": "Basauri"}, {"codigo": "DONOSTI"}]'
   and not public.tiendas() -> 'tiendas' @> '[{"codigo": "DURANGO"}]');
-select pg_temp.comprobar('El operario manda un aviso a una tienda',
+select pg_temp.comprobar('El operario manda avisos a una tienda',
   jsonb_array_length(public.crear_aviso_tienda(gen_random_uuid(), current_date,
-                       'Meted en la bolsa de mañana las cajas vacías', (select id from public.centros_trabajo where codigo = 'BASAURI')) -> 'avisos') = 1);
-select pg_temp.comprobar('Solo mandar: no gestiona personas, días cerrados ni cancela avisos',
+                       'Meted en la bolsa de mañana las cajas vacías', (select id from public.centros_trabajo where codigo = 'BASAURI')) -> 'avisos') = 1
+  and jsonb_array_length(public.crear_aviso_tienda(gen_random_uuid(), current_date,
+                       'Preparad los expositores para recogerlos', (select id from public.centros_trabajo where codigo = 'BASAURI')) -> 'avisos') = 1);
+select pg_temp.comprobar('No gestiona personas ni días cerrados',
   public.guardar_persona_tienda('X') -> 'error' ->> 'codigo' = 'NO_AUTORIZADO'
-  and public.marcar_dia_cerrado(current_date + 30) -> 'error' ->> 'codigo' = 'NO_AUTORIZADO'
-  and public.avisos_tiendas() -> 'error' ->> 'codigo' = 'NO_AUTORIZADO'
+  and public.marcar_dia_cerrado(current_date + 30) -> 'error' ->> 'codigo' = 'NO_AUTORIZADO');
+select pg_temp.comprobar('Ve los avisos que ha mandado él (y solo esos)',
+  jsonb_array_length(public.avisos_tiendas() -> 'avisos') = 2
+  and not exists (select 1 from jsonb_array_elements(public.avisos_tiendas() -> 'avisos') x where x ->> 'de' <> 'Almacén'));
+select pg_temp.comprobar('Cancela uno suyo: queda «Cancelado por el almacén»',
+  public.cancelar_aviso_almacen((select (x ->> 'id')::uuid from jsonb_array_elements(public.avisos_tiendas() -> 'avisos') x
+                                  where x ->> 'texto' = 'Meted en la bolsa de mañana las cajas vacías')) -> 'aviso' ->> 'nota' = 'Cancelado por el almacén'
   and public.cancelar_aviso_almacen(gen_random_uuid()) -> 'error' ->> 'codigo' = 'NO_AUTORIZADO');
 reset role;
 select pg_temp.como('00000000-0000-4000-a000-000000000002');  -- Administración
 select pg_temp.comprobar('Administración también manda (a todas)',
   public.crear_aviso_tienda(gen_random_uuid(), current_date, 'Mañana llega la cartelería nueva') -> 'avisos' @> '[{"tienda": "Basauri"}]');
 select pg_temp.comprobar('Administración los ve con quién lo mandó («Almacén» o «Administración»)',
-  public.avisos_tiendas() -> 'avisos' @> '[{"texto": "Meted en la bolsa de mañana las cajas vacías", "de": "Almacén", "creado_por": "Operario de pruebas"}]'
+  public.avisos_tiendas() -> 'avisos' @> '[{"texto": "Preparad los expositores para recogerlos", "de": "Almacén", "creado_por": "Operario de pruebas"}]'
   and public.avisos_tiendas() -> 'avisos' @> '[{"texto": "Mañana llega la cartelería nueva", "de": "Administración"}]');
-select pg_temp.comprobar('Y los puede cancelar (también el del almacén)',
+select pg_temp.comprobar('Y los puede cancelar (también los del almacén)',
   public.cancelar_aviso_almacen((select (x ->> 'id')::uuid from jsonb_array_elements(public.avisos_tiendas() -> 'avisos') x
-                                  where x ->> 'de' = 'Almacén')) ? 'aviso');
+                                  where x ->> 'texto' = 'Preparad los expositores para recogerlos')) ? 'aviso');
+reset role;
+select pg_temp.como('00000000-0000-4000-a000-000000000001');  -- operario
+select pg_temp.comprobar('El operario no cancela los de Administración',
+  public.cancelar_aviso_almacen((select i.id from public.incidencias i where i.descripcion = 'Mañana llega la cartelería nueva'
+                                  and i.persona_id = '00000000-0000-4000-b000-000000000001')) -> 'error' ->> 'codigo' = 'NO_AUTORIZADO');
 reset role;
 select pg_temp.como('00000000-0000-4000-b000-000000000001');  -- la tienda
 select pg_temp.comprobar('En la tienda, cada aviso dice de quién viene',

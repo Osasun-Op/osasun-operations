@@ -126,7 +126,9 @@ begin
   perform pg_temp.comprobar('Encaje: al terminar BZ1 todas están hechas → la producción queda hecha (sin pausa)',
     (select estado from public.tareas where id = v_prod) = 'hecha'
     and (select resultado from public.tareas where id = v_prod) = '7 cajas', r::text);
-  perform pg_temp.comprobar('Después entra la urgente', r -> 'tarea_activa' -> 'tarea' ->> 'clave' = 'admin:urgente', r::text);
+  -- Tarea 29 (03/11/2026): después de la producción, siempre las bolsas; la urgente espera a que terminen.
+  perform pg_temp.comprobar('Después de la producción, las bolsas (la urgente espera a que terminen)',
+    r -> 'tarea_activa' -> 'tarea' ->> 'clave' = 'bolsas', r::text);
   update public.tareas set estado = 'hecha' where jornada_id = j and clave = 'admin:urgente';
 
   -- Elementos: bolsas
@@ -145,10 +147,12 @@ begin
   -- Antes de cerrar Algorta llega una tarea con hora vencida (la salida de las 10:45)
   r := motor.marcar_cajas_de(op, (select id from public.tarea_elementos where tarea_id = v_bolsas
                                   and destino_id = pg_temp.destino('ALGORTA') and producto = 'FORTE'), 1, '2026-11-03 10:46:00+01');
-  perform pg_temp.comprobar('Encaje en bolsas: al completar la tienda entera, si toca otra con hora, la bolsa se pausa',
-    (select estado from public.tareas where id = v_bolsas) = 'pendiente'
-    and r -> 'tarea_activa' -> 'tarea' ->> 'clave' = 'salida_reparto', r::text);
-  perform pg_temp.comprobar('Lo hecho se conserva al pausar (Algorta completa)',
+  perform pg_temp.comprobar('Con las bolsas sin terminar, la salida (10:45) no entra: siguen las bolsas, con el aviso para retrasar',
+    (select estado from public.tareas where id = v_bolsas) = 'en_curso'
+    and r -> 'tarea_activa' -> 'tarea' ->> 'clave' = 'bolsas'
+    and r -> 'tarea_activa' -> 'aviso_salida' ->> 'hora_salida' = '10:45'
+    and r -> 'tarea_activa' -> 'aviso_salida' -> 'minutos' = '[15, 30]'::jsonb, r::text);
+  perform pg_temp.comprobar('Lo hecho se conserva (Algorta completa)',
     not exists (select 1 from public.tarea_elementos where tarea_id = v_bolsas
                 and destino_id = pg_temp.destino('ALGORTA') and estado <> 'hecho'));
 
