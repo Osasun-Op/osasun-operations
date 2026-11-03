@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 30 está fusionada (PR #30). La siguiente es la **Tarea 30b** (franquicias: «Envíos» y cierre de caja, sección 7), que se encarga con la frase del propietario.
+**Tarea 30b** (sección 7): franquicias y Durango, «Envíos» y cierre de caja corto. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.50, «Qué tienen las franquicias» y Durango) y lo que hiciste en las Tareas 28 y 29. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
@@ -117,12 +117,12 @@ Ninguna. La Tarea 30 está fusionada (PR #30). La siguiente es la **Tarea 30b** 
 
 ---
 
-## 7. TAREA 30b (preparada; se encarga después de la 30): franquicias — «Envíos» y cierre de caja, en pruebas
+## 7. TAREA 30b (activa): franquicias — «Envíos» y cierre de caja, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, «Qué tienen las franquicias» (v1.50). Reutiliza la reposición de la Tarea 28 (lista de lo marcado, «Todo bien» / «Falta algo» → incidencia para Administración) y el cierre de caja (`cerrar_caja`, `cierres_caja`). Solo en pruebas; producción espera.
 
-1. **«Envíos» para las tiendas que reciben por envío** (configuración por tienda; hoy Donosti y Rentería, y **Durango**, que es tienda propia pero recibe por envío en vez de bolsa): al día siguiente de guardar y sacar el envío que las lleva, `tienda_hoy()` trae `envios` con lo que les llega (lo **marcado** al meterlo en la caja, como `bolsa` en la Tarea 29). **No es una tarea con hora**: sigue ahí hasta que la confirman con «Todo bien» o «Falta algo» (eligiendo qué y cuánto; llega a Administración como incidencia abierta, como la reposición). Para ellas no hay «Recibe la bolsa» ni reposición.
-2. **Cierre de caja de las franquicias:** tarea «Cierre de caja» 10 minutos antes de cerrar (20:20 entre semana; 13:20 el sábado, que cierran por la tarde), con **solo la Z y el número de ventas** (sin efectivo ni Glovo). Se guarda en `cierres_caja` igual que las propias.
+1. **«Envíos» para las tiendas que reciben por envío** (configuración por tienda; hoy Donosti y Rentería, y **Durango**, que es tienda propia pero recibe por envío en vez de bolsa): al día siguiente de guardar y sacar el envío que las lleva, `tienda_hoy()` trae `envios` con lo que les llega (lo **marcado** al meterlo en la caja, como `bolsa` en la Tarea 29). **No es una tarea con hora**: sigue ahí hasta que la confirman con «Todo bien» o «Falta algo» (eligiendo qué y cuánto; llega a Administración como incidencia abierta, como la reposición). Para ellas no hay «Recibe la bolsa» ni reposición. `tienda_hoy()` trae también cuántos envíos hay sin confirmar (para el número de la pestaña).
+2. **Cierre de caja de las franquicias** (solo Donosti y Rentería; **Durango es tienda propia y mantiene su «Cierre del día» completo** con Z, nº de ventas, efectivo y Glovo): tarea «Cierre de caja» 10 minutos antes de cerrar (20:20 entre semana; 13:20 el sábado, que cierran por la tarde), con **solo la Z y el número de ventas** (sin efectivo ni Glovo). Se guarda en `cierres_caja` igual que las propias.
 3. **Contratos:** `envios` en `tienda_hoy()`, la función de confirmar y el cierre corto, con nota para Lovable.
 
 **Entrega:** PR **«Tarea 30b — Franquicias: envíos y cierre de caja»**, con «Qué he leído y qué existía ya», pruebas en verde (el almacén y las tiendas propias igual), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
@@ -773,3 +773,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.49 | 03/11/2026 | Tarea 30 activa (incidencias de tienda), aprobada por el propietario. |
 | 1.50 | 03/11/2026 | Tarea 30 fusionada (PR #30), solo en pruebas. Sin tarea activa. |
 | 1.51 | 03/11/2026 | Tarea 30c preparada (pedidos de cliente para recoger en Donosti, Rentería y Durango, por envío). |
+| 1.52 | 03/11/2026 | Tarea 30b activa (aprobada por el propietario): Durango mantiene su cierre del día completo; el número de envíos sin confirmar en `tienda_hoy()`. |
