@@ -1,6 +1,12 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.16 · **Fecha:** 03/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.17 · **Fecha:** 03/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.17 (Tarea 30b) — para Lovable: «Envíos» y el cierre de caja corto de las franquicias.** Solo se añade (§9.1, §9.14, §9.21). 🧪 = solo en pruebas.
+> 1. **Pestaña «Envíos»** arriba, junto a «Avisos», en las tiendas que reciben por envío (hoy **Rentería y Durango**; Donosti no, porque el envío a Gipuzkoa va entero a Rentería, que es quien lo confirma): `tienda_hoy().envios` y, para el número de la pestaña, `tienda_hoy().envios_sin_confirmar`. Enseñar la pestaña solo si hay algo en `envios` o `envios_sin_confirmar > 0`.
+> 2. Cada envío sale **desde el día siguiente** a su salida, con **lo marcado al meterlo en la caja** (como la bolsa), y **sigue ahí hasta confirmarlo** con `confirmar_envio`: «Todo bien» o «Falta algo» (eligiendo qué y cuánto, como la reposición; llega a Administración como incidencia abierta). No es una tarea con hora.
+> 3. **Cierre de caja corto** (Donosti y Rentería): tarea «Cierre de caja» 10 minutos antes de cerrar con un punto `pide: "cierre_caja_corto"`: pedir solo **la Z y el nº de ventas** y llamar a `cerrar_caja({ elemento_id, z, ventas })`. Las propias (Durango incluida) siguen con su «Cierre del día» completo (`pide: "cierre_caja"`).
+> 4. `cierres_caja()` trae `efectivo` y `glovo` vacíos (`null`) en los cierres cortos.
 
 > **Cambios en 1.16 (Tarea 30) — para Lovable: incidencias de tienda.** Solo se añade (§9.1 y §9.20). 🧪 = solo en pruebas.
 > 1. **Botón «Incidencia»** en la tableta: las opciones de esa tienda vienen en **`tienda_hoy().opciones_incidencia`** (en las propias: «Material de tienda», «Me quedo sin producto», «Descuadre de stock o de caja», «Comentario de cliente» y «Otros»; en Donosti y Rentería, solo «Otros», un cuadro de texto libre). Pintar solo las que vengan. Sin foto ni urgencia.
@@ -217,6 +223,7 @@ Tiendas (Tarea 27, §9; columna «Tienda» = la cuenta de cada tienda):
 | `peticiones_tiendas_pendientes` | BD | — (operario ✔) | ✔ | 🧪 Tarea 28 |
 | `descartar_peticion_tienda` · `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` | BD | — | ✔ | 🧪 Tarea 28 |
 | `crear_incidencia_tienda` | BD | ✔ | — | 🧪 Tarea 30 |
+| `confirmar_envio` | BD | ✔ | — | 🧪 Tarea 30b |
 | Todas las del almacén y las de Administración de arriba | — | — (`NO_AUTORIZADO`) | — | 🧪 Tarea 27 |
 
 ## 3. Operario
@@ -806,6 +813,7 @@ Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la c
 - `tareas`: la lista del día, por hora.
 - **Tarea 28:** `reparto` (por dónde va, §9.13), `peticiones` (muestras y material, §9.15) y `pedir_material` (si la tienda puede pedir material, §9.15).
 - **Tarea 30:** `incidencias` y `opciones_incidencia` (§9.20).
+- **Tarea 30b:** `envios` y `envios_sin_confirmar` (§9.21).
 
 ### 9.2 Objeto tarea de la tienda 🧪
 ```json
@@ -944,11 +952,12 @@ Sale al terminar «Recibe la bolsa» (`tipo: "reposicion"`), con la misma `bolsa
 - Antes de salir: `salido: false` y `texto: null`. Al salir: «Ha salido a las HH:MM». Cada vez que una tienda marca «Bolsa recibida»: «Ha pasado por [tienda] a las HH:MM (parada N de M)». Mostrar `texto` tal cual.
 - Las paradas van en el orden del reparto (BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU), solo las que llevan algo ese día.
 
-### 9.14 Cierre de caja: `cerrar_caja(elemento_id, z, ventas, efectivo, glovo)` 🧪 (Tarea 28)
+### 9.14 Cierre de caja: `cerrar_caja(elemento_id, z, ventas, efectivo?, glovo?)` 🧪 (Tarea 28)
 En el «Cierre del día», el punto «Cierre de caja en la app: Z, nº de ventas, efectivo y Glovo» trae `pide: "cierre_caja"`. No se marca con un toque (`FALTAN_DATOS`, `pide: "cierre_caja"`): se apunta con `cerrar_caja`.
 - `z`, `efectivo` y `glovo` en euros (dos decimales como máximo; Glovo 0 si no hay); `ventas`, el número de ventas (entero).
 - Se guarda por tienda y día; **el efectivo es la X de la bolsa del día siguiente** (§9.11). Se puede corregir (volver a llamar) mientras el «Cierre del día» siga abierto. El punto queda hecho, con sus datos en `datos`.
 - **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `TODAVIA_NO`, `SIN_PERSONA`, `ESTADO_NO_VALIDO`, `DATOS_NO_VALIDOS`.
+- **Cierre corto de las franquicias** (Tarea 30b 🧪, Donosti y Rentería): tarea **«Cierre de caja»** (`clave: "cierre_caja"`) 10 minutos antes de cerrar (20:20 entre semana; 13:20 el sábado, que no abren por la tarde), con un solo punto «Cierre de caja en la app: Z y nº de ventas», `pide: "cierre_caja_corto"`. Un toque da `FALTAN_DATOS` con `pide: "cierre_caja_corto"`. Se apunta con **`cerrar_caja({ elemento_id, z, ventas })`**: sin efectivo ni Glovo (si llegan, no se guardan). En `cierres_caja()` salen con `efectivo` y `glovo` a `null`. Las propias (Durango incluida) siguen pidiendo los cuatro.
 
 ### 9.15 Muestras y material: `productos_tienda()` · `revisar_muestras(tarea_id, muestras?)` · `pedir_material(id_cliente, texto)` 🧪 (Tarea 28)
 - **«Revisa las muestras»** (`tipo: "muestras"`): jueves por la mañana (en Bilbao alterna por semanas, como las demás semanales); también en Donosti y Rentería. Comprobar que están en buen estado y elegir qué hay que traer nuevo.
@@ -971,7 +980,7 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 
 ### 9.17 Administración: `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` · `descartar_peticion_tienda` 🧪 (Tarea 28)
 - **`cierres_caja(desde?, hasta?, tienda_id?)`:** `{ cierres: [{ fecha, tienda_id, tienda, z, ventas, efectivo, glovo, por, guardado_en }] }`, los más nuevos primero (por defecto, la última semana). Lectura preparada para el panel (Tarea 30).
-- **`incidencias_tiendas()`:** `{ incidencias: [{ id, tienda_id, tienda, opcion, texto, fecha, a_las, estado, cerrada_en, nota }] }`: las abiertas primero y las cerradas de la última semana. `opcion`: `"falta_reposicion"` (Tarea 28) y, desde la Tarea 30, `"sin_producto"`, `"descuadre"`, `"comentario_cliente"` y `"otros"` (§9.20). Por ejemplo, `"falta_reposicion"` («Falta en la bolsa del reparto del 18/12: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Nombre)»). Es el aviso en la app: mostrarlas en el panel.
+- **`incidencias_tiendas()`:** `{ incidencias: [{ id, tienda_id, tienda, opcion, texto, fecha, a_las, estado, cerrada_en, nota }] }`: las abiertas primero y las cerradas de la última semana. `opcion`: `"falta_reposicion"` (Tarea 28); desde la Tarea 30, `"sin_producto"`, `"descuadre"`, `"comentario_cliente"` y `"otros"` (§9.20); y desde la Tarea 30b, `"falta_envio"` (§9.21). Por ejemplo, `"falta_reposicion"` («Falta en la bolsa del reparto del 18/12: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Nombre)»). Es el aviso en la app: mostrarlas en el panel.
 - **`cerrar_incidencia_tienda(incidencia_id, nota?)`:** la cierra al resolverla (`nota`, una línea). **Salida:** `incidencias_tiendas()`. **Errores:** `NO_ENCONTRADO`, `DATOS_NO_VALIDOS`.
 - **`descartar_peticion_tienda(peticion_id, motivo?)`** («No va»): quitar una muestra o un material pendiente que no va a ir. `motivo` opcional (una línea, 120 letras); la tienda ve «No va: [motivo]» o, sin motivo, «No va: lo ha quitado Administración». **Salida:** `{ peticion: {…} }`. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya atendida o descartada), `DATOS_NO_VALIDOS` (motivo demasiado largo).
 - **Dónde:** en «Preparar reparto» / «Preparar envío» (§9.16) y en el panel, sección «Tiendas»: una lista de **peticiones pendientes** de todas las tiendas (`peticiones_tiendas_pendientes('reparto')` y `('envio')`) con el botón «No va» en cada una, para quitarlas sin abrir el reparto.
@@ -979,7 +988,7 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 ### 9.18 Errores nuevos (Tarea 28) 🧪
 | Código | Qué hace la pantalla |
 | --- | --- |
-| `FALTAN_DATOS` | `error.pide` dice qué: `"efectivo"` → pedir la cantidad y llamar a `entregar_efectivo`; `"cierre_caja"` → pedir Z, nº de ventas, efectivo y Glovo y llamar a `cerrar_caja`. |
+| `FALTAN_DATOS` | `error.pide` dice qué: `"efectivo"` → pedir la cantidad y llamar a `entregar_efectivo`; `"cierre_caja"` → pedir Z, nº de ventas, efectivo y Glovo y llamar a `cerrar_caja`; `"cierre_caja_corto"` (Tarea 30b) → pedir Z y nº de ventas y llamar a `cerrar_caja` sin efectivo ni Glovo. |
 | `MOTIVO_OBLIGATORIO` | En el efectivo: pedir el porqué de la otra cantidad y repetir `entregar_efectivo` con `motivo`. |
 
 ### 9.19 `tiendas()` 🧪 (Tarea 29)
@@ -996,3 +1005,23 @@ Botón «Incidencia» de la tableta, en cualquier momento (`ESTADO_DEL_SISTEMA.m
 - Hay que haber elegido quién está (`SIN_PERSONA`). Repetir con el mismo `id_cliente` no la duplica.
 - **`tienda_hoy().incidencias`:** las de la tienda abiertas y las cerradas hoy (las abiertas primero): `[{ id, opcion, texto, fecha, a_las, estado: "abierta" | "cerrada", estado_texto }]`. Mostrar `estado_texto`: «Abierta» o «Resuelta por Administración: [nota]» (sin nota, «Resuelta por Administración»). Incluye la de «Falta algo» de la reposición. Los avisos van aparte (`avisos`).
 - **Salida:** `tienda_hoy()` actualizado. **Errores:** `DATOS_NO_VALIDOS` (opción que no existe, producto que no está en la lista, sin texto, demasiado largo), `NO_AUTORIZADO` (la tienda no tiene esa opción; el operario y Administración), `SIN_PERSONA`, `SIN_JORNADA` (hoy la tienda no abre).
+
+### 9.21 «Envíos»: `tienda_hoy().envios` · `confirmar_envio(envio_id, faltan?, nota?)` 🧪 (Tarea 30b)
+Para las tiendas que **reciben por envío** en lugar de bolsa del reparto (configuración `recibe_envio` por tienda: hoy **Rentería**, que recibe el envío a Gipuzkoa entero y lo reparte con Donosti, y **Durango**, con el suyo; decisión del propietario, 03/11/2026). Para ellas no hay «Recibe la bolsa» ni reposición. **A Eder no le sale nada nuevo:** se usa lo que ya marca al preparar el envío.
+- **Cuándo sale:** desde el **día siguiente** a la salida del envío (cuando el operario empieza o termina «Salida a Nacex»; el viernes, «Lleva en el reparto lo que va a Nacex»). **No es una tarea con hora:** sigue en `envios` hasta que se confirma. Se miran los envíos de la última semana.
+- **`tienda_hoy().envios`:** los que quedan por confirmar (los más antiguos primero) y los confirmados hoy:
+```json
+[ {
+  "id": "…", "reparto_id": "…", "fecha": "2026-12-16", "salida": "18:10", "destino": "Gipuzkoa (envío a Rentería)",
+  "productos": [ { "clave": "producto:V2|4g", "producto": "V2", "formato": "4g", "cantidad": 3 } ],
+  "peticiones": [ { "clave": "peticion:Donosti · Muestra: V2", "texto": "Donosti · Muestra: V2" } ],
+  "pedidos": [],
+  "confirmado": null
+} ]
+```
+  Lo que trae es **lo marcado al meterlo en la caja** (como `bolsa`, §9.11): lo que no se ha marcado no aparece. `confirmado`, cuando ya está: `{ resultado: "bien" | "falta", a_las, por, faltan, incidencia_id }`.
+- **`tienda_hoy().envios_sin_confirmar`:** cuántos quedan por confirmar (el número de la pestaña).
+- **«Todo bien»:** `confirmar_envio({ envio_id })`.
+- **«Falta algo»:** `confirmar_envio({ envio_id, faltan: [{ clave, cantidad? }], nota? })`, como en la reposición (§9.12): `clave` de `productos`, `peticiones` o `pedidos`, de 1 a lo que traía (sin `cantidad`, todas); `nota`, una línea (200 letras). Llega a **Administración como incidencia abierta** (`incidencias_tiendas()`, `opcion: "falta_envio"`, «Falta en el envío del 16/12: 1x V2 4g. La caja venía abierta (Nombre)»), y la tienda la ve en `tienda_hoy().incidencias`.
+- Hay que haber elegido quién está (`SIN_PERSONA`).
+- **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO` (no es un envío de esta tienda), `ESTADO_NO_VALIDO` («Ese envío ya está confirmado.»), `DATOS_NO_VALIDOS` (algo que no está en la lista, cantidad, nota larga), `SIN_PERSONA`, `SIN_JORNADA`; el operario y Administración, `NO_AUTORIZADO`.

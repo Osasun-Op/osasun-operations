@@ -112,8 +112,9 @@ begin
     and (select porque from public.tareas t where t.jornada_id = motor.generar_jornada(basauri, '2026-12-18') and t.clave = 'video_semana')
         like 'Busca y mira un vídeo sobre nuestro sector: cannabis y CBD,%para recomendarlo a compañeros y clientes.',
     pg_temp.dia(basauri, '2026-12-18'));
-  perform pg_temp.comprobar('Franquicia (Donosti): sin aperturas ni cierres; el viernes, solo el vídeo; el sábado no abre por la tarde',
-    pg_temp.dia(donosti, '2026-12-14') is null and pg_temp.dia(donosti, '2026-12-18') = 'video_semana@11:00'
+  -- Desde la Tarea 30b, la franquicia tiene su «Cierre de caja» corto (10 minutos antes de cerrar).
+  perform pg_temp.comprobar('Franquicia (Donosti): sin aperturas ni cierres de turno; el viernes, el vídeo y el cierre de caja; el sábado no abre por la tarde',
+    pg_temp.dia(donosti, '2026-12-14') = 'cierre_caja@20:20' and pg_temp.dia(donosti, '2026-12-18') = 'video_semana@11:00 cierre_caja@20:20'
     and not exists (select 1 from public.horarios where persona_id = donosti and dia_semana = 6 and turno = 'tarde'),
     coalesce(pg_temp.dia(donosti, '2026-12-14'), '-') || ' / ' || coalesce(pg_temp.dia(donosti, '2026-12-18'), '-'));
   perform pg_temp.comprobar('Domingo: nada', motor.generar_jornada(basauri, '2026-12-20') is null);
