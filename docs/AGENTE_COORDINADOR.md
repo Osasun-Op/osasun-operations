@@ -51,6 +51,19 @@ Tu trabajo no es hacer el software más sofisticado, sino **el sistema más senc
 ### Evitar que una tarea nueva rompa o duplique lo anterior (petición del propietario, 28/10/2026)
 Antes de encargar una tarea que cambia una regla ya construida: busca en el código dónde está la versión anterior (`grep` en `supabase/`), escribe en la tarea **qué funciones o archivos sustituye**, las diferencias concretas y lo que no debe cambiar (sobre todo las salidas que usan las pantallas), y pide que cualquier prueba antigua que cambie se explique en el PR. Al revisar el PR, comprueba que no quedan dos versiones de la misma regla.
 
+### Antes de mandar un encargo: confirmación extra (petición del propietario, 03/11/2026)
+Aunque la tarea ya esté aprobada, **antes de enviarla** (a Lovable o al agente de base de datos):
+1. Vuelve a leer lo que vas a mandar contra las últimas decisiones apuntadas (`ESTADO_DEL_SISTEMA.md` y las notas de esta sesión), sobre todo **lo último que se ha decidido**, que es lo que más fácil se queda fuera o mal puesto.
+2. Enseña al propietario **en pocas líneas qué va en el encargo** y espera su «sí». Solo entonces lo envías.
+
+### Encargos cortos y concretos (petición del propietario, 03/11/2026)
+Con agentes de IA, un encargo largo se cumple peor: se mezclan cosas, se olvidan detalles y la revisión cuesta más. Mejor **dos encargos cortos que uno largo**. Criterio:
+- **Un solo objetivo** por encargo, que se pueda probar de una vez (una pantalla o un recorrido, una regla, un arreglo).
+- **Pocos puntos** (como guía, de 3 a 5). Si salen más, se parte.
+- **No mezclar** en el mismo encargo cosas de sitios distintos: la tableta de tienda, la pantalla del almacén y el panel de Administración van por separado; lo que toca el almacén, siempre aparte y lo más pequeño posible.
+- **Solo el trozo del contrato que necesita**, no secciones enteras de más.
+- **Orden:** primero lo que desbloquea lo siguiente; un encargo por agente a la vez, y el siguiente cuando se haya revisado el anterior.
+
 ### Avisar sin que lo pida el propietario (petición del propietario, 28/10/2026)
 - Después de encargar algo a Lovable (`send_message`), programa con `send_later` un aviso a esta sesión **a los 3 minutos** (petición del propietario), para comprobar con `get_project` (`agentFinished`) y `get_message`. Si ha terminado, revisa y escribe al propietario el resultado. Si no, vuelve a programar otro aviso.
 - Con el agente de base de datos: cuando el propietario lo arranque, programa un aviso a los 15–20 minutos para comprobar si hay un PR nuevo y revisarlo.
