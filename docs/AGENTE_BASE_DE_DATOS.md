@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 31** (sección 7): productos atascados. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.57: «Atascados» y la regla general de las franquicias) y lo que hiciste en las Tareas 27, 28, 30, 30b y 30c. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
+**Tarea 29d** (sección 7), **urgente**: «Calcular» del reparto y del envío, solo con la hoja. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` §5 R1c (v1.58) y `_compartido/almacen.ts`, `reparto_lista.ts` y `r1.ts`. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya». (La Tarea 31 está entregada en el PR #34 y la revisa el coordinador.)
 
 ---
 
@@ -100,7 +100,21 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
-## 7. TAREA 31 (activa): productos atascados, en pruebas
+## 7. TAREA 29d (activa, urgente): «Calcular» del reparto y del envío, solo con la hoja, en pruebas
+
+**Qué pasó (04/11/2026):** al calcular el reparto a las 08:28, la hoja decía INDOOR PR RELAX 4g = 0 en el almacén, pero `en_almacen` salió 2: la cuenta propia de la app (R1c, `ajusteAlmacen` / `aplicarAjuste` en `_compartido/almacen.ts`) sumó lo producido el 03/11 desde el último recuento marcado (02/11 18:43) sin restar las bolsas del 03/11 (no se marcaron). Igual con KUSH WATERHASH 10g, SUGAR CBDX, T BALLS / GELATO DRY 4g e INDOOR PR AFRU 10g. Nueva regla del propietario: `ESTADO_DEL_SISTEMA.md` §5 R1c (v1.58).
+
+1. **«Calcular» del reparto y del envío** (`guardar_reparto` y lo que use `catalogo` para ese cálculo): la cifra de almacén es **la de la hoja leída en ese momento, tal cual**. Sin sumar ni restar nada: ni lo producido o salido desde el recuento, ni lo apartado de otro reparto, envío o pedido (`apartadoReparto`, comprometido). Si ves otro ajuste en ese cálculo, quítalo también y dilo en el PR.
+2. **Lo demás de R1c no cambia:** el «coge / haz» de los pedidos de cliente y las cajas en camino siguen con «almacén ahora». Dilo en el PR si algo más dependía del cálculo del reparto.
+3. **Sin granel (R1e)** sigue igual, ahora con la cifra real de la hoja: si la hoja dice 0 y no hay granel, sale el aviso de siempre (quitar o coger de otra tienda).
+4. **Pruebas** con el caso del 04/11 (hoja 0, producido el día anterior sin recuento marcado → hay que producir 2, o aviso sin granel), Deno y SQL. Despliega `guardar_reparto` y `catalogo` **solo en pruebas**.
+5. **Solo en pruebas; producción espera.**
+
+**Entrega:** PR **«Tarea 29d — Calcular solo con la hoja»**, con «Qué he leído y qué existía ya», pruebas en verde, una llamada real (un cálculo sin guardar), registros sin errores y cómo deshacer.
+
+---
+
+## 7. TAREA 31 (entregada en el PR #34, en revisión): productos atascados, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, «Atascados» (v1.56) y la **regla general de las franquicias** (v1.57: como tiendas propias en todo, salvo la logística por envío y las tareas del día a día de su gente), y `AGENTE_COORDINADOR.md`, bloque 1, puntos 15 a 17. Reutiliza: la lista del día de la tienda y la alternancia de Bilbao (Tarea 27), `productos_tienda()` con formatos (Tarea 30c), las incidencias para Administración (`incidencias_tiendas`, `cerrar_incidencia_tienda`), los avisos a tiendas (Tarea 27/29), las incidencias del operario y el siguiente envío de una franquicia (Tareas 30b/30c). Solo en pruebas; producción espera. **El reparto de Eder no cambia.**
 
@@ -814,3 +828,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.57 | 04/11/2026 | Tarea 30c fusionada (PR #33), solo en pruebas. Sin tarea activa. |
 | 1.58 | 04/11/2026 | Tarea 31 preparada (productos atascados), pendiente de aprobación. |
 | 1.59 | 04/11/2026 | Tarea 31 activa (productos atascados), aprobada por el propietario. |
+| 1.60 | 04/11/2026 | Tarea 29d activa (urgente): «Calcular» solo con la hoja. Tarea 31 entregada (PR #34), en revisión. |

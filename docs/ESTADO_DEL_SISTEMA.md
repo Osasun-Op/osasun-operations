@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.57 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.58 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -177,7 +177,7 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
   - **envío por Nacex a Gipuzkoa o Durango:** desde que está preparado **hasta las 11:59 del día siguiente**.
   - El recuento no las borra.
 - **Pedidos de cliente por Nacex:** las cajas se restan del almacén y **salen del stock** (no se suman a ninguna tienda).
-- **El reparto de primera hora** usa también «almacén ahora», que a esa hora coincide con lo que dice STOCK OSASUN (decisión del propietario en la Tarea 14). A esa hora no hay nada en camino a Bizkaia, y lo que vaya a Gipuzkoa o Durango no le afecta.
+- **«Calcular» del reparto y del envío: solo la hoja** (decisión del propietario, 04/11/2026; **sustituye** a «el reparto de primera hora usa también almacén ahora», Tarea 14). Al pulsar «Calcular», la app lee la hoja en ese momento y calcula con la cifra de almacén que pone, **sin sumar ni restar nada por su cuenta** (ni lo producido o salido desde el recuento, ni lo apartado de otro reparto, envío o pedido). La hoja tiene que estar al día al calcular. Motivo: el 04/11 la cuenta propia de la app sumó lo producido el 03/11 (recuentos del 03/11 sin marcar en la app y bolsas del 03/11 sin marcar) y dio por hechas cajas que no había (INDOOR PR RELAX 4g, KUSH WATERHASH 10g, SUGAR CBDX, T BALLS 4g, INDOOR PR AFRU 10g). «Almacén ahora» sigue para lo demás (el «coge / haz» de los pedidos, las cajas en camino).
 - **Un pedido para recoger en tienda activa el reparto** (decisión del propietario en la Tarea 14):
   - entra en el reparto de hoy mientras las bolsas no estén listas; si el reparto ya está guardado, entra al momento;
   - «Prepara el reparto» no se puede cerrar sin reparto si hay un pedido esperando;
@@ -585,3 +585,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.55 | 04/11/2026 | R1b: el pedido que va por envío tiene su tarea propia del operario, como en el reparto. |
 | 1.56 | 04/11/2026 | E2-8: atascados: la primera tienda que lo pide se lo lleva; «Ya no queda» cierra la promoción; las franquicias piden y lo reciben por envío; lo atascado en una franquicia va directo a Administración. |
 | 1.57 | 04/11/2026 | E2-8: regla general de las franquicias: como tiendas propias en todo, salvo la logística (envío en vez de reparto) y las tareas del día a día de su gente. |
+| 1.58 | 04/11/2026 | R1c: «Calcular» del reparto y del envío usa solo la cifra de la hoja, sin la cuenta propia de la app. |
