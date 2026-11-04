@@ -100,6 +100,25 @@ Ninguna. La Tarea 29d está fusionada (PR #35). Quedan de tiendas la **32** (pan
 
 ---
 
+## 7. TAREA 32 (preparada, pendiente de aprobación del propietario): el panel de Administración por centro, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8 («Panel de Administración») y `AGENTE_COORDINADOR.md`, bloque 1, punto 23 y nota del 03/11 («Panel (Tarea 32)»). Reutiliza: `estado_actual()` (almacén), `tienda_hoy_de` y sus piezas (tareas con puntos y «hecha por», `en_turno`, bolsa, envíos, incidencias, atascados, peticiones, pedidos), `cierres_caja()`, `incidencias_tiendas()` y `tiendas()`. **Nada al lado:** lo que ya calcula la tableta se lee igual para Administración. Solo en pruebas; producción espera.
+
+1. **Selector de centros** para el panel: el almacén y las tiendas activas, en el orden de la ruta (Almacén · Bilbao · Algorta · Barakaldo · Basauri · Portugalete · Donosti · Rentería; Durango cuando abra). Amplía `tiendas()` o una función nueva, sin duplicar.
+2. **Resumen de una tienda para Administración** (`resumen_tienda(tienda_id, fecha?)`, hoy por defecto), **solo de lectura**: no crea la jornada ni tareas, no pasa atascados a Administración ni toca nada (lo que la tableta hace al abrirse, aquí no). Con lo mismo que ve la tienda:
+   - quién está ahora (`en_turno`) y quién ha estado hoy;
+   - las tareas del día con su hora, estado, «hecha por» y hora de fin (las no hechas, como no hechas);
+   - la bolsa del reparto (recibida, efectivo entregado o el motivo, reposición «todo bien» / «falta algo») o, en las que reciben por envío, sus envíos sin confirmar;
+   - incidencias abiertas de la tienda (incluidos atascados), avisos sin leer, peticiones pendientes y pedidos de cliente abiertos;
+   - el cierre de caja del día (o el último).
+   Si el centro no abre ese día, dilo.
+3. **El almacén** sigue con `estado_actual()` tal cual: el panel lo elige en el selector y no cambia.
+4. **Contratos** con nota para Lovable (el selector y la vista de una tienda con las mismas secciones que el almacén donde se pueda). Las ventas, con el bloque 2.
+
+**Entrega:** PR **«Tarea 32 — Panel por centro»**, con «Qué he leído y qué existía ya», pruebas en verde (que el resumen no cambia nada en la base de datos), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
+
+---
+
 ## 7.0 TAREA 29d (fusionada en el PR #35; solo en pruebas, producción espera): «Calcular» del reparto y del envío, solo con la hoja, en pruebas
 
 **Qué pasó (04/11/2026):** al calcular el reparto a las 08:28, la hoja decía INDOOR PR RELAX 4g = 0 en el almacén, pero `en_almacen` salió 2: la cuenta propia de la app (R1c, `ajusteAlmacen` / `aplicarAjuste` en `_compartido/almacen.ts`) sumó lo producido el 03/11 desde el último recuento marcado (02/11 18:43) sin restar las bolsas del 03/11 (no se marcaron). Igual con KUSH WATERHASH 10g, SUGAR CBDX, T BALLS / GELATO DRY 4g e INDOOR PR AFRU 10g. Nueva regla del propietario: `ESTADO_DEL_SISTEMA.md` §5 R1c (v1.58).
@@ -831,3 +850,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.60 | 04/11/2026 | Tarea 29d activa (urgente): «Calcular» solo con la hoja. Tarea 31 entregada (PR #34), en revisión. |
 | 1.61 | 04/11/2026 | Tarea 31 fusionada (PR #34), solo en pruebas. Activa: 29d. |
 | 1.62 | 04/11/2026 | Tarea 29d fusionada (PR #35), solo en pruebas; `pegar_reparto` borrada del código (falta borrarla del panel de Supabase). Sin tarea activa. |
+| 1.63 | 04/11/2026 | Tarea 32 preparada (panel de Administración por centro), pendiente de aprobación. |
