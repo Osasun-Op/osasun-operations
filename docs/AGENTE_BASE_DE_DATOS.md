@@ -70,11 +70,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 35** (sección 7): «Empezar turno» y «Fin de turno» del operario. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` §6.4 (v1.65: «El turno lo abre y lo cierra el operario» y «Fuera del turno, ninguna tarea») y lo que hiciste en las Tareas 24 y 27. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
+Ninguna. La Tarea 35 está fusionada (PR #39). Las siguientes del plan (el «Fin de turno» de las tiendas y los fichajes) las preparará el coordinador.
 
 ---
 
-## 7. TAREA 35 (activa): «Empezar turno» y «Fin de turno» del operario, en pruebas
+## 7.0 TAREA 35 (fusionada en el PR #39; solo en pruebas, producción espera): «Empezar turno» y «Fin de turno» del operario, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` §6.4, v1.65, y `AGENTE_COORDINADOR.md`, notas del 04/11 («Eder sin «Recuento de stock y cierre»» y «El propietario propone que el operario cierre su turno»). **Qué pasó el 04/11:** el Chromebook de Eder se durmió de 17:10 a 18:30; al despertarlo pasadas las 18:30, `en_turno` ya era falso y no tuvo «Recuento de stock y cierre» (obligatoria, 18:15–18:30). Reutiliza: el registro de turnos de las tiendas (`turnos_tienda`, `empezar_turno`, `en_turno_tienda`), `motor.en_turno` (la única regla de «estar en turno», que usan `elegir_tarea` y el aviso de salida), los cierres de turno (`cierres`, `generar_cierres_turno` y su correo) y la pausa de lo no obligatorio al acabar el turno (Tarea 24). **Es la primera de tres:** después irán el «Fin de turno» de las tiendas y los fichajes, así que el registro tiene que servir para las dos. Solo en pruebas; producción espera.
 
@@ -909,3 +909,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.66 | 04/11/2026 | Tarea 33 activa (marcas en las pestañas del panel y totales de los cierres de caja), aprobada por el propietario. Después, la Tarea 34 (efectivo de los días sin reparto). |
 | 1.67 | 04/11/2026 | Tarea 33 fusionada (PR #37), solo en pruebas (65 migraciones). Tarea 34 activa (efectivo de los días sin reparto), aprobada por el propietario. |
 | 1.68 | 04/11/2026 | Tarea 34 fusionada (PR #38), solo en pruebas (66 migraciones). Tarea 35 activa («Empezar turno» y «Fin de turno» del operario), aprobada por el propietario. |
+| 1.69 | 04/11/2026 | Tarea 35 fusionada (PR #39), solo en pruebas (67 migraciones; ya aplicada). Sin tarea activa. |
