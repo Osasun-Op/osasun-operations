@@ -1180,7 +1180,7 @@ Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8 v1.62, «Marcas en las p
     - **Se quita cuando entra en esa tienda** del panel (`marcar_tienda_vista`).
     - **Es por persona:** cada persona de Administración tiene las suyas.
   - **`sin_abrir`** (sí o no): hoy la tienda abre (no es domingo ni está marcada cerrada), ha pasado media hora desde que empieza un turno (mañana o tarde, con su horario; Bilbao, por la tarde, desde las 16:30) y nadie ha empezado ese turno. Se pinta **«sin abrir»**, en texto y sin color.
-    - **Se quita** cuando alguien empieza ese turno.
+    - **Se quita** cuando alguien empieza ese turno o cuando acaba el turno (solo sale mientras dura; decisión del propietario, PR #37).
     - **Sirve también para un festivo sin marcar.**
   - **`texto`:** lo que se pinta junto al nombre de la pestaña, ya montado, por ejemplo «●2 · 3 sin hacer» (`null` si no hay nada). Pintar el «●N» en rojo y lo demás sin color.
 - **`marcar_tienda_vista({ tienda_id })`:** llamarlo **al abrir la pestaña de un centro** (`tienda_id` es el `id` de `tiendas().centros`; también vale el del almacén).

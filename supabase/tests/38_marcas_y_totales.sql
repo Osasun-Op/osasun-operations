@@ -83,6 +83,11 @@ begin
   perform pg_temp.comprobar('Por la tarde (abre a las 17:00), a las 17:31 sin nadie en la tarde: otra vez «sin abrir»',
     not (pg_temp.m('BASAURI', pg_temp.a('2026-12-15', '17:29')) ->> 'sin_abrir')::boolean
     and (pg_temp.m('BASAURI', pg_temp.a('2026-12-15', '17:31')) ->> 'sin_abrir')::boolean);
+  perform pg_temp.comprobar('Solo mientras dura ese turno: Portugalete, sin nadie, sale a las 12:00, no a las 13:45 (entre turnos) y otra vez a las 17:31',
+    (pg_temp.m('PORTU', pg_temp.a('2026-12-15', '12:00')) ->> 'sin_abrir')::boolean
+    and not (pg_temp.m('PORTU', pg_temp.a('2026-12-15', '13:45')) ->> 'sin_abrir')::boolean
+    and (pg_temp.m('PORTU', pg_temp.a('2026-12-15', '17:31')) ->> 'sin_abrir')::boolean
+    and not (pg_temp.m('PORTU', pg_temp.a('2026-12-15', '21:00')) ->> 'sin_abrir')::boolean);
   perform pg_temp.comprobar('El domingo no abre: nada',
     not (pg_temp.m('BASAURI', pg_temp.a('2026-12-13', '12:00')) ->> 'sin_abrir')::boolean);
   perform motor.marcar_dia_cerrado_de('00000000-0000-4000-a000-000000000002', '2026-12-16', pg_temp.d('PORTU'), true, 'Festivo local',
