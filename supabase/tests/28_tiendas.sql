@@ -99,7 +99,7 @@ begin
   perform pg_temp.comprobar('Sábado en Basauri: cierre del día a las 19:20',
     pg_temp.dia(basauri, '2026-12-19') = 'apertura_manana@10:50 cierre_manana@13:20 apertura_tarde@16:50 cierre_dia@19:20',
     pg_temp.dia(basauri, '2026-12-19'));
-  perform pg_temp.comprobar('Jueves: limpieza de cristales por la tarde (Basauri 17:00)',
+  perform pg_temp.comprobar('Jueves: limpieza semanal por la tarde (Basauri 17:00)',
     pg_temp.dia(basauri, '2026-12-17') like '%limpieza_cristales@17:00%', pg_temp.dia(basauri, '2026-12-17'));
   perform pg_temp.comprobar('Bilbao alterna las semanales: semana impar (51) por la tarde, semana par (52) por la mañana',
     pg_temp.dia(bilbao, '2026-12-17') like '%limpieza_cristales@16:30%'
@@ -222,7 +222,7 @@ begin
 end;
 $$;
 
--- Limpieza de cristales y vídeo de la semana
+-- Limpieza semanal (antes «de cristales»; código limpieza_cristales) y vídeo de la semana
 do $$
 declare
   basauri constant uuid := '00000000-0000-4000-b000-000000000001';
@@ -236,7 +236,7 @@ begin
   perform motor.empezar_turno_tienda_de(basauri, ane, pg_temp.a('2026-12-17', '16:55'));
   r := motor.terminar_tarea_tienda_de(basauri, (pg_temp.tarea(motor.tienda_hoy_de(basauri, pg_temp.a('2026-12-17', '17:10')), 'limpieza_cristales') ->> 'id')::uuid,
                                       pg_temp.a('2026-12-17', '17:10'));
-  perform pg_temp.comprobar('Limpieza de cristales: «Hecho»', pg_temp.tarea(r, 'limpieza_cristales') ->> 'estado' = 'hecha', r::text);
+  perform pg_temp.comprobar('Limpieza semanal: «Hecho»', pg_temp.tarea(r, 'limpieza_cristales') ->> 'estado' = 'hecha', r::text);
 
   -- Viernes: Basauri comparte; Portugalete no ha podido.
   perform motor.empezar_turno_tienda_de(basauri, ane, pg_temp.a('2026-12-18', '10:55'));
@@ -263,7 +263,7 @@ begin
   r := motor.empezar_turno_tienda_de(portu, iker, pg_temp.a('2026-12-19', '10:55'));
   perform pg_temp.comprobar('Sábado: a quien no pudo el viernes (Iker) no le vuelve a salir', pg_temp.tarea(r, 'video_semana%') is null, r::text);
   r := motor.empezar_turno_tienda_de(portu, nora, pg_temp.a('2026-12-19', '11:10'));
-  perform pg_temp.comprobar('Sábado: a quien trabaja y no ha compartido esa semana (Nora) le sale, ya',
+  perform pg_temp.comprobar('Sábado: a quien trabaja y no ha compartido esa semana (Nora) le sale (a las 11:00, Tarea 36; empieza a las 11:10)',
     (pg_temp.tarea(r, 'video_semana%') ->> 'se_puede_marcar')::boolean, r::text);
   r := motor.compartir_video_de(portu, (pg_temp.tarea(r, 'video_semana%') ->> 'id')::uuid, 'https://youtu.be/abcdefghijk',
                                 'Cómo se hace una extracción en frío', false, pg_temp.a('2026-12-19', '12:00'));
