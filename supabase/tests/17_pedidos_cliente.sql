@@ -154,14 +154,15 @@ begin
     and (public.servidor_guardar_pedido_cliente(adm, c_a, 'Ane', 'tienda', pg_temp.d('BILBAO'), null, pg_temp.lineas(3),
                                                 '2026-11-24', null, null, null, '2026-11-24 08:01+01') ->> 'ya_guardado')::boolean
     and (select count(*) from public.pedidos_cliente where id_cliente = c_a) = 1, r::text);
-  perform pg_temp.comprobar('Tienda: solo las del reparto (Donosti y Gipuzkoa no); entrega no válida',
-    pg_temp.pedido(adm, c_l, 'X', 'tienda', pg_temp.d('DONOSTI'), 1, '2026-11-24 08:02+01') -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS'
-    and pg_temp.pedido(adm, c_l, 'X', 'tienda', pg_temp.d('GIPUZKOA'), 1, '2026-11-24 08:02+01') -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS'
+  -- Desde la Tarea 30c también Donosti, Rentería y Durango (por envío): prueba 35. Gipuzkoa no es una tienda.
+  perform pg_temp.comprobar('Tienda: Gipuzkoa (el destino del envío) no; entrega no válida',
+    pg_temp.pedido(adm, c_l, 'X', 'tienda', pg_temp.d('GIPUZKOA'), 1, '2026-11-24 08:02+01') -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS'
     and pg_temp.pedido(adm, c_l, 'X', 'correo', null, 1, '2026-11-24 08:02+01') -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS');
   r := public.servidor_preparar(adm, '2026-11-24 08:40+01');
   perform pg_temp.comprobar('servidor_preparar lleva los pedidos de tienda que esperan al reparto de hoy',
     r -> 'pedidos_tienda' = jsonb_build_array(jsonb_build_object('id', v_a, 'cliente', 'Ane', 'destino_id', pg_temp.d('BILBAO'),
-                                                                 'lineas', pg_temp.lineas(3))), r -> 'pedidos_tienda' #>> '{}');
+                                                                 'lineas', pg_temp.lineas(3), 'envio_destino_id', null)),
+    r -> 'pedidos_tienda' #>> '{}');
 
   -- El reparto de hoy (V2 4g: 20 pedidas, faltan 5) y el pedido de Ane asignado con su «coge / haz».
   r := pg_temp.guardar(mar, 'reparto', 20, 5, '2026-11-24 08:50+01');

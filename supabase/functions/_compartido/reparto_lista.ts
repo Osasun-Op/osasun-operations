@@ -40,8 +40,13 @@ interface Contexto {
   comprometido?: Comprometido;
   /** R1c: lo producido y lo salido desde el último recuento (almacén ahora = hoja + producido − salido). */
   almacen?: MovimientosAlmacen;
-  /** Pedidos de cliente para recoger en tienda que van en el reparto de hoy. */
-  pedidos_tienda?: { id: string; cliente: string; destino_id: string; lineas: Cajas[] }[];
+  /**
+   * Pedidos de cliente para recoger en tienda que esperan. `envio_destino_id` (Tarea 30c): el destino del envío que
+   * los lleva (GIPUZKOA para Donosti y Rentería); null si van en el reparto.
+   */
+  pedidos_tienda?: { id: string; cliente: string; destino_id: string; lineas: Cajas[]; envio_destino_id?: string | null }[];
+  /** Tarea 30c: las tiendas que se pueden elegir en «Pedido de cliente» (también las que reciben por envío). */
+  tiendas_pedido?: { id: string; codigo: string; nombre: string; va_en: "reparto" | "envio" }[];
 }
 
 type Respuesta = Record<string, unknown>;
@@ -67,7 +72,13 @@ export const tiendasDe = (ctx: Pick<Contexto, "destinos" | "config">, tipo: "rep
 /** Pedidos de cliente para recoger en tienda del reparto de hoy, en las tiendas del reparto. */
 const pedidosDelReparto = (ctx: Pick<Contexto, "pedidos_tienda">, destinos: Destino[]) => {
   const enLista = new Set(destinos.map((x) => x.id));
-  return (ctx.pedidos_tienda ?? []).filter((p) => enLista.has(p.destino_id));
+  return (ctx.pedidos_tienda ?? []).filter((p) => !p.envio_destino_id && enLista.has(p.destino_id));
+};
+
+/** Tarea 30c: pedidos de las tiendas que reciben por envío, que van en el envío a su destino (Gipuzkoa, Durango). */
+const pedidosDelEnvio = (ctx: Pick<Contexto, "pedidos_tienda">, destinos: Destino[]) => {
+  const enLista = new Set(destinos.map((x) => x.id));
+  return (ctx.pedidos_tienda ?? []).filter((p) => !!p.envio_destino_id && enLista.has(p.envio_destino_id));
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -88,6 +99,8 @@ export async function catalogoDe(d: Dependencias, persona: string): Promise<Resp
     tiendas: {
       reparto: reparto.map(tienda),
       envio: tiendasDe(ctx, "envio").map(tienda),
+      // Tarea 30c: para «Pedido de cliente», las del reparto y las que reciben por envío.
+      pedido: ctx.tiendas_pedido ?? reparto.map((x) => ({ ...tienda(x), va_en: "reparto" as const })),
     },
     productos: lista,
     // Pedidos de cliente para recoger en tienda que van en el reparto de hoy:
@@ -137,10 +150,15 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
     return error("CATALOGO_AMBIGUO", "Hay nombres repetidos en PRINCIPAL. Avisa a Administración.", { claves: ambiguas });
   }
   const destinos = tiendasDe(ctx, tipo);
-  // Un pedido para recoger en tienda activa el reparto: puede ir solo, sin productos.
-  const pedidos = tipo === "reparto" ? pedidosDelReparto(ctx, destinos) : [];
-  const v = validarLineas(cuerpo.lineas, entradas, destinos, pedidos.length > 0);
+  // Un pedido para recoger en tienda activa el reparto: puede ir solo, sin productos. Los de las tiendas que
+  // reciben por envío (Tarea 30c) van en el envío a su destino, pero no lo activan.
+  const pedidosReparto = tipo === "reparto" ? pedidosDelReparto(ctx, destinos) : [];
+  const activanReparto = pedidosReparto.length > 0;
+  const v = validarLineas(cuerpo.lineas, entradas, destinos, activanReparto);
   if (!v.ok) return error(v.codigo, v.mensaje, v.detalle);
+  // En el envío, solo los pedidos de los destinos a los que va (Gipuzkoa, Durango o los dos).
+  const pedidos = tipo === "reparto" ? pedidosReparto
+    : pedidosDelEnvio(ctx, destinos.filter((x) => v.lineas.some((l) => l.destino_id === x.id)));
   const pv = validarPeticiones(cuerpo.peticiones, destinos);
   if (!pv.ok) return error("DATOS_NO_VALIDOS", pv.mensaje, pv.detalle);
 
@@ -154,7 +172,7 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
     apartadoReparto: tipo === "envio"
       ? [...c.reparto, ...c.pedidos_tienda].map((x) => ({ producto: x.producto, formato: x.formato, pedido: x.cantidad }))
       : [],
-    permitirVacio: pedidos.length > 0,
+    permitirVacio: activanReparto,
   });
   // R1e: lo que hay que hacer sin granel se resuelve en la producción (quitarlo o de otra tienda).
   const produccion = tipo === "reparto" ? marcarSinGranel(r.produccion, r.bolsas, lectura.datos, destinos) : r.produccion;
@@ -184,18 +202,17 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
     p_persona: persona, p_reparto: guardado.reparto_id, p_peticiones: pv.peticiones,
   });
 
-  // Pedidos de cliente para recoger en tienda (R1b): van en este reparto, con su
-  // tarea y su bolsa aparte («coge / haz» al salir la tarea). También si el
-  // reparto no cambia, para no perder un pedido si la llamada anterior se cortó.
+  // Pedidos de cliente para recoger en tienda (R1b): van en este reparto (o, los de
+  // las tiendas que reciben por envío, en este envío; Tarea 30c), con su tarea y su
+  // caja aparte («coge / haz» al salir la tarea). También si el reparto no cambia,
+  // para no perder un pedido si la llamada anterior se cortó.
   let pedidosCliente: unknown[] = [];
-  if (tipo === "reparto") {
-    if (pedidos.length > 0) {
-      const asignados = await d.rpc<{ pedidos: unknown[] }>("servidor_asignar_pedidos", {
-        p_persona: persona, p_reparto: guardado.reparto_id,
-        p_pedidos: pedidos.map((p) => ({ pedido_id: p.id, elementos: listaPedido(p.lineas, entradas, lectura.datos.categorias) })),
-      });
-      pedidosCliente = asignados.pedidos ?? [];
-    }
+  if (pedidos.length > 0) {
+    const asignados = await d.rpc<{ pedidos: unknown[] }>("servidor_asignar_pedidos", {
+      p_persona: persona, p_reparto: guardado.reparto_id,
+      p_pedidos: pedidos.map((p) => ({ pedido_id: p.id, elementos: listaPedido(p.lineas, entradas, lectura.datos.categorias) })),
+    });
+    pedidosCliente = asignados.pedidos ?? [];
   }
   await d.rpc("servidor_reparto_anotar_id_cliente", { p_reparto: guardado.reparto_id, p_id_cliente: idCliente });
   // El texto lo da la base de datos: con lo decidido en la producción (R1e) ya aplicado.
