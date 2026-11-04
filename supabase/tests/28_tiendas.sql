@@ -384,7 +384,8 @@ select pg_temp.comprobar('Almacén: para sus plantillas, la hora de salida se ca
                  and motor.desde_plantilla(j.id, p.id) is distinct from
                      coalesce(motor.en_local(j.fecha, p.hora_inicio), motor.inicio_turno(j.persona_id, j.fecha, p.turno),
                               motor.inicio_turno(j.persona_id, j.fecha, null))));
-select motor.generar_cierres_programados(pg_temp.a('2026-12-14', '13:31'));
+-- Tarea 35: a medianoche, la tarea programada cierra los turnos que quedaron sin cerrar.
+select motor.generar_cierres_programados(pg_temp.a('2026-12-15', '00:05'));
 select pg_temp.comprobar('Los cierres de turno (y su correo) siguen siendo solo del almacén',
   exists (select 1 from public.cierres c join public.jornadas j on j.id = c.jornada_id
            where j.persona_id = '00000000-0000-4000-a000-000000000001' and j.fecha = '2026-12-14')

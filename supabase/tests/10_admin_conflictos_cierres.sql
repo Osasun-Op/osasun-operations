@@ -3,6 +3,17 @@
 -- Martes 10/11/2026 a viernes 13/11/2026 y un martes de verano. Transacción deshecha al final.
 
 begin;
+-- Tarea 35: estas pruebas son de antes de «Empezar turno». Aquí el turno está abierto de su hora de inicio a la de fin,
+-- como si el operario lo empezara y lo terminara a su hora (solo dentro de esta transacción, que se deshace). La 40
+-- prueba los botones.
+create or replace function motor.en_turno(p_jornada uuid, p_ahora timestamptz)
+returns boolean language sql stable set search_path = '' as $$
+  select exists (select 1 from public.jornadas j
+                   join public.horarios h on h.persona_id = j.persona_id and h.dia_semana = extract(isodow from j.fecha)
+                  where j.id = p_jornada
+                    and p_ahora >= motor.en_local(j.fecha, h.hora_inicio)
+                    and p_ahora < motor.en_local(j.fecha, h.hora_fin))
+$$;
 -- Aísla la prueba de las jornadas reales del operario de pruebas. Se deshace al final.
 update public.tareas set estado = 'hecha'
  where estado in ('pendiente', 'en_curso', 'bloqueada')
@@ -226,11 +237,12 @@ begin
 
   -- Cierre de la mañana (martes 13:00) ----------------------------------------------------
   perform motor.terminar_incidencia_de(op, (select id from public.incidencias where jornada_id = j and terminada_en is null), '2026-11-10 10:20+01');
-  perform pg_temp.comprobar('A las 12:59 no se genera ningún cierre', motor.generar_cierres_programados('2026-11-10 12:59+01') = 0);
-  n := motor.generar_cierres_programados('2026-11-10 13:00+01');
-  select id into v_cierre from public.cierres where jornada_id = j and turno = 'manana';
-  perform pg_temp.comprobar('A las 13:00 se genera el cierre de la mañana y se encola su correo',
-    n = 1 and v_cierre is not null
+  -- Tarea 35: el cierre ya no sale a la hora de fin, sino al cerrar el turno. Aquí se cierra solo (sin el recuento).
+  perform pg_temp.comprobar('A las 13:00 la tarea programada ya no genera ningún cierre',
+    motor.generar_cierres_programados('2026-11-10 13:00+01') = 0);
+  v_cierre := motor.cerrar_turno_almacen(j, 'manana', '2026-11-10 13:00+01', true);
+  perform pg_temp.comprobar('Al cerrarse la mañana (13:00) se genera su cierre y se encola su correo',
+    v_cierre is not null
     and (select count(*) from net.http_request_queue
           where convert_from(body, 'UTF8')::jsonb = jsonb_build_object('tipo', 'cierre', 'ref', v_cierre::text)) = 1);
   perform pg_temp.comprobar('Otra vez a las 13:30: no se genera otro ni se encola otro correo',
@@ -297,10 +309,10 @@ begin
   -- Cierre de la tarde (martes 18:30) ----------------------------------------------------
   perform motor.resolver_problema_de(adm, (select id from public.problemas where jornada_id = j and estado <> 'resuelto'),
                                      'Pilas nuevas', '2026-11-10 15:40+01');
-  n := motor.generar_cierres_programados('2026-11-10 18:30+01');
-  select id into v_cierre2 from public.cierres where jornada_id = j and turno = 'tarde';
+  v_cierre2 := motor.cerrar_turno_almacen(j, 'tarde', '2026-11-10 18:30+01', true);
+  n := (select count(*) from public.cierres where jornada_id = j and turno = 'tarde');
   r := (select contenido from public.cierres where id = v_cierre2);
-  perform pg_temp.comprobar('A las 18:30 se genera el cierre de la tarde y la jornada queda cerrada',
+  perform pg_temp.comprobar('Al cerrarse la tarde (18:30) se genera su cierre y la jornada queda cerrada',
     n = 1 and v_cierre2 is not null and (select estado from public.jornadas where id = j) = 'cerrada', n::text);
   perform pg_temp.comprobar('Cierre de la tarde: el problema resuelto por la tarde con su solución; sin lo hecho por la mañana',
     r -> 'problemas' @> '[{"descripcion": "Báscula sin pilas", "solucion": "Pilas nuevas", "estado": "resuelto"}]'
@@ -359,13 +371,14 @@ begin
   j_vie := motor.generar_jornada(op, '2026-11-13');
   update public.tareas t set estado = 'hecha', terminada_en = '2026-11-13 10:00+01'
     from public.plantillas_tarea p where p.id = t.plantilla_id and t.jornada_id = j_vie and p.codigo = 'limpieza_resinas';
-  n := motor.generar_cierres_programados('2026-11-13 13:00+01');
+  perform motor.cerrar_turno_almacen(j_vie, 'manana', '2026-11-13 13:00+01', true);
+  n := (select count(*) from public.cierres where jornada_id = j_vie);
   r := (select contenido from public.cierres where jornada_id = j_vie);
   perform pg_temp.comprobar('Viernes 13:00: un solo cierre, con calidad = limpieza hecha, y la jornada cerrada',
     n = 1 and r -> 'calidad' = '{"limpieza_viernes": true}'::jsonb and (select estado from public.jornadas where id = j_vie) = 'cerrada'
     and r -> 'siguiente' ->> 'fecha' = '2026-11-16', r::text);
-  perform pg_temp.comprobar('Viernes 18:30: no hay turno de tarde, no se genera nada más',
-    motor.generar_cierres_programados('2026-11-13 18:30+01') = 0
+  perform pg_temp.comprobar('Viernes, a medianoche: no hay turno de tarde, no se genera nada más',
+    motor.generar_cierres_programados('2026-11-14 00:05+01') = 0
     and (select count(*) from public.cierres where jornada_id = j_vie) = 1);
   perform pg_temp.comprobar('Texto del viernes: «Limpieza hecha: sí»',
     motor.texto_cierre(r) ->> 'texto' like '%CALIDAD DEL VIERNES%Limpieza hecha: sí%');
@@ -373,11 +386,13 @@ begin
   -- Verano: 13:00 en Madrid son las 11:00 UTC -----------------------------------------------
   update public.tareas set estado = 'hecha' where jornada_id = j_vie and estado in ('pendiente', 'en_curso', 'bloqueada');
   perform motor.generar_jornada(op, '2027-06-15');
-  perform pg_temp.comprobar('Verano: el cierre de la mañana se genera a las 11:00 UTC (13:00 en Madrid), no antes',
-    motor.generar_cierres_programados('2027-06-15 10:30+00') = 0
-    and motor.generar_cierres_programados('2027-06-15 11:00+00') = 1);
-  perform pg_temp.comprobar('Tarea programada de los cierres: a y media y en punto de 11, 12, 16 y 17 UTC, de lunes a viernes',
-    exists (select 1 from cron.job where jobname = 'generar_cierres_turno' and schedule = '0,30 11,12,16,17 * * 1-5'));
+  perform pg_temp.comprobar('Verano: los turnos sin cerrar se cierran a medianoche de Madrid (22:05 UTC), no antes',
+    motor.generar_cierres_programados('2027-06-15 21:59+00') = 0
+    and motor.generar_cierres_programados('2027-06-15 22:05+00') = 2
+    and motor.generar_cierres_programados('2027-06-15 23:05+00') = 0);
+  perform pg_temp.comprobar('Tarea programada: solo cierra lo que quedó sin cerrar, a las 00:05 de Madrid (22:05 y 23:05 UTC)',
+    exists (select 1 from cron.job where jobname = 'cerrar_turnos_olvidados' and schedule = '5 22,23 * * *')
+    and not exists (select 1 from cron.job where jobname = 'generar_cierres_turno'));
 end;
 $$;
 

@@ -1,6 +1,26 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.23 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.24 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.24 (Tarea 35) — para Lovable: «Empezar turno» y «Fin de turno» del operario (Chromebook y Pixel).** Se añaden dos funciones (§3.22), el campo `turno` en `tarea_activa` (§3.2) y `turno_operario` en el cierre (§4.4). 🧪 = solo en pruebas. **Cambia una regla:** sin «Empezar turno», `tarea` es `null` siempre.
+> 1. **Dos botones, en el Chromebook y en el Pixel,** según `tarea_activa().turno`:
+>    - **«Empezar turno»** si `turno.empezar` no es `null`: llama a `empezar_turno_almacen()`.
+>    - **«Fin de turno»** si `turno.estado` es `"abierto"`: llama a `fin_turno_almacen()`.
+>    - **Pueden salir los dos a la vez**, si la mañana sigue abierta pasada su hora (`empezar: "tarde"`). Empezar la tarde cierra sola la mañana.
+>    - **Los dos devuelven la `tarea_activa`** nueva (dentro de `tarea_activa` en «Fin de turno»). Repetir no duplica.
+> 2. **Qué enseña la pantalla:**
+>    - **Antes de empezar** (`estado: "sin_empezar"`): no hay tarea. Enseñar `turno.mensaje` («Pulsa «Empezar turno» para empezar el turno de mañana.») y el botón.
+>    - **Pasada la hora, sin nada obligatorio:** `tarea` es `null` y `turno.mensaje` es «Has terminado. Pulsa «Fin de turno».».
+>    - **Con los turnos de hoy cerrados** (`estado: "terminado"`): «Has cerrado los turnos de hoy.», sin botones.
+>    - **En los demás casos,** `turno.mensaje` es `null` y se enseña la tarea como siempre.
+> 3. **Errores de «Fin de turno»:**
+>    - **`RECUENTO_PENDIENTE`:** no se cierra sin el recuento. Mostrar el mensaje y la `tarea_activa` que trae el error, que ya es el recuento (sale en ese momento, aunque no sea su hora).
+>    - **`CONFIRMAR_FIN_DE_TURNO`:** quedan obligatorias. Mostrar el mensaje («Te quedan 2 obligatorias sin hacer: … ¿Cerrar el turno igualmente?») con «Cerrar igualmente», que repite la llamada con `confirmar: true`, y «Seguir».
+> 4. **Errores de «Empezar turno»:** `TURNOS_CERRADOS` (ya ha cerrado los turnos de hoy) y `SIN_JORNADA` (hoy no trabaja). Mostrar el mensaje.
+> 5. **El cierre del turno** (el de siempre, con su correo) sale al pulsar «Fin de turno», ya no a las 13:00 y a las 18:30.
+>    - **Si se olvida de pulsarlo,** el turno se cierra solo al empezar el siguiente o a medianoche.
+>    - **Si un turno no se empezó,** también tiene su cierre.
+>    - **`contenido.turno_operario` dice cómo fue,** y el correo lo pone en la segunda línea.
 
 > **Cambios en 1.23 (Tarea 34) — para Lovable: el efectivo de los días sin reparto.** Solo se añade (§9.11 y §9.24). 🧪 = solo en pruebas.
 > 1. **«Recibe la bolsa»:** la X es ahora la suma del efectivo de los cierres que todavía no han ido en ninguna bolsa entregada. El lunes son el viernes y el sábado; también suma los días sin reparto y una bolsa que se quedó sin entregar.
@@ -309,11 +329,24 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
   "incidencias_abiertas": 2,
   "avisos": [ { "id": "...", "texto": "Voy al Casco Viejo y llevo yo la bolsa de Bilbao", "contacto": null, "fecha": "2026-11-03" } ],
   "incidencia_en_curso": { "id": "...", "opcion": "corregir", "descripcion": "...", "estado_texto": "En curso desde las 15:47", "minutos": 10, "...": "(objeto incidencia, §3.11)" },
-  "problemas_abiertos": [ { "id": "...", "tarea_id": "...", "tarea": "Revisar el envío", "tipo": "no_encuentro", "descripcion": "...", "estado": "abierto|sin_respuesta", "llamadas": 0, "proxima_llamada_en": null } ]
+  "problemas_abiertos": [ { "id": "...", "tarea_id": "...", "tarea": "Revisar el envío", "tipo": "no_encuentro", "descripcion": "...", "estado": "abierto|sin_respuesta", "llamadas": 0, "proxima_llamada_en": null } ],
+  "turno": { "estado": "abierto", "turno": "tarde", "empezado_a_las": "15:28", "hora_fin": "18:30", "pasada_la_hora": true, "empezar": null, "mensaje": "Has terminado. Pulsa «Fin de turno»." }
 }
 ```
 - `jornada` es `null` si hoy no trabaja; `tarea` es `null` solo fuera del turno (antes de empezar o entre turnos).
-- **Fuera del turno** ✅ Tarea 24: antes de empezar, entre turnos y después del último, `tarea` es `null` aunque quede algo pendiente; solo sigue la tarea **en curso**, para poder terminarla (el recuento de las 12:45 terminado a las 13:04). Lo pendiente vuelve a salir al empezar el siguiente turno. Es la misma comprobación del horario (`horarios`) que usa «Nunca sin tarea».
+- **`turno`** (Tarea 35 🧪) — el turno del operario, para los botones «Empezar turno» y «Fin de turno» (§3.22). `null` si hoy no trabaja.
+  - **`estado`:** `"sin_empezar"`, `"abierto"` o `"terminado"` (los turnos de hoy, cerrados).
+  - **`turno`:** `"manana"` o `"tarde"`: el abierto o, si no hay ninguno, el que empezaría.
+  - **`empezado_a_las`** y **`hora_fin`:** «HH:MM». `hora_fin` es la de su horario.
+  - **`pasada_la_hora`:** `true` si el turno abierto ya ha pasado su hora de fin.
+  - **`empezar`:** el turno que empezaría «Empezar turno». Si no es `null`, se enseña el botón; si hay otro abierto, ese se cierra solo.
+  - **`mensaje`:** lo que se enseña en lugar de la tarea, o `null`. Puede ser «Pulsa «Empezar turno» para empezar el turno de mañana.» (o «de tarde»), «Has terminado. Pulsa «Fin de turno».» o «Has cerrado los turnos de hoy.».
+- **El turno lo abre y lo cierra el operario** (Tarea 35 🧪, propietario, 04/11/2026; **sustituye a «Fuera del turno» y «Fin del turno» de abajo**):
+  - **Antes de «Empezar turno», ninguna tarea,** tampoco la que quedó en curso.
+  - **Hasta «Fin de turno»** le siguen saliendo las tareas, también pasada su hora.
+  - **Pasada su hora,** solo salen las obligatorias de ese turno que queden (el recuento) y lo obligatorio en curso. Lo no obligatorio (+35 %, compras, «Orden y limpieza», lo de Administración sin hora) se pausa al pedir la tarea, como en «Fin del turno», y espera al siguiente turno. Lo que tenía entre manos se puede marcar o terminar, pero no vuelve a ponerse en curso.
+  - **Pasada su hora y sin nada obligatorio:** `tarea` es `null` y `turno.mensaje` dice «Has terminado. Pulsa «Fin de turno».». No sale «Orden y limpieza».
+- **Fuera del turno** ✅ Tarea 24 (en pruebas, sustituido por la Tarea 35, arriba): antes de empezar, entre turnos y después del último, `tarea` es `null` aunque quede algo pendiente; solo sigue la tarea **en curso**, para poder terminarla (el recuento de las 12:45 terminado a las 13:04). Lo pendiente vuelve a salir al empezar el siguiente turno. Es la misma comprobación del horario (`horarios`) que usa «Nunca sin tarea».
 - **Fin del turno** ✅ Tarea 24 (opción B del propietario): al generarse el cierre del turno, lo **no obligatorio** que quedó en curso pasa a `pendiente`, con lo hecho guardado y una pausa «Fin del turno» a la hora de fin del turno (los minutos trabajados se paran ahí). En el siguiente turno vuelve a salir por su prioridad; al final del día sigue su regla (el +35 % se recalcula, lo de Administración pasa a mañana). Las obligatorias siguen en curso. Fuera del turno, lo que tenía entre manos se puede marcar o terminar (`terminar_elemento`, `terminar_tarea`), pero no vuelve a ponerse en curso.
 - **Nunca sin tarea** (v1.17): si dentro del turno no queda nada disponible, se adelantan las tareas fijas de la tarde de ese día (minis el lunes, resinas el martes, control de materiales el jueves) y después «Orden y limpieza», que **no se gasta** (al terminarla vuelve a salir). Lo ligado a su hora (recuento, revisión del envío, Nacex, salida) espera a su hora.
 - **Lo primero de la mañana** ✅ Tarea 23: mientras falten ese día la revisión inicial, «Prepara el reparto», la producción del reparto, las bolsas y la preparación del envío del viernes (las que haya), y antes del turno de tarde, solo salen esas, lo urgente (mercancía, problemas, urgentes de Administración), lo que tiene hora fija, lo de Administración con hora límite y los pedidos de tienda. Lo demás (Administración sin hora, arrastradas, +35 %, compras, incidencias, fijas de la tarde) espera; en los huecos sale «Orden y limpieza». (`motor.lo_primero_pendiente`, `motor.va_antes_que_lo_primero`.)
@@ -636,6 +669,23 @@ En «Producción del reparto», una referencia que hay que hacer y **no tiene gr
 - **`cancelar_aviso_almacen(aviso_id)`** (Administración) → `{ aviso }`, cerrado con la nota «Cancelado por Administración». Repetir no cambia nada. Desde la Tarea 29 🧪 el operario la usa solo para sus avisos a las tiendas (§9.9).
 - El operario lo ve desde su día en `tarea_activa().avisos` y en `incidencias_abiertas()`, y lo cierra con `cerrar_incidencia`. Consta en el cierre del turno (sin el contacto, que solo está en la base de datos).
 
+### 3.22 «Empezar turno» y «Fin de turno»: `empezar_turno_almacen()` · `fin_turno_almacen(confirmar?)` 🧪 (Tarea 35)
+El operario abre y cierra su turno, por la mañana y por la tarde (propietario, 04/11/2026). Van en el Chromebook y en el Pixel, según `tarea_activa().turno` (§3.2). Solo el operario: Administración no ficha en esta tarea (`NO_AUTORIZADO`). Es el mismo registro de turnos de las tiendas (`turnos_tienda`, sin persona de tienda), y servirá después para el «Fin de turno» de las tiendas y para fichar.
+- **`empezar_turno_almacen()`** → la `tarea_activa` (§3.2), ya con el turno abierto.
+  - **Qué turno empieza:** el primero de hoy sin cerrar que aún no ha pasado su hora de fin; si han pasado todos, el último sin cerrar. Se puede empezar antes de la hora; cada tarea sigue saliendo a su hora.
+  - **Si había otro abierto,** se cierra solo («no lo cerró el operario»). También uno de antes que no se empezó (su cierre dice «No empezó el turno»).
+  - **Repetir no duplica.** Un turno cerrado no se vuelve a abrir.
+  - **Errores:** `TURNOS_CERRADOS` («Ya has cerrado los turnos de hoy.») y `SIN_JORNADA` («Hoy no tienes turno.»).
+- **`fin_turno_almacen({ confirmar? })`** → `{ cierre, tarea_activa }`: `cierre` es el id del cierre del turno (§4.4), que sale con su correo.
+  - **Sin turno abierto,** no hace nada (`cierre: null`). Repetir no duplica.
+  - **`RECUENTO_PENDIENTE`:** con el recuento de stock de ese turno sin hacer, no se cierra. El recuento sale en ese momento, aunque no sea su hora, para que la app vuelva a leer la hoja siempre (propietario, 04/11/2026). Mensaje: «Antes de cerrar el turno, haz el recuento de stock.». Trae `tarea` (el recuento) y `tarea_activa`.
+  - **`CONFIRMAR_FIN_DE_TURNO`:** con otras obligatorias de ese turno sin hacer, hay que confirmar. Mensaje: «Te queda 1 obligatoria sin hacer: Revisar la impresora. ¿Cerrar el turno igualmente?». Trae `pendientes` (los títulos). Con `confirmar: true` se cierra, y en el cierre constan como no hechas.
+- **Ejemplo:**
+```js
+const { data } = await supabase.rpc("fin_turno_almacen", { confirmar: false });
+if (data.error?.codigo === "CONFIRMAR_FIN_DE_TURNO") { /* «Cerrar igualmente» → rpc con confirmar: true */ }
+```
+
 ## 4. Administración ✅ (Tarea 4)
 
 ### 4.1 `crear_tarea_admin` ✅
@@ -684,6 +734,20 @@ Inicio del móvil. Solo lee (no genera nada). **Salida:** `{ ahora, fecha, opera
 
 ### 4.4 `cierre(cierre_id)` · `cierres_recientes(limite)` ✅
 Cierre **por turno** (13:00 y 18:30 de lunes a jueves; 13:00 el viernes, según el horario), generado solo y enviado **por correo**, una sola vez.
+- **Desde la Tarea 35 🧪:**
+  - **El cierre sale al pulsar «Fin de turno»** (§3.22). Si no se pulsa, el turno se cierra solo al empezar el siguiente o a medianoche (00:05 de Madrid). Un turno que no se empezó también tiene su cierre.
+  - **`contenido.turno_operario`:** `{ como, empezado, terminado, al_dia_siguiente }`, con las horas en «HH:MM».
+  - **`como`:**
+    - `"operario"`: lo cerró él;
+    - `"solo"`: no lo cerró el operario;
+    - `"sin_empezar"`: no lo empezó (`empezado` y `terminado`, `null`);
+    - `"abierto"`: el turno seguía abierto al generarse el cierre.
+  - **`al_dia_siguiente`:** `true` si se cerró solo a medianoche.
+  - **El correo lo dice en la segunda línea,** con uno de estos textos:
+    - «Turno de 08:28 a 11:16.»;
+    - «Turno desde las 15:28. No cerrado por el operario: se cerró solo al acabar el día.» (o «a las 15:30»);
+    - «No empezó el turno: no pulsó «Empezar turno».».
+  - **Un cierre sin recuento no cuenta como recuento:** el almacén sigue contando desde el último recuento hecho (R1c).
 - `cierre` → `{ id, fecha, turno, generado_en, enviado_en, canal, contenido, texto }` (`texto` = el del correo).
 - `cierres_recientes(limite = 10, máx. 50)` → `{ cierres: [{ id, fecha, turno, generado_en, enviado_en, hechas, sin_hacer, problemas, incidencias }] }`.
 - **Contenido** (`MODELO_DATOS.md` §3.12): `hecho` [{ titulo, resultado, hora }] · `no_hecho` [{ titulo, estado, motivo, pasa_a_manana }] (obligatorias y de Administración de ese turno; las de todo el día, en el último) · `problemas` [{ tarea, descripcion, abierto, minutos, mas_de_5_min, solucion, estado, llamadas }] · `incidencias` [objeto incidencia (§3.11) + { tarea, inicio, fin }] (las abiertas o cerradas en el turno y las que siguen abiertas de otros días) · `arrastrados` { llegaron (primer turno), pasan_a_manana (último turno) } · `retrasos_salida` y `cruce_retrasos` { cajas_reparto, cajas_a_producir, cajas_producidas, tiendas, incidencias_manana, minutos_incidencias_manana } (turno de mañana, si hubo retraso) · `siguiente` (lo que queda para la tarde, o lo que toca el próximo día de trabajo) · `calidad` solo el viernes y solo `{ "limpieza_viernes": true|false }`.
@@ -705,7 +769,7 @@ Pantalla **Histórico** de Administración (`ESTADO_DEL_SISTEMA.md` §8): con un
 | Función | Quién la llama | Qué hace |
 | --- | --- | --- |
 | `motor.generar_jornada(persona, fecha)` ✅ | Tarea programada de las 06:00 y `tarea_activa` | Crea la jornada, arrastra lo pendiente y crea las tareas del día. Idempotente. |
-| `motor.generar_cierre(jornada, turno, ahora)` ✅ | Tarea programada `generar_cierres_turno` (a y media y en punto de 11, 12, 16 y 17 UTC, lunes a viernes: cubre las 13:00 y las 18:30 de Madrid en verano e invierno) | Congela el cierre, cierra la jornada tras el último turno y pide el correo. Idempotente. |
+| `motor.generar_cierre(jornada, turno, ahora)` ✅ | Tarea programada `generar_cierres_turno` (a y media y en punto de 11, 12, 16 y 17 UTC, lunes a viernes: cubre las 13:00 y las 18:30 de Madrid en verano e invierno). 🧪 Tarea 35: `motor.cerrar_turno_almacen`, al pulsar «Fin de turno», al empezar el siguiente o con la tarea programada `cerrar_turnos_olvidados` (a las 22:05 y 23:05 UTC: las 00:05 de Madrid en verano e invierno), que solo cierra los turnos de ayer que quedaron sin cerrar | Congela el cierre, cierra la jornada tras el último turno y pide el correo. Idempotente. |
 | `enviar_correo` (función del servidor) ✅ | Solo la base de datos, con solicitud interna de un solo uso (`x-solicitud`); las pantallas no pueden | Reclama el envío (`servidor_correo_reclamar`), lo manda con Resend (secreto `RESEND_API_KEY`) y anota la respuesta (`servidor_correo_respuesta`): enviado; **rechazado** (Resend respondió con un error) → se reintenta a los 5 min, hasta 3 intentos; **dudoso** (sin respuesta a tiempo) → no se reintenta. El fallo final sale en `estado_actual`. |
 | `motor.reintentar_correos(ahora)` ✅ | Tarea programada `reintentar_correos`, cada minuto | Vuelve a pedir los correos rechazados cuya espera de 5 min ha pasado. |
 | `hook_antes_de_crear_usuario(event)` ✅ | Supabase Auth, antes de crear un usuario (hook «Before User Created») | Solo deja crear el usuario si su correo está en `cuentas_autorizadas` (configuración del entorno). Si no: error 403 «Esta cuenta no tiene acceso a Osasun Operations. Pide acceso a Administración.» |
@@ -808,6 +872,9 @@ Todos se muestran tal cual (`data.error.mensaje`). Los que piden algo más a la 
 | `MOTIVO_OBLIGATORIO` | «Prepara el reparto» sin reparto: ofrecer «Preparar reparto» o escribir el motivo y repetir `terminar_tarea` con `motivo`. |
 | `PEDIDO_ESPERANDO_REPARTO` | «Prepara el reparto» con un pedido de tienda esperando: mostrar el mensaje y llevar a «Preparar reparto» (con el pedido ya marcado). No se puede cerrar con motivo. |
 | `SIN_TAREA` | Mostrar el mensaje (ej. «Estoy bloqueado» sin ninguna tarea abierta). |
+| `RECUENTO_PENDIENTE` (Tarea 35 🧪) | «Fin de turno» sin el recuento: mostrar el mensaje y `error.tarea_activa` (ya es el recuento). |
+| `CONFIRMAR_FIN_DE_TURNO` (Tarea 35 🧪) | Mostrar el mensaje con «Cerrar igualmente» (repetir `fin_turno_almacen` con `confirmar: true`) y «Seguir». |
+| `TURNOS_CERRADOS` · `SIN_JORNADA` (Tarea 35 🧪) | «Empezar turno»: mostrar el mensaje. |
 | `SOLUCION_OBLIGATORIA` · `DATOS_NO_VALIDOS` · `CANTIDAD_FUERA_DE_RANGO` | Mostrar junto al campo y dejar corregir. |
 | `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` | Mostrar el mensaje; el resto de la app sigue funcionando. |
 | Cualquier otro | Mostrar el mensaje. |
