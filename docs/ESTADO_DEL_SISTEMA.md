@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.52 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.53 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
 
 ---
 
@@ -253,6 +253,7 @@ Es **un ajuste de cada tarea, no algo programado**. Se puede cambiar tras las pr
 - Compras y recogidas: siguen abiertas hasta que él confirma que ya lo tiene.
 - Tareas de Administración: pasan al día siguiente como arrastradas.
 - **Tareas fijas obligatorias** (minis, resinas, control de materiales, limpieza de resinas…): pasan al día siguiente como arrastradas y constan en el cierre con su motivo. Las ligadas a una hora o un turno (recuento, Nacex, salida del reparto, efectivo) no se arrastran: constan en el cierre como no hechas (decisión del propietario, 26/10/2026).
+- **Lo del reparto y del envío de un día nunca pasa al día siguiente** (decisión del propietario, 04/11/2026, Tarea 29c): producción del reparto, bolsas, salida, preparación del envío y Nacex; si no se hacen, constan como no hechas en su día. **Los pedidos de cliente sí pasan** al día siguiente, como dice R1b, para que no se pierda ninguno.
 
 ### 6.6 Problemas e incidencias
 **Botón «Tengo un problema»**, con cinco tipos: falta material · no encuentro algo · no sé cómo hacerlo · algo no funciona · otro.
@@ -579,3 +580,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.50 | 03/11/2026 | E2-8: qué tienen las franquicias (incidencia de texto libre, pestaña «Envíos» para confirmar lo que llega, cierre de caja con Z y nº de ventas; sin material, aperturas, cierres ni cristales) y Durango como tienda propia que recibe por envío. |
 | 1.51 | 03/11/2026 | R1b: pedidos de cliente para recoger en Donosti, Rentería y Durango, en el siguiente envío; aviso en «Revisa si toca envío…». |
 | 1.52 | 03/11/2026 | E2-8: «Envíos» cuenta al preparar el envío y se ve desde el día siguiente (7 días); el de Gipuzkoa lo confirma solo Rentería; Donosti sin «Envíos». |
+| 1.53 | 04/11/2026 | §6.5: lo del reparto y del envío no pasa nunca al día siguiente; los pedidos de cliente sí. |

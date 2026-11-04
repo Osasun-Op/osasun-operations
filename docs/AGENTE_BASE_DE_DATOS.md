@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 29c** (sección 7): quitar las bolsas de ayer arrastradas y que lo del reparto nunca se arrastre. Es urgente: Eder la tiene hoy en su lista. Lee antes `docs/CONSTITUCION_TECNICA.md` y lo que hiciste en las Tareas 29 y 29b. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya». Después, la Tarea 30c.
+Ninguna. La Tarea 29c está fusionada (PR #32). La siguiente es la **Tarea 30c** (pedidos de cliente por envío, sección 7), que se encarga con la frase del propietario.
 
 ---
 
@@ -87,7 +87,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
-## 7. TAREA 29c (activa): quitar las bolsas de ayer arrastradas y que lo del reparto nunca se arrastre, en pruebas
+## 7.0 TAREA 29c (fusionada en el PR #32; solo en pruebas, producción espera): quitar las bolsas de ayer arrastradas y que lo del reparto nunca se arrastre, en pruebas
 
 **Qué pasa (04/11/2026):** las bolsas del 03/11 que se pasaron a mañana por error (conflicto de las 10:28, `cede` = bolsas, `manana`; tarea `6a13b51c-97c5-4ab3-ab53-694052a4ead2`) se han **arrastrado a hoy** a las 06:00 (`arrastre:6a13b51c…`, 46 elementos). El reparto del 03/11 ya salió. Hoy Eder tiene dos «Bolsas listas en la mesa de salida»: la de hoy (`bolsas`, 52 elementos) y la arrastrada, que sobra. Arreglo pequeño, solo esto:
 
@@ -789,3 +789,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.52 | 03/11/2026 | Tarea 30b activa (aprobada por el propietario): Durango mantiene su cierre del día completo; el número de envíos sin confirmar en `tienda_hoy()`. |
 | 1.53 | 03/11/2026 | Tarea 30b fusionada (PR #31), solo en pruebas. Tarea 30c ajustada: los pedidos de Donosti salen en «Envíos» de Rentería. Sin tarea activa. |
 | 1.54 | 04/11/2026 | Tarea 29c activa (urgente): bolsas del 03/11 arrastradas a hoy; lo del reparto nunca se arrastra. |
+| 1.55 | 04/11/2026 | Tarea 29c fusionada (PR #32), solo en pruebas. Sin tarea activa. |
