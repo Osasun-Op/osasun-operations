@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 30c está fusionada (PR #33). La siguiente de tiendas es la **Tarea 31** (productos atascados), que el coordinador preparará.
+**Tarea 31** (sección 7): productos atascados. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.57: «Atascados» y la regla general de las franquicias) y lo que hiciste en las Tareas 27, 28, 30, 30b y 30c. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
@@ -100,9 +100,9 @@ Ninguna. La Tarea 30c está fusionada (PR #33). La siguiente de tiendas es la **
 
 ---
 
-## 7. TAREA 31 (preparada, pendiente de aprobación del propietario): productos atascados, en pruebas
+## 7. TAREA 31 (activa): productos atascados, en pruebas
 
-**Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, «Atascados» (v1.56), y `AGENTE_COORDINADOR.md`, bloque 1, puntos 15 a 17. Reutiliza: la lista del día de la tienda y la alternancia de Bilbao (Tarea 27), `productos_tienda()` con formatos (Tarea 30c), las incidencias para Administración (`incidencias_tiendas`, `cerrar_incidencia_tienda`), los avisos a tiendas (Tarea 27/29), las incidencias del operario y el siguiente envío de una franquicia (Tareas 30b/30c). Solo en pruebas; producción espera. **El reparto de Eder no cambia.**
+**Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, «Atascados» (v1.56) y la **regla general de las franquicias** (v1.57: como tiendas propias en todo, salvo la logística por envío y las tareas del día a día de su gente), y `AGENTE_COORDINADOR.md`, bloque 1, puntos 15 a 17. Reutiliza: la lista del día de la tienda y la alternancia de Bilbao (Tarea 27), `productos_tienda()` con formatos (Tarea 30c), las incidencias para Administración (`incidencias_tiendas`, `cerrar_incidencia_tienda`), los avisos a tiendas (Tarea 27/29), las incidencias del operario y el siguiente envío de una franquicia (Tareas 30b/30c). Solo en pruebas; producción espera. **El reparto de Eder no cambia.**
 
 1. **Martes por la mañana** (Bilbao alterna; en todas las tiendas, franquicias incluidas): «Revisa los productos atascados»: eligen de la lista (− y +) cuántas cajas no se mueven, con nota opcional; o «Nada atascado esta semana».
 2. **Atascado en una tienda propia:** se pregunta a **todas** las demás tiendas, franquicias incluidas, todo el martes: «[Tienda] tiene N cajas de Y que no se mueven: ¿las quieres?», con «Las quiero». **Se lo lleva la primera que lo pide** y deja de salir a las demás.
@@ -813,3 +813,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.56 | 04/11/2026 | Tarea 30c activa: pedidos por envío (Donosti, Rentería, Durango) y pedidos creados por la propia tienda, solo para recoger en su tienda. |
 | 1.57 | 04/11/2026 | Tarea 30c fusionada (PR #33), solo en pruebas. Sin tarea activa. |
 | 1.58 | 04/11/2026 | Tarea 31 preparada (productos atascados), pendiente de aprobación. |
+| 1.59 | 04/11/2026 | Tarea 31 activa (productos atascados), aprobada por el propietario. |
