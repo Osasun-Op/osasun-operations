@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 29c está fusionada (PR #32). La siguiente es la **Tarea 30c** (pedidos de cliente por envío, sección 7), que se encarga con la frase del propietario.
+**Tarea 30c** (sección 7): pedidos de cliente para todas las tiendas, por envío y desde la tableta. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` §5 R1b (v1.51) y E2-8, y lo que hiciste en las Tareas 12, 27, 28 y 30b. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
@@ -100,7 +100,7 @@ Ninguna. La Tarea 29c está fusionada (PR #32). La siguiente es la **Tarea 30c**
 
 ---
 
-## 7. TAREA 30c (preparada; se encarga después de la 30b): pedidos de cliente para recoger en las tiendas que reciben por envío, en pruebas
+## 7. TAREA 30c (activa): pedidos de cliente para todas las tiendas (por envío y desde la tableta), en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` §5 R1b (v1.51, «Recoger en una tienda que recibe por envío»). Reutiliza `guardar_pedido_cliente`, la caja aparte «Pedido de cliente» de las bolsas, la preparación del envío y la pestaña «Envíos» de la Tarea 30b. **El reparto y los pedidos de siempre no cambian.** Solo en pruebas; producción espera.
 
@@ -108,7 +108,12 @@ Ninguna. La Tarea 29c está fusionada (PR #32). La siguiente es la **Tarea 30c**
 2. **Va en el siguiente envío** a esa tienda (Gipuzkoa para Donosti y Rentería; Durango para Durango): caja aparte «Pedido de cliente · [cliente] · [tienda]» en la preparación del envío, que el operario marca como las demás. Mientras no haya envío, el pedido espera.
 3. **Aviso en «Revisa si toca envío…»** (15:30): «Hay N pedidos de cliente esperando envío a [destino]».
 4. **En la tienda:** el pedido sale en `envios` (Tarea 30b) con lo demás que llega. **Los de Donosti van en el envío a Gipuzkoa y salen en «Envíos» de Rentería**, que es quien lo recibe y confirma (decisión del propietario en el PR #31); el texto de la caja dice para qué tienda es.
-5. **Contratos:** §3.16 y lo que toque de la 30b, con nota para Lovable (la lista de tiendas de «Pedido de cliente»).
+5. **Las tiendas crean sus pedidos desde la tableta** (decisión del propietario, bloque 1 punto 20; confirmado el 04/11/2026): todas, franquicias incluidas. Apuntan el nombre del cliente y los productos con su formato (la misma lista, con − y +, que el reparto; sin que la tableta llame a Google: usa la última lectura de la hoja, como `productos_tienda`, pero con formatos). Queda con el nombre de quien está en el turno.
+   - **Solo para recoger en su propia tienda** (`entrega: "tienda"`, `destino` = la tienda que lo pide); **nunca por Nacex** (eso sigue siendo de Administración y del operario).
+   - Las propias lo reciben en el reparto y Donosti, Rentería y Durango en el envío (puntos 1 a 4), por el mismo camino que los pedidos de siempre (R1b).
+   - Hoy la tienda no puede usar las funciones de pedidos (Tarea 27): se le abre solo esto, sin darle acceso al catálogo ni a lo del almacén.
+   - Administración los ve en sus pedidos de siempre, con qué tienda lo ha pedido; la tienda ve los suyos y su estado.
+6. **Contratos:** §3.16 y lo nuevo de la tableta, con nota para Lovable (la lista de tiendas de «Pedido de cliente» y el botón de la tableta).
 
 **Entrega:** PR **«Tarea 30c — Pedidos de cliente por envío»**, con «Qué he leído y qué existía ya», pruebas en verde (el reparto y los pedidos de siempre igual), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
 
@@ -790,3 +795,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.53 | 03/11/2026 | Tarea 30b fusionada (PR #31), solo en pruebas. Tarea 30c ajustada: los pedidos de Donosti salen en «Envíos» de Rentería. Sin tarea activa. |
 | 1.54 | 04/11/2026 | Tarea 29c activa (urgente): bolsas del 03/11 arrastradas a hoy; lo del reparto nunca se arrastra. |
 | 1.55 | 04/11/2026 | Tarea 29c fusionada (PR #32), solo en pruebas. Sin tarea activa. |
+| 1.56 | 04/11/2026 | Tarea 30c activa: pedidos por envío (Donosti, Rentería, Durango) y pedidos creados por la propia tienda, solo para recoger en su tienda. |
