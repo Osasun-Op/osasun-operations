@@ -70,11 +70,27 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 33** (sección 7): marcas en las pestañas del panel y totales de los cierres de caja. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.61 y v1.62: «Cómo queda el panel» y «Marcas en las pestañas») y lo que hiciste en las Tareas 28 y 32. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya». Después irá la Tarea 34 (efectivo de los días sin reparto), que preparará el coordinador.
+**Tarea 34** (sección 7): el efectivo de los días sin reparto. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.62: «Recibe la bolsa») y lo que hiciste en las Tareas 28 y 32. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 33 (activa): marcas en las pestañas del panel y totales de los cierres de caja, en pruebas
+## 7. TAREA 34 (activa): el efectivo de los días sin reparto, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, v1.62 («Recibe la bolsa»: si el reparto no ha pasado algún día por la tienda, la bolsa lleva el efectivo de todos esos días) y `AGENTE_COORDINADOR.md`, nota del 04/11 («Decisiones del propietario», punto 4: «a veces pasa con alguna tienda»). Hoy la X de «Bolsa de ayer entregada con X € en efectivo» sale de `motor.efectivo_anterior` (solo el último cierre anterior a ese día), en `motor.preparar_bolsa_tienda`, y se guarda en `bolsas_tienda` (`efectivo_esperado`, `efectivo_de`). Reutiliza: `cierres_caja`, `bolsas_tienda` (lo entregado), `entregar_efectivo`, `bolsa_tienda_json` y `resumen_tienda`. Las franquicias no tienen bolsa ni efectivo: no cambian. Solo en pruebas; producción espera.
+
+1. **X = la suma del efectivo de los cierres de caja de la tienda que todavía no han ido en ninguna bolsa entregada** (efectivo tocado o con otra cantidad):
+   - si el reparto pasa todos los días, sale lo mismo que ahora (el cierre anterior; el lunes, el del sábado);
+   - si una bolsa se quedó con el efectivo sin entregar (la tarea quedó sin hacer), sus cierres siguen pendientes y van en la siguiente;
+   - si la tienda nunca ha entregado una bolsa, solo el último cierre, como ahora, para no sumar todo lo anterior.
+2. **El texto del punto:** con un solo cierre, como ahora («Bolsa de ayer entregada con 85,50 € en efectivo»). Con varios: «Bolsa entregada con 180,00 € en efectivo (cierres del 03/11 y 04/11)».
+3. **Otra cantidad**, igual que ahora: `entregar_efectivo` con la cantidad y el motivo obligatorio. Esos cierres quedan entregados; la diferencia queda explicada con el motivo y no pasa a la siguiente bolsa. Si ves un caso en que esto no encaja, ponlo en «Dudas».
+4. **Lo que sale:** `bolsa.efectivo` (tableta y `resumen_tienda`) trae además los días que incluye (por ejemplo, `dias: ["2026-11-03", "2026-11-04"]`), con `esperado` = la suma. **Contratos** con nota para Lovable: en el dashboard, «Efectivo: 180,00 € entregados (03/11 y 04/11)» en lugar de «Efectivo de ayer».
+
+**Entrega:** PR **«Tarea 34 — Efectivo de los días sin reparto»**, con «Qué he leído y qué existía ya», pruebas en verde (un día; dos días sin reparto; sábado a lunes; bolsa sin entregar que pasa a la siguiente; otra cantidad; tienda sin entregas anteriores), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
+
+---
+
+## 7.0 TAREA 33 (fusionada en el PR #37; solo en pruebas, producción espera): marcas en las pestañas del panel y totales de los cierres de caja, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, v1.61 y v1.62 («Cómo queda el panel» y «Marcas en las pestañas»), y `AGENTE_COORDINADOR.md`, notas del 04/11 («Panel reorganizado» y «Decisiones del propietario»). Reutiliza: `tiendas().centros` (Tarea 32), `resumen_tienda` y sus piezas (`cuantas`, `no_hecha`, `en_turno`, horario y días cerrados), `incidencias_tiendas()` (abiertas; los atascados con `decisiones`), los problemas abiertos de `estado_actual()` y `cierres_caja()`. **Sustituye al «resumen del día»** (aviso al cerrar, bloque 1, punto 28): no se crea ninguna incidencia ni correo. Solo en pruebas; producción espera.
 
@@ -873,3 +889,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.64 | 04/11/2026 | Tarea 32 activa (panel por centro), aprobada por el propietario. |
 | 1.65 | 04/11/2026 | Tarea 32 fusionada (PR #36), solo en pruebas. Sin tarea activa. |
 | 1.66 | 04/11/2026 | Tarea 33 activa (marcas en las pestañas del panel y totales de los cierres de caja), aprobada por el propietario. Después, la Tarea 34 (efectivo de los días sin reparto). |
+| 1.67 | 04/11/2026 | Tarea 33 fusionada (PR #37), solo en pruebas (65 migraciones). Tarea 34 activa (efectivo de los días sin reparto), aprobada por el propietario. |
