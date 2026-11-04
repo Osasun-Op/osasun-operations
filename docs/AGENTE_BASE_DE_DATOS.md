@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 29d** (sección 7), **urgente**: «Calcular» del reparto y del envío, solo con la hoja. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` §5 R1c (v1.58) y `_compartido/almacen.ts`, `reparto_lista.ts` y `r1.ts`. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya». (La Tarea 31 está fusionada, PR #34.)
+Ninguna. La Tarea 29d está fusionada (PR #35). Quedan de tiendas la **32** (panel con selector) y la **33** (resumen del día), que preparará el coordinador.
 
 ---
 
@@ -100,7 +100,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
-## 7. TAREA 29d (activa, urgente): «Calcular» del reparto y del envío, solo con la hoja, en pruebas
+## 7.0 TAREA 29d (fusionada en el PR #35; solo en pruebas, producción espera): «Calcular» del reparto y del envío, solo con la hoja, en pruebas
 
 **Qué pasó (04/11/2026):** al calcular el reparto a las 08:28, la hoja decía INDOOR PR RELAX 4g = 0 en el almacén, pero `en_almacen` salió 2: la cuenta propia de la app (R1c, `ajusteAlmacen` / `aplicarAjuste` en `_compartido/almacen.ts`) sumó lo producido el 03/11 desde el último recuento marcado (02/11 18:43) sin restar las bolsas del 03/11 (no se marcaron). Igual con KUSH WATERHASH 10g, SUGAR CBDX, T BALLS / GELATO DRY 4g e INDOOR PR AFRU 10g. Nueva regla del propietario: `ESTADO_DEL_SISTEMA.md` §5 R1c (v1.58).
 
@@ -830,3 +830,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.59 | 04/11/2026 | Tarea 31 activa (productos atascados), aprobada por el propietario. |
 | 1.60 | 04/11/2026 | Tarea 29d activa (urgente): «Calcular» solo con la hoja. Tarea 31 entregada (PR #34), en revisión. |
 | 1.61 | 04/11/2026 | Tarea 31 fusionada (PR #34), solo en pruebas. Activa: 29d. |
+| 1.62 | 04/11/2026 | Tarea 29d fusionada (PR #35), solo en pruebas; `pegar_reparto` borrada del código (falta borrarla del panel de Supabase). Sin tarea activa. |
