@@ -70,11 +70,29 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 34** (sección 7): el efectivo de los días sin reparto. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.62: «Recibe la bolsa») y lo que hiciste en las Tareas 28 y 32. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
+**Tarea 35** (sección 7): «Empezar turno» y «Fin de turno» del operario. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` §6.4 (v1.65: «El turno lo abre y lo cierra el operario» y «Fuera del turno, ninguna tarea») y lo que hiciste en las Tareas 24 y 27. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
-## 7. TAREA 34 (activa): el efectivo de los días sin reparto, en pruebas
+## 7. TAREA 35 (activa): «Empezar turno» y «Fin de turno» del operario, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` §6.4, v1.65, y `AGENTE_COORDINADOR.md`, notas del 04/11 («Eder sin «Recuento de stock y cierre»» y «El propietario propone que el operario cierre su turno»). **Qué pasó el 04/11:** el Chromebook de Eder se durmió de 17:10 a 18:30; al despertarlo pasadas las 18:30, `en_turno` ya era falso y no tuvo «Recuento de stock y cierre» (obligatoria, 18:15–18:30). Reutiliza: el registro de turnos de las tiendas (`turnos_tienda`, `empezar_turno`, `en_turno_tienda`), `motor.en_turno` (la única regla de «estar en turno», que usan `elegir_tarea` y el aviso de salida), los cierres de turno (`cierres`, `generar_cierres_turno` y su correo) y la pausa de lo no obligatorio al acabar el turno (Tarea 24). **Es la primera de tres:** después irán el «Fin de turno» de las tiendas y los fichajes, así que el registro tiene que servir para las dos. Solo en pruebas; producción espera.
+
+1. **«Empezar turno» y «Fin de turno»** del operario, por la mañana y por la tarde, con la hora y quién. **En el mismo registro de turnos que ya usan las tiendas** (sin una tabla nueva al lado, si se puede). Repetir no duplica.
+2. **«En turno» pasa a ser «turno empezado y sin cerrar»**, en lugar del reloj (en `motor.en_turno`, sin duplicar la regla):
+   - antes de «Empezar turno», ninguna tarea; `tarea_activa` lo dice, para que la pantalla enseñe el botón;
+   - hasta «Fin de turno» le siguen saliendo las tareas, también pasada su hora;
+   - **pasada su hora, solo lo obligatorio que quede y lo que tenga en curso** que sea obligatorio; lo no obligatorio (+35 %, compras, orden y limpieza, tareas de Administración sin hora) espera al siguiente turno, con la pausa que ya existe;
+   - pasada su hora y sin nada obligatorio: sin «Orden y limpieza»; `tarea_activa` dice «Has terminado. Pulsa «Fin de turno»».
+3. **El cierre del turno** (el de siempre, con su correo) se genera **al pulsar «Fin de turno»**. Si no lo pulsa, el turno se cierra solo al empezar el siguiente o a medianoche (el de la tarde), y el cierre dice que no lo cerró el operario. La tarea programada queda solo para eso.
+4. **Lo demás no cambia:** el reparto, las bolsas, la salida (también cuando sale Administración), los avisos y las tareas de Administración. Administración no ficha en esta tarea.
+5. **Contratos**, con nota para Lovable: los dos botones en la pantalla del operario (Chromebook y Pixel), qué devuelve `tarea_activa` antes de empezar y al terminar, y los errores.
+
+**Entrega:** PR **«Tarea 35 — Empezar y fin de turno del almacén»**, con «Qué he leído y qué existía ya», pruebas en verde (antes de empezar, nada; el caso del 04/11: a las 18:31, con el turno abierto, sale el recuento; lo no obligatorio espera pasada la hora; «Has terminado»; cierre al pulsar y cierre solo si se olvida; repetir no duplica; reparto y bolsas igual), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
+
+---
+
+## 7.0 TAREA 34 (fusionada en el PR #38; solo en pruebas, producción espera): el efectivo de los días sin reparto, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, v1.62 («Recibe la bolsa»: si el reparto no ha pasado algún día por la tienda, la bolsa lleva el efectivo de todos esos días) y `AGENTE_COORDINADOR.md`, nota del 04/11 («Decisiones del propietario», punto 4: «a veces pasa con alguna tienda»). Hoy la X de «Bolsa de ayer entregada con X € en efectivo» sale de `motor.efectivo_anterior` (solo el último cierre anterior a ese día), en `motor.preparar_bolsa_tienda`, y se guarda en `bolsas_tienda` (`efectivo_esperado`, `efectivo_de`). Reutiliza: `cierres_caja`, `bolsas_tienda` (lo entregado), `entregar_efectivo`, `bolsa_tienda_json` y `resumen_tienda`. Las franquicias no tienen bolsa ni efectivo: no cambian. Solo en pruebas; producción espera.
 
@@ -890,3 +908,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.65 | 04/11/2026 | Tarea 32 fusionada (PR #36), solo en pruebas. Sin tarea activa. |
 | 1.66 | 04/11/2026 | Tarea 33 activa (marcas en las pestañas del panel y totales de los cierres de caja), aprobada por el propietario. Después, la Tarea 34 (efectivo de los días sin reparto). |
 | 1.67 | 04/11/2026 | Tarea 33 fusionada (PR #37), solo en pruebas (65 migraciones). Tarea 34 activa (efectivo de los días sin reparto), aprobada por el propietario. |
+| 1.68 | 04/11/2026 | Tarea 34 fusionada (PR #38), solo en pruebas (66 migraciones). Tarea 35 activa («Empezar turno» y «Fin de turno» del operario), aprobada por el propietario. |
