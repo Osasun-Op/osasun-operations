@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 30b está fusionada (PR #31). La siguiente es la **Tarea 30c** (pedidos de cliente por envío, sección 7), que se encarga con la frase del propietario.
+**Tarea 29c** (sección 7): quitar las bolsas de ayer arrastradas y que lo del reparto nunca se arrastre. Es urgente: Eder la tiene hoy en su lista. Lee antes `docs/CONSTITUCION_TECNICA.md` y lo que hiciste en las Tareas 29 y 29b. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya». Después, la Tarea 30c.
 
 ---
 
@@ -84,6 +84,19 @@ Ninguna. La Tarea 30b está fusionada (PR #31). La siguiente es la **Tarea 30c**
 4. **Solo en pruebas; producción espera** (excepción de tiendas). De paso, el pendiente de `CONTRATOS.md` §9.11 (la pantalla de «Recibe la bolsa» no enseña la lista), si te cabe en el mismo PR.
 
 **Entrega:** PR **«Tarea 29b — Aviso de salida solo cuando toca»**, con «Qué he leído y qué existía ya», pruebas en verde, una llamada real, registros sin errores y cómo deshacer.
+
+---
+
+## 7. TAREA 29c (activa): quitar las bolsas de ayer arrastradas y que lo del reparto nunca se arrastre, en pruebas
+
+**Qué pasa (04/11/2026):** las bolsas del 03/11 que se pasaron a mañana por error (conflicto de las 10:28, `cede` = bolsas, `manana`; tarea `6a13b51c-97c5-4ab3-ab53-694052a4ead2`) se han **arrastrado a hoy** a las 06:00 (`arrastre:6a13b51c…`, 46 elementos). El reparto del 03/11 ya salió. Hoy Eder tiene dos «Bolsas listas en la mesa de salida»: la de hoy (`bolsas`, 52 elementos) y la arrastrada, que sobra. Arreglo pequeño, solo esto:
+
+1. **Datos de pruebas:** cancelar la tarea arrastrada de hoy (`clave = 'arrastre:6a13b51c-97c5-4ab3-ab53-694052a4ead2'`) con el motivo «Del reparto del 03/11, que ya salió», con una migración de datos o una función ya existente, y que quede en el registro. No tocar la de hoy (`bolsas`).
+2. **Que no vuelva a pasar:** `motor.arrastrar` **nunca** pasa al día siguiente las tareas del reparto o del envío de un día (las de `motor.es_del_reparto`: producción, bolsas, salida, pedidos de cliente del reparto, preparación del envío, Nacex), aunque tengan `no_terminada = 'arrastrar'`; constan como no hechas en su día. Revisa también si la decisión `manana` de la Tarea 29 deja alguna puerta abierta.
+3. **Prueba** con el caso del 03/11 → 04/11 (bolsas pasadas a mañana: al día siguiente no aparecen) y que lo demás se sigue arrastrando igual (las de Administración, las fijas obligatorias).
+4. **Solo en pruebas; producción espera.**
+
+**Entrega:** PR **«Tarea 29c — Lo del reparto no se arrastra»**, con «Qué he leído y qué existía ya», pruebas en verde, registros sin errores y cómo deshacer.
 
 ---
 
@@ -775,3 +788,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.51 | 03/11/2026 | Tarea 30c preparada (pedidos de cliente para recoger en Donosti, Rentería y Durango, por envío). |
 | 1.52 | 03/11/2026 | Tarea 30b activa (aprobada por el propietario): Durango mantiene su cierre del día completo; el número de envíos sin confirmar en `tienda_hoy()`. |
 | 1.53 | 03/11/2026 | Tarea 30b fusionada (PR #31), solo en pruebas. Tarea 30c ajustada: los pedidos de Donosti salen en «Envíos» de Rentería. Sin tarea activa. |
+| 1.54 | 04/11/2026 | Tarea 29c activa (urgente): bolsas del 03/11 arrastradas a hoy; lo del reparto nunca se arrastra. |
