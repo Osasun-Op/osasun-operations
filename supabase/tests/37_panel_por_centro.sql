@@ -31,7 +31,7 @@ create function pg_temp.a(p_fecha date, p_hora time) returns timestamptz languag
 create function pg_temp.d(p_codigo text) returns uuid language sql as $$
   select id from public.centros_trabajo where codigo = p_codigo $$;
 create function pg_temp.err(r jsonb) returns text language sql as $$ select r -> 'error' ->> 'codigo' $$;
--- Cuántas filas hay en lo que la tableta escribe al abrirse (para ver que el resumen no cambia nada).
+-- Cuántas filas hay en lo que la app de la tienda escribe al entrar (para ver que el resumen no cambia nada).
 create function pg_temp.filas() returns jsonb language sql as $$
   select jsonb_build_object(
     'jornadas', (select count(*) from public.jornadas), 'tareas', (select count(*) from public.tareas),
@@ -89,7 +89,7 @@ declare
 begin
   perform pg_temp.comprobar('Sin la lista del día todavía: lo dice, y no crea la jornada ni nada',
     (r ->> 'abre')::boolean = false
-    and r ->> 'motivo' = 'Todavía no tiene la lista del día (se prepara a las 06:00 o al abrir la tableta)'
+    and r ->> 'motivo' = 'Todavía no tiene la lista del día (se prepara a las 06:00 o al entrar en la app)'
     and r -> 'tareas' = '[]'::jsonb and jsonb_array_length(r -> 'horario') > 0
     and pg_temp.filas() = (select v from _v where k = 'antes'), r::text);
   perform pg_temp.comprobar('Un domingo: «Ese día no abre»',
@@ -153,7 +153,7 @@ begin
     and (r -> 'cierre_caja' ->> 'es_de_ese_dia')::boolean = false and r -> 'cierre_caja' ->> 'por' = 'Ane Prueba', r ->> 'cierre_caja');
   perform pg_temp.comprobar('Ver el resumen no cambia nada en la base de datos',
     pg_temp.filas() = (select v from _v where k = 'martes'));
-  -- Lo mismo que ve la tableta (las mismas ayudas).
+  -- Lo mismo que ve la tienda en la app (las mismas ayudas).
   hoy := motor.tienda_hoy_de(basauri, ahora);
   perform pg_temp.comprobar('Las tareas, los avisos, el horario y las incidencias son los mismos que en tienda_hoy()',
     hoy -> 'tareas' = r -> 'tareas' and hoy -> 'avisos' = r -> 'avisos' and hoy -> 'horario' = r -> 'horario'
@@ -173,7 +173,7 @@ begin
     r ->> 'ahora' = '23:59' and r -> 'en_turno' = 'null'::jsonb and jsonb_array_length(r -> 'turnos') = 1
     and (r -> 'cuantas' ->> 'no_hechas')::int > 0 and (r -> 'cuantas' ->> 'pendientes')::int = 0
     and exists (select 1 from jsonb_array_elements(r -> 'tareas') x where (x ->> 'no_hecha')::boolean), r ->> 'cuantas');
-  perform pg_temp.comprobar('Mirar el miércoles no pasa el atascado a Administración (eso lo hace la tableta o el panel de incidencias)',
+  perform pg_temp.comprobar('Mirar el miércoles no pasa el atascado a Administración (eso lo hace la app de la tienda al entrar o el panel de incidencias)',
     pg_temp.filas() = (select v from _v where k = 'miercoles')
     and not exists (select 1 from public.incidencias where opcion = 'atascado'));
   perform pg_temp.comprobar('Rentería (por envío): sin bolsa ni reparto, con «Envíos» (vacío)',

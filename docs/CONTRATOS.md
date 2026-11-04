@@ -1101,8 +1101,8 @@ Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8, «Panel de Administraci
 - **Selector:** `tiendas().centros` (§9.19). Al elegir el **Almacén**, el panel de siempre (`estado_actual()`, §4.3). Al elegir una **tienda**, `resumen_tienda`.
 - **`resumen_tienda({ tienda_id, fecha? })`:** solo Administración (el operario y las tiendas, `NO_AUTORIZADO`).
   - `fecha` es hoy por defecto. Un día pasado sale como quedó al final del día; un día que viene da `DATOS_NO_VALIDOS`.
-  - **Solo lee:** no crea la lista del día ni tareas, no prepara la bolsa ni los envíos y no pasa atascados a Administración. Lo que la tableta hace al abrirse, aquí no.
-  - Por eso «Recibe la bolsa» y los envíos nuevos salen cuando la tienda abre la tableta, igual que los ve ella.
+  - **Solo lee:** no crea la lista del día ni tareas, no prepara la bolsa ni los envíos y no pasa atascados a Administración. Lo que la app de la tienda hace al entrar, aquí no.
+  - Por eso «Recibe la bolsa» y los envíos nuevos salen cuando la tienda entra en la app (lo hace nada más conectarse), igual que los ve ella.
 - **Salida:**
 ```json
 {
@@ -1125,14 +1125,14 @@ Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8, «Panel de Administraci
 - **`abre: false`:** enseñar solo `motivo`. Puede ser:
   - «Ese día no abre»;
   - «Ese día la tienda está cerrada (lo ha marcado Administración)»;
-  - «Todavía no tiene la lista del día (se prepara a las 06:00 o al abrir la tableta)»;
+  - «Todavía no tiene la lista del día (se prepara a las 06:00 o al entrar en la app)»;
   - «Todavía no ha entrado con su cuenta».
 - **Quién está:** `en_turno` es quien está ahora (solo hoy; `null` si nadie ha empezado). `turnos` es quién ha estado ese día, en orden.
 - **Tareas:** las mismas que ve la tienda, con su hora, `estado`, `hecha_por` y `hora_fin`. `no_hecha: true` quiere decir que la tienda ya cerró sin hacerla. `cuantas` resume las tareas para la cabecera.
 - **Bolsa o envíos:**
   - `bolsa` y `reparto` son de las tiendas del reparto (`null` si ese día no hay);
   - `envios` y `envios_sin_confirmar` son de las que reciben por envío (Rentería; Durango cuando abra).
-- **Lo abierto:** las mismas listas que la tableta. `atascados` solo trae los abiertos (ofrecidos, con Administración, en promoción o por recoger).
+- **Lo abierto:** las mismas listas que ve la tienda en la app. `atascados` solo trae los abiertos (ofrecidos, con Administración, en promoción o por recoger).
 - **Cierre de caja:** el de ese día o, si no lo hay, el último de los 60 días anteriores. `es_de_ese_dia` dice cuál es. En las franquicias, `efectivo` y `glovo` vienen vacíos.
 - **Errores:** `NO_ENCONTRADO` (no es una tienda), `DATOS_NO_VALIDOS` (un día que viene) y `NO_AUTORIZADO`.
 - **Las ventas**, con el bloque 2.
