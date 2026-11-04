@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 30c** (sección 7): pedidos de cliente para todas las tiendas, por envío y desde la tableta. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` §5 R1b (v1.51) y E2-8, y lo que hiciste en las Tareas 12, 27, 28 y 30b. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
+Ninguna. La Tarea 30c está fusionada (PR #33). La siguiente de tiendas es la **Tarea 31** (productos atascados), que el coordinador preparará.
 
 ---
 
@@ -100,7 +100,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ---
 
-## 7. TAREA 30c (activa): pedidos de cliente para todas las tiendas (por envío y desde la tableta), en pruebas
+## 7.0 TAREA 30c (fusionada en el PR #33; solo en pruebas, producción espera): pedidos de cliente para todas las tiendas (por envío y desde la tableta), en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` §5 R1b (v1.51, «Recoger en una tienda que recibe por envío»). Reutiliza `guardar_pedido_cliente`, la caja aparte «Pedido de cliente» de las bolsas, la preparación del envío y la pestaña «Envíos» de la Tarea 30b. **El reparto y los pedidos de siempre no cambian.** Solo en pruebas; producción espera.
 
@@ -796,3 +796,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.54 | 04/11/2026 | Tarea 29c activa (urgente): bolsas del 03/11 arrastradas a hoy; lo del reparto nunca se arrastra. |
 | 1.55 | 04/11/2026 | Tarea 29c fusionada (PR #32), solo en pruebas. Sin tarea activa. |
 | 1.56 | 04/11/2026 | Tarea 30c activa: pedidos por envío (Donosti, Rentería, Durango) y pedidos creados por la propia tienda, solo para recoger en su tienda. |
+| 1.57 | 04/11/2026 | Tarea 30c fusionada (PR #33), solo en pruebas. Sin tarea activa. |
