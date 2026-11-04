@@ -100,6 +100,21 @@ Ninguna. La Tarea 30c está fusionada (PR #33). La siguiente de tiendas es la **
 
 ---
 
+## 7. TAREA 31 (preparada, pendiente de aprobación del propietario): productos atascados, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, «Atascados» (v1.56), y `AGENTE_COORDINADOR.md`, bloque 1, puntos 15 a 17. Reutiliza: la lista del día de la tienda y la alternancia de Bilbao (Tarea 27), `productos_tienda()` con formatos (Tarea 30c), las incidencias para Administración (`incidencias_tiendas`, `cerrar_incidencia_tienda`), los avisos a tiendas (Tarea 27/29), las incidencias del operario y el siguiente envío de una franquicia (Tareas 30b/30c). Solo en pruebas; producción espera. **El reparto de Eder no cambia.**
+
+1. **Martes por la mañana** (Bilbao alterna; en todas las tiendas, franquicias incluidas): «Revisa los productos atascados»: eligen de la lista (− y +) cuántas cajas no se mueven, con nota opcional; o «Nada atascado esta semana».
+2. **Atascado en una tienda propia:** se pregunta a **todas** las demás tiendas, franquicias incluidas, todo el martes: «[Tienda] tiene N cajas de Y que no se mueven: ¿las quieres?», con «Las quiero». **Se lo lleva la primera que lo pide** y deja de salir a las demás.
+3. **Atascado en una franquicia:** no se ofrece a las demás; **va directo a Administración** (incidencia abierta) para decidir promoción o recogida. Si decide recogida, la cierra con su nota: la recogida la organiza Administración y, cuando llegue, manda a Eder una tarea o un aviso (lo que ya existe).
+4. **Si nadie lo pide** (propias), al cerrar el martes llega a Administración (incidencia abierta) para decidir **el miércoles por la mañana**: **promoción** (aviso a la tienda; la promoción queda abierta para la tienda hasta que pulsa «Ya no queda») o **al almacén**.
+5. **Si hay que moverlo** (otra tienda lo pide o va al almacén): incidencia abierta para Eder, sin hora y sin tocar el reparto: «Recoge N de Y en [tienda] y llévalo a [tienda o almacén]»; la cierra al entregarlo. La tienda que lo tiene recibe el aviso «Prepara N de Y para recogida». **Si lo pide una franquicia:** Eder lo recoge y lo lleva al almacén, y va **en el siguiente envío a esa franquicia** (como una petición o un pedido del envío), sea cuando sea.
+6. **Contratos** con nota para Lovable (tableta: la tarea del martes, las ofertas con «Las quiero», la promoción con «Ya no queda»; panel: lo que decide Administración; operario: sus incidencias de recogida).
+
+**Entrega:** PR **«Tarea 31 — Productos atascados»**, con «Qué he leído y qué existía ya», pruebas en verde (el almacén y el reparto igual), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
+
+---
+
 ## 7.0 TAREA 30c (fusionada en el PR #33; solo en pruebas, producción espera): pedidos de cliente para todas las tiendas (por envío y desde la tableta), en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` §5 R1b (v1.51, «Recoger en una tienda que recibe por envío»). Reutiliza `guardar_pedido_cliente`, la caja aparte «Pedido de cliente» de las bolsas, la preparación del envío y la pestaña «Envíos» de la Tarea 30b. **El reparto y los pedidos de siempre no cambian.** Solo en pruebas; producción espera.
@@ -797,3 +812,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.55 | 04/11/2026 | Tarea 29c fusionada (PR #32), solo en pruebas. Sin tarea activa. |
 | 1.56 | 04/11/2026 | Tarea 30c activa: pedidos por envío (Donosti, Rentería, Durango) y pedidos creados por la propia tienda, solo para recoger en su tienda. |
 | 1.57 | 04/11/2026 | Tarea 30c fusionada (PR #33), solo en pruebas. Sin tarea activa. |
+| 1.58 | 04/11/2026 | Tarea 31 preparada (productos atascados), pendiente de aprobación. |
