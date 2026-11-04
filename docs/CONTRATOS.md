@@ -1,6 +1,10 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.24 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.25 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.25 (Tarea 36) — para Lovable: nada que cambiar en la tableta.** Solo cambian dos datos que ya vienen del servidor (§9.2 y §9.6). 🧪 = solo en pruebas.
+> 1. **«Limpieza de cristales»** se llama ahora **«Limpieza semanal: cristales, polvo y baños»**, con su `porque`. La `clave` sigue siendo `limpieza_cristales`. La tarea es la misma: un toque («Hecho»), el jueves por la tarde.
+> 2. **El vídeo del sábado** ya no sale en el momento de elegir el nombre. Sale **a la hora de abrir de su turno, después de la apertura**: 11:00 por la mañana y 17:00 por la tarde (Bilbao, 16:30). Hasta esa hora sale en gris (`se_puede_marcar: false`), como las demás. La pantalla enseña `hora` y el orden de la lista tal como vienen.
 
 > **Cambios en 1.24 (Tarea 35) — para Lovable: «Empezar turno» y «Fin de turno» del operario (Chromebook y Pixel).** Se añaden dos funciones (§3.22), el campo `turno` en `tarea_activa` (§3.2) y `turno_operario` en el cierre (§4.4). 🧪 = solo en pruebas. **Cambia una regla:** sin «Empezar turno», `tarea` es `null` siempre.
 > 1. **Dos botones, en el Chromebook y en el Pixel,** según `tarea_activa().turno`:
@@ -970,7 +974,7 @@ Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la c
 | Cierre de la mañana | L–S | 10 min antes de cerrar (13:20) | Ventas y stock de la plantilla al día (todo en verde) · Incidencias del turno registradas |
 | Apertura de la tarde | L–S, si hay tarde | 10 min antes (16:50; Bilbao 16:20) | Fichar · Abrir · Cartelería · Glovo |
 | Cierre del día | L–S | 10 min antes del cierre del día | Ventas del día en la plantilla (todo en verde) · Suelo fregado · **Cierre de caja en la app: Z, nº de ventas, efectivo y Glovo** (Tarea 28, §9.14) · Efectivo contado y en la bolsa para mañana · Incidencias de la tarde registradas |
-| Limpieza de cristales | jueves, tarde | al abrir la tarde | — («Hecho») |
+| Limpieza semanal: cristales, polvo y baños (Tarea 36; antes «Limpieza de cristales», `clave` `limpieza_cristales`) | jueves, tarde | al abrir la tarde | — («Hecho») |
 | Vídeo de la semana | viernes, mañana (y el sábado, §9.6) | al abrir la mañana | — (enlace y una línea) |
 | Recibe la bolsa del reparto (Tarea 28) | cuando sale el reparto, si trae bolsa para la tienda | la hora de salida | Bolsa recibida · Bolsa de ayer entregada con X € en efectivo (§9.11) |
 | Coloca y apunta la reposición (Tarea 28) | al terminar «Recibe la bolsa» | en ese momento | — (§9.12) |
@@ -997,7 +1001,7 @@ Tocar un punto de una tarea `puntos` (`tareas[].puntos[].id`). Con el último, l
 - **El texto** de la tarea (`porque`) es el aprobado por el propietario; se muestra entero.
 - **Compartir:** `compartir_video({ tarea_id, enlace, aprendido })`: `enlace` de YouTube (`youtube.com/watch?v=…`, `youtu.be/…`, `shorts/…`) y `aprendido`, una línea (200 letras como máximo). La tarea queda `hecha` y el vídeo entra en la lista.
 - **«Hoy no he podido»:** `compartir_video({ tarea_id, no_he_podido: true })`. La tarea queda `cancelada` (no hecha) y no pasa al día siguiente.
-- **Un vídeo por persona y semana** (la que está en `en_turno`): si ya compartió uno esa semana, `YA_COMPARTIDO`. **El sábado** le sale a quien trabaje si esa semana no ha compartido ni ha dicho «Hoy no he podido».
+- **Un vídeo por persona y semana** (la que está en `en_turno`): si ya compartió uno esa semana, `YA_COMPARTIDO`. **El sábado** le sale a quien trabaje si esa semana no ha compartido ni ha dicho «Hoy no he podido». **Desde la Tarea 36,** sale a la hora de abrir de su turno, después de la apertura: 11:00 si empieza por la mañana; 17:00 si empieza por la tarde (Bilbao, 16:30). Si empieza entre turnos, sale a la hora de abrir del siguiente. Hasta esa hora sale en gris.
 - **Errores:** los de §9.4, más `DATOS_NO_VALIDOS` (falta el enlace, no es de YouTube o falta la línea) y `YA_COMPARTIDO`.
 - **`videos_semana(limite?)`** (tiendas y Administración; 50 por defecto, 200 como máximo): `{ videos: [{ id, enlace, aprendido, tienda, persona, fecha }] }`, los más nuevos primero. La lista la ven todas las tiendas. Los «Hoy no he podido» no salen.
 
