@@ -374,3 +374,40 @@ Deno.test("E-07 el reparto no cambia: sin granel va a la producción (Tarea 16),
   const r = await guardarRepartoDe(f.d, "p", cuerpo({ lineas: [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 3 }] }));
   assertEquals([r.error, (f.args("servidor_guardar_reparto")!.p_produccion as { sin_granel?: boolean }[])[0].sin_granel], [undefined, true]);
 });
+
+Deno.test("Tarea 30c · guardar_reparto: el envío lleva los pedidos de las tiendas que reciben por envío; el reparto, no", async () => {
+  const pedidos = [
+    { id: "pedido-1", cliente: "Ane", destino_id: "bilbao", lineas: [{ producto: "V2", formato: "4g", cantidad: 3 }], envio_destino_id: null },
+    { id: "pedido-2", cliente: "Mikel", destino_id: "donosti", lineas: [{ producto: "V2", formato: "4g", cantidad: 1 }], envio_destino_id: "gipuzkoa" },
+    { id: "pedido-3", cliente: "Itziar", destino_id: "durango", lineas: [{ producto: "MINI", formato: "10g", cantidad: 2 }], envio_destino_id: "durango" },
+  ];
+  // Envío a Gipuzkoa: solo el de Donosti (el de Durango espera a su envío; el de Bilbao, al reparto).
+  const env = falso({ ctx: { ...CTX, pedidos_tienda: pedidos } });
+  const r = await guardarRepartoDe(env.d, "p", { id_cliente: ID, tipo: "envio",
+    lineas: [{ destino_id: "gipuzkoa", producto: "V2", formato: "4g", cantidad: 2 }] }) as Record<string, unknown>;
+  assertEquals(r.error, undefined);
+  const plan = env.args("servidor_asignar_pedidos")!.p_pedidos as { pedido_id: string; elementos: { producto: string; cantidad: number }[] }[];
+  assertEquals(plan.map((p) => [p.pedido_id, p.elementos.map((e) => `${e.cantidad} ${e.producto}`)]), [["pedido-2", ["1 V2"]]]);
+  // La producción del envío es la del envío: el pedido va con su tarea propia («coge / haz»).
+  const prod = (env.args("servidor_guardar_reparto")!.p_produccion as { pedido: number }[])[0];
+  assertEquals(prod.pedido, 2);
+  // El reparto no toma los de Donosti ni Durango.
+  const rep = falso({ ctx: { ...CTX, pedidos_tienda: pedidos } });
+  await guardarRepartoDe(rep.d, "p", cuerpo());
+  assertEquals((rep.args("servidor_asignar_pedidos")!.p_pedidos as { pedido_id: string }[]).map((p) => p.pedido_id), ["pedido-1"]);
+  // Un pedido por envío no crea un envío por sí solo (sin productos, el envío no se guarda).
+  const solo = falso({ ctx: { ...CTX, pedidos_tienda: [pedidos[1]] } });
+  const e = await guardarRepartoDe(solo.d, "p", { id_cliente: ID, tipo: "envio", lineas: [] }) as { error: { codigo: string } };
+  assertEquals([e.error.codigo, solo.args("servidor_asignar_pedidos")], ["DATOS_NO_VALIDOS", undefined]);
+});
+
+Deno.test("Tarea 30c · catalogo: las tiendas para «Pedido de cliente», también las que reciben por envío", async () => {
+  const tiendas_pedido = [{ id: "bilbao", codigo: "BILBAO", nombre: "Bilbao", va_en: "reparto" },
+                          { id: "donosti", codigo: "DONOSTI", nombre: "Donosti", va_en: "envio" }];
+  const r = await catalogoDe(falso({ ctx: { ...CTX, tiendas_pedido } }).d, "p") as { tiendas: Record<string, unknown[]> };
+  assertEquals(r.tiendas.pedido, tiendas_pedido);
+  // Sin el dato (una base de datos anterior), las del reparto, como antes.
+  const antes = await catalogoDe(falso().d, "p") as { tiendas: Record<string, { codigo: string; va_en: string }[]> };
+  assertEquals(antes.tiendas.pedido.map((t) => `${t.codigo}:${t.va_en}`),
+               ["BILBAO:reparto", "ALGORTA:reparto", "BARAKALDO:reparto", "BASAURI:reparto", "PORTU:reparto"]);
+});

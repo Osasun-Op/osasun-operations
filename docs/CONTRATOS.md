@@ -1,6 +1,13 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.17 · **Fecha:** 03/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.18 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.18 (Tarea 30c) — para Lovable: pedidos de cliente para todas las tiendas (por envío y desde la tableta).** Solo se añade. 🧪 = solo en pruebas.
+> 1. **«Pedido de cliente» (almacén y Administración):** la lista de tiendas para «Recoger en tienda» es **`catalogo().tiendas.pedido`** (§3.13): las del reparto y, además, **Donosti y Rentería** (y Durango cuando abra), con `va_en: "reparto" | "envio"`. Las que van por envío esperan al siguiente envío a Gipuzkoa (o a Durango).
+> 2. **El pedido** (§3.17) trae `va_en`, `pedido_en_tienda` (si lo apuntó una tienda, cuál) y `pedido_por` (quién estaba en el turno), y `estado_texto` ya dice «Va en el próximo envío a Donosti» / «En el envío del 16/12: por preparar» / «Preparado: va en el envío del 16/12».
+> 3. **En el almacén** (§3.2): en «Revisa si toca envío…», **`tarea.aviso`**: «Hay N pedidos de cliente esperando envío a Gipuzkoa» (mostrarlo bien a la vista; `null` en las demás tareas). En el envío, la tarea propia «Hay un pedido de cliente para enviar a [tienda] · [cliente]» (con su «coge / haz», como en el reparto) y la caja aparte «Pedido de cliente · [cliente] · [tienda]».
+> 4. **En la tableta** (§9.22): botón **«Pedido de cliente»** en todas las tiendas, franquicias incluidas: nombre del cliente y productos con su formato (con − y +) de **`productos_tienda()`, que ahora trae `formatos`**; se guarda con **`crear_pedido_tienda`**. Es para recoger en esa tienda, nunca por Nacex. **`tienda_hoy().pedidos`**: los pedidos para recoger en la tienda con su `estado_texto`.
+> 5. **«Envíos»** (§9.21): cada pedido trae `tienda` (en el envío a Gipuzkoa, Donosti o Rentería).
 
 > **Cambios en 1.17 (Tarea 30b) — para Lovable: «Envíos» y el cierre de caja corto de las franquicias.** Solo se añade (§9.1, §9.14, §9.21). 🧪 = solo en pruebas.
 > 1. **Pestaña «Envíos»** arriba, junto a «Avisos», en las tiendas que reciben por envío (hoy **Rentería y Durango**; Donosti no, porque el envío a Gipuzkoa va entero a Rentería, que es quien lo confirma): `tienda_hoy().envios` y, para el número de la pestaña, `tienda_hoy().envios_sin_confirmar`. Enseñar la pestaña solo si hay algo en `envios` o `envios_sin_confirmar > 0`.
@@ -224,6 +231,7 @@ Tiendas (Tarea 27, §9; columna «Tienda» = la cuenta de cada tienda):
 | `descartar_peticion_tienda` · `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` | BD | — | ✔ | 🧪 Tarea 28 |
 | `crear_incidencia_tienda` | BD | ✔ | — | 🧪 Tarea 30 |
 | `confirmar_envio` | BD | ✔ | — | 🧪 Tarea 30b |
+| `crear_pedido_tienda` | BD | ✔ | — | 🧪 Tarea 30c |
 | Todas las del almacén y las de Administración de arriba | — | — (`NO_AUTORIZADO`) | — | 🧪 Tarea 27 |
 
 ## 3. Operario
@@ -270,9 +278,10 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 - **Al recargar** la pantalla recupera de aquí todo lo abierto: `incidencias_abiertas` (número para «Cerrar incidencias»), `incidencia_en_curso` (la que tiene su tarea en curso, con `minutos`; `null` si no hay) y `problemas_abiertos` (con la tarea bloqueada; el siguiente paso es `problema_llamada` o `resolver_problema`).
 - `tarea.enlace` ✅ Tarea 22: el enlace de una compra por internet (tarea «Compra: …»); `null` en las demás.
 - `avisos` ✅ Tarea 22: los avisos de Administración abiertos de hoy (o de días pasados sin cerrar), para mostrarlos arriba de la pantalla. Se cierran con `cerrar_incidencia` (también están en `incidencias_abiertas()`). Lista vacía si no hay.
+- `tarea.aviso` (Tarea 30c 🧪): en «Revisa si toca envío…», los pedidos de cliente que esperan envío: «Hay 2 pedidos de cliente esperando envío a Gipuzkoa» (varios destinos, separados por « · »). `null` si no hay y en las demás tareas.
 - `siguiente`: una línea con lo que viene después. Si antes llega una tarea con hora, se anuncia esa con su hora.
 - `pregunta`: reservado; hoy siempre `null`. La pregunta «¿Quién sale hoy?» la devuelve `pegar_reparto` (`FALTA_SALE`).
-- `elementos` ✅: `[ { id, tipo, producto, formato, texto, categoria, destino, destino_id, bolsa, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla) y, dentro de la tienda, por `bolsa`: «Bolsa de reposición» y, si hay pedidos de cliente, «Pedido de cliente · [cliente]» (Tarea 12). **Peticiones especiales** (Tarea 13): `tipo: "peticion"`, con su texto en `texto` (y en `producto`), `cantidad` 1 y `formato` vacío; van en la bolsa de su tienda después de las cajas, para mostrarlas bajo «Además, mete:». En los demás elementos, `texto` es `null`. En las listas de producción, `bolsa` es `null`; en los pedidos de cliente, `motivo` dice «Coge N del almacén» o «Haz N».
+- `elementos` ✅: `[ { id, tipo, producto, formato, texto, categoria, destino, destino_id, bolsa, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla) y, dentro de la tienda, por `bolsa`: «Bolsa de reposición» y, si hay pedidos de cliente, «Pedido de cliente · [cliente]» (Tarea 12; en el envío, «Pedido de cliente · [cliente] · [tienda]», Tarea 30c). **Peticiones especiales** (Tarea 13): `tipo: "peticion"`, con su texto en `texto` (y en `producto`), `cantidad` 1 y `formato` vacío; van en la bolsa de su tienda después de las cajas, para mostrarlas bajo «Además, mete:». En los demás elementos, `texto` es `null`. En las listas de producción, `bolsa` es `null`; en los pedidos de cliente, `motivo` dice «Coge N del almacén» o «Haz N».
   - **Aviso de llamada** (Tarea 16, R1e): `tipo: "llamada"`, en la bolsa de reposición de la tienda que recibe algo de otra tienda, con su `texto` («Llama a Algorta para que prepare 2 BZ1 4g para su retirada») y `cantidad` 1. Se muestra y se marca como una petición especial; la tienda no está completa sin él.
   - **Referencia sin granel** (Tarea 16, R1e), solo en «Producción del reparto»: además trae `sin_granel: true`, `para: [{ destino_id, destino, pedido, faltan }]` (las tiendas que la reciben; lo que hay en el almacén se lo llevan las primeras del reparto), `tiendas_con_stock: [{ destino_id, destino, cajas }]` (las demás tiendas del reparto con cajas de esa referencia en PRINCIPAL), `resuelto` y `decisiones: [{ destino_id, destino, accion, origen_id, origen, cantidad }]`. Sin resolver, al elegirla sale el aviso «No hay granel» con las dos opciones por tienda (§3.19). Resuelta, queda `estado: "hecho"`, `cantidad` 0 y `motivo` «No se produce: 3 se quitan de Bilbao; 2 para Portugalete de Algorta.».
 - La elección sigue `PLAN_TECNICO.md` §2.3. **Nunca devuelve avisos de tiempo ni de presión** (§6.7): solo tareas.
@@ -425,7 +434,8 @@ Lo que se puede elegir al preparar el reparto o el envío. Solo lee (la hoja y l
 {
   "tiendas": {
     "reparto": [ { "id": "...", "codigo": "BILBAO", "nombre": "Bilbao" }, { "id": "...", "codigo": "ALGORTA", "nombre": "Algorta" }, "…" ],
-    "envio":   [ { "id": "...", "codigo": "GIPUZKOA", "nombre": "Gipuzkoa (envío a Rentería)" }, { "id": "...", "codigo": "DURANGO", "nombre": "Durango" } ]
+    "envio":   [ { "id": "...", "codigo": "GIPUZKOA", "nombre": "Gipuzkoa (envío a Rentería)" }, { "id": "...", "codigo": "DURANGO", "nombre": "Durango" } ],
+    "pedido":  [ { "id": "...", "codigo": "BILBAO", "nombre": "Bilbao", "va_en": "reparto" }, "…", { "id": "...", "codigo": "DONOSTI", "nombre": "Donosti", "va_en": "envio" } ]
   },
   "productos": [
     { "clave": "V2|4g", "producto": "V2", "formato": "4g", "categoria": "INVERNADERO", "orden": 2300 },
@@ -440,6 +450,7 @@ Lo que se puede elegir al preparar el reparto o el envío. Solo lee (la hoja y l
 ```
 - `pedidos_cliente` (Tarea 14): los pedidos para recoger en tienda que van en el reparto de hoy (los que esperan y los que ya van en él). En «Preparar reparto» y «Modificar reparto» se muestran **marcados y fijos** en su tienda, con su `texto`; la pantalla no los manda en `lineas`: `guardar_reparto` los añade solo. Lista vacía si no hay.
 - `tiendas.reparto`: BILBAO, ALGORTA, BARAKALDO, BASAURI, PORTU. `tiendas.envio`: GIPUZKOA, DURANGO. **En el orden de las hojas de tienda de STOCK OSASUN** (decisión del propietario, 28/10). Donosti y Rentería no salen: sus hojas son solo de consulta. La lista y el orden están en la configuración (`destinos_reparto`), así que se pueden cambiar sin tocar las pantallas.
+- `tiendas.pedido` (Tarea 30c 🧪): las tiendas para «Recoger en tienda» en «Pedido de cliente» (§3.16): las del reparto en su orden y después las que reciben por envío (Donosti y Rentería; Durango cuando abra), con `va_en`. Sale de la configuración de siempre (`destinos_reparto` y `peticiones_por_envio`).
 - `productos`: una referencia por producto y formato de PRINCIPAL (y los productos sin formato, con `formato: ""`), **en el orden de la hoja**. `clave` (`producto|formato`) es estable mientras no cambie el nombre en la hoja: sirve para la lista y para los contadores. `categoria`: el grupo de la pestaña ALMACEN; si el producto no está allí, `"Otros"`.
 - **Errores:** `SHEETS_NO_DISPONIBLE` · `ESTRUCTURA_SHEETS_CAMBIADA` (los mismos de siempre), `CATALOGO_AMBIGUO`, `NO_AUTORIZADO`.
 
@@ -532,6 +543,7 @@ Botón **«Pedido de cliente»**: las cajas con la misma lista que el reparto y 
 - `cliente`: nombre corto, obligatorio (60 letras como máximo). `entrega`: `"tienda"` (recoger en tienda; `destino_id` obligatorio, una tienda del reparto) o `"nacex"` (envío por Nacex; `datos_envio` obligatorio: el texto pegado tal cual, con sus saltos de línea). `lineas`: como en `guardar_reparto` pero **sin tienda**; 0 se ignora, repetidas se suman.
 - **Proceso:** lee la hoja y comprueba cada referencia (como `guardar_reparto`).
   - **Recoger en tienda** (Tarea 14: el pedido activa el reparto): va en el reparto de hoy mientras **las bolsas no estén listas** (si aún no hay reparto, mientras «Prepara el reparto» siga abierta); si no, en el del siguiente día de trabajo. Si el reparto de hoy ya está guardado, **entra en él al momento**; si no, entra al guardarlo (§3.14), aunque sea solo con el pedido. En los dos casos: tarea «Hay un pedido de cliente para dejar en [tienda] · [cliente]» (aparece **al terminar la producción del reparto**, antes de las bolsas, con la misma hora límite) y bolsa aparte «Pedido de cliente · [cliente]».
+  - **Recoger en una tienda que recibe por envío** (Tarea 30c 🧪; Donosti y Rentería en el envío a Gipuzkoa, Durango en el suyo): `destino_id` de `catalogo().tiendas.pedido` con `va_en: "envio"`. Espera al **siguiente envío** a ese destino (si el de hoy ya está guardado y sin preparar, entra en él al momento); no crea un envío por sí solo. Al guardar el envío: tarea «Hay un pedido de cliente para enviar a [tienda] · [cliente]» (con su «coge / haz», como en el reparto) y caja aparte «Pedido de cliente · [cliente] · [tienda]» en «Prepara el envío aprobado». Sale del almacén con el envío preparado. En la tienda, en «Envíos» (los de Donosti, en los de Rentería).
   - **Nacex:** tarea «Prepara el pedido de cliente (Nacex) · [cliente]» con la lista y los datos de envío en `porque`. De lunes a jueves, por la tarde (después de la revisión y la preparación del envío), antes de las 18:10; el viernes, por la mañana, antes de las 10:45, y lo lleva quien sale de reparto. **Activa Nacex ese día** (recuento a las 17:55 y «Salida a Nacex» a las 18:10; el viernes, «Lleva en el reparto lo que va a Nacex…»). Si ya hay envío, es el mismo viaje. Los pedidos de Nacex **entran hasta las 18:00** de lunes a jueves (el viernes, hasta las 10:45) y mientras la salida a Nacex no esté hecha; si no, van al siguiente día de trabajo. Si por la producción no llega a salir ese día, el operario lo pasa al día siguiente (§3.18); si queda sin hacer, pasa solo, como tarea de Nacex de ese día y con Nacex activado.
   - En las dos, **al salir la tarea** (cuando le toca al operario), cada referencia dice en `motivo` **«Coge N del almacén»** o **«Haz N»** (o las dos cosas: «Coge 2 del almacén y haz 1»). Se calcula en ese momento con el **almacén ahora** (la última lectura de la hoja + lo producido − lo salido desde el recuento), menos lo que aún no ha salido y va antes (reparto, envío y pedidos anteriores, R1c). Al guardar el pedido, `motivo` aún es `null`.
 - **Salida:** `{ pedido: (objeto pedido, §3.17), tarea: (la de Nacex; null en tienda), tarea_activa: (solo al operario) }`.
@@ -541,7 +553,8 @@ Botón **«Pedido de cliente»**: las cajas con la misma lista que el reparto y 
 ### 3.17 `pedidos_cliente_abiertos()` ✅ (Tarea 12)
 Para el panel de Administración y, si se quiere, para el operario.
 - **Salida:** `{ total, pedidos: [objeto pedido, ...] }`, por fecha y orden de llegada. Abiertos = esperando al reparto, por preparar, o preparados que salen hoy o más adelante.
-- **Objeto pedido:** `{ id, cliente, entrega: "tienda"|"nacex", entrega_texto ("Recoger en Bilbao" | "Envío por Nacex"), destino_id, destino, datos_envio, lineas: [{ producto, formato, cantidad }], fecha, estado: "esperando_reparto"|"por_preparar"|"preparado"|"cancelado", estado_texto, tarea_id, registrado_en, registrado_por, registrado_por_nombre }`.
+- **Objeto pedido:** `{ id, cliente, entrega: "tienda"|"nacex", entrega_texto ("Recoger en Bilbao" | "Envío por Nacex"), destino_id, destino, datos_envio, lineas: [{ producto, formato, cantidad }], fecha, estado: "esperando_reparto"|"por_preparar"|"preparado"|"cancelado", estado_texto, tarea_id, registrado_en, registrado_por, registrado_por_nombre, va_en, pedido_en_tienda, pedido_por }`.
+- **Tarea 30c 🧪:** `va_en`: `"reparto"` o `"envio"` (recoger en tienda; `null` en Nacex). `pedido_en_tienda`: si lo apuntó una tienda desde la tableta, cuál («Basauri»); `pedido_por`: quién estaba en el turno. En los de envío, `estado_texto` dice «Va en el próximo envío a Donosti», «En el envío del 16/12: por preparar» o «Preparado: va en el envío del 16/12».
 - `fecha`: el día del reparto que lo lleva o de la salida a Nacex. `estado_texto`, para mostrar: «Va en el próximo reparto a Bilbao (desde el 25/11)», «En el reparto del 24/11: por preparar», «Por preparar: sale a Nacex el 24/11», «Preparado: va en el reparto del 24/11», «Preparado: sale a Nacex el 24/11», «Cancelado».
 - Los datos de envío solo los ve el personal (cualquier persona con ficha). Sin ficha: `NO_AUTORIZADO`.
 
@@ -814,6 +827,7 @@ Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la c
 - **Tarea 28:** `reparto` (por dónde va, §9.13), `peticiones` (muestras y material, §9.15) y `pedir_material` (si la tienda puede pedir material, §9.15).
 - **Tarea 30:** `incidencias` y `opciones_incidencia` (§9.20).
 - **Tarea 30b:** `envios` y `envios_sin_confirmar` (§9.21).
+- **Tarea 30c:** `pedidos` (§9.22).
 
 ### 9.2 Objeto tarea de la tienda 🧪
 ```json
@@ -962,7 +976,7 @@ En el «Cierre del día», el punto «Cierre de caja en la app: Z, nº de ventas
 ### 9.15 Muestras y material: `productos_tienda()` · `revisar_muestras(tarea_id, muestras?)` · `pedir_material(id_cliente, texto)` 🧪 (Tarea 28)
 - **«Revisa las muestras»** (`tipo: "muestras"`): jueves por la mañana (en Bilbao alterna por semanas, como las demás semanales); también en Donosti y Rentería. Comprobar que están en buen estado y elegir qué hay que traer nuevo.
   - **Las muestras se piden por producto, sin formato** (son de ~1 g; decisión del propietario, 03/11/2026).
-  - **`productos_tienda()`:** `{ productos: [{ clave, producto, categoria }], leidos_en }`, cada producto una vez, de la última lectura de la hoja (la del último reparto, envío o lista de stock), en el orden de la hoja.
+  - **`productos_tienda()`:** `{ productos: [{ clave, producto, categoria, formatos }], leidos_en }` (`formatos`, Tarea 30c: los de la hoja, `[""]` si no tiene; las muestras no lo usan), cada producto una vez, de la última lectura de la hoja (la del último reparto, envío o lista de stock), en el orden de la hoja.
   - **Elegir:** tocar el producto = 1; con − y + se cambia la cantidad (de 1 a 99).
   - **`revisar_muestras({ tarea_id, muestras: [{ producto, cantidad? }] })`**: sin `cantidad`, 1. Lista vacía = están bien y no hace falta nada. La tarea queda hecha; lo elegido sale en `muestras` de la tarea (`{ producto, formato: "", cantidad, estado }`).
   - En la casilla del reparto llega como «Muestra: V2» o, con más de una, «Muestra: V2 x2».
@@ -1018,9 +1032,17 @@ Para las tiendas que **reciben por envío** en lugar de bolsa del reparto (confi
   "pedidos": []
 } ]
 ```
-  `preparado`: la hora a la que se terminó de preparar (mostrar «Preparado a las 17:00»). Lo que trae es **lo marcado al meterlo en la caja** (como `bolsa`, §9.11): lo que no se ha marcado no aparece. El envío a Gipuzkoa es uno para las dos tiendas, calculado con lo que hay en Donosti y Rentería juntas.
+  Cada pedido de `pedidos` trae además `tienda` (Tarea 30c: en el envío a Gipuzkoa, Donosti o Rentería). `preparado`: la hora a la que se terminó de preparar (mostrar «Preparado a las 17:00»). Lo que trae es **lo marcado al meterlo en la caja** (como `bolsa`, §9.11): lo que no se ha marcado no aparece. El envío a Gipuzkoa es uno para las dos tiendas, calculado con lo que hay en Donosti y Rentería juntas.
 - **`tienda_hoy().envios_sin_confirmar`:** cuántos quedan por confirmar (el número de la pestaña).
 - **«Todo bien»:** `confirmar_envio({ envio_id })`.
 - **«Falta algo»:** `confirmar_envio({ envio_id, faltan: [{ clave, cantidad? }], nota? })`, como en la reposición (§9.12): `clave` de `productos`, `peticiones` o `pedidos`, de 1 a lo que traía (sin `cantidad`, todas); `nota`, una línea (200 letras). Llega a **Administración como incidencia abierta** (`incidencias_tiendas()`, `opcion: "falta_envio"`, «Falta en el envío del 16/12: 1x V2 4g. La caja venía abierta (Nombre)»), y la tienda la ve en `tienda_hoy().incidencias`.
 - Hay que haber elegido quién está (`SIN_PERSONA`).
 - **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO` (no es un envío de esta tienda), `ESTADO_NO_VALIDO` («Ese envío ya está confirmado.»), `DATOS_NO_VALIDOS` (algo que no está en la lista, cantidad, nota larga), `SIN_PERSONA`, `SIN_JORNADA`; el operario y Administración, `NO_AUTORIZADO`.
+
+### 9.22 Pedidos de cliente desde la tableta: `crear_pedido_tienda(id_cliente, cliente, lineas)` · `tienda_hoy().pedidos` 🧪 (Tarea 30c)
+Botón **«Pedido de cliente»** en todas las tiendas, franquicias incluidas (decisión del propietario, bloque 1 punto 20; 04/11/2026). Solo **para recoger en esa misma tienda**; nunca por Nacex (eso sigue siendo de Administración y del almacén).
+- **La lista:** `productos_tienda()` (§9.15), con `formatos`: elegir producto y formato y la cantidad con − y +. Es la última lectura de la hoja: la tableta no llama a Google.
+- **`crear_pedido_tienda({ id_cliente, cliente, lineas: [{ producto, formato, cantidad }] })`:** `cliente`, nombre corto (60 letras); `formato` uno de los de ese producto (`""` si no tiene); `cantidad` de 1 a 99 (0 no cuenta; repetidos se suman). Queda con el nombre de quien está en el turno (`SIN_PERSONA` si no hay nadie). Repetir con el mismo `id_cliente` no lo duplica.
+- **Después, el camino de siempre** (§3.16): las propias lo reciben en el reparto (hoy si las bolsas aún no están hechas; si no, en el siguiente), con su tarea en el almacén y su bolsa aparte; Donosti, Rentería y Durango, en el siguiente envío (§9.21). Administración lo ve en `pedidos_cliente_abiertos()` con `pedido_en_tienda` y `pedido_por`.
+- **`tienda_hoy().pedidos`:** los pedidos para recoger en la tienda (los que ha apuntado ella y los de Administración), los que esperan o están por preparar y los preparados hasta su día: objeto pedido (§3.17) sin `datos_envio`. Mostrar `cliente`, `lineas` y `estado_texto`.
+- **Salida:** `tienda_hoy()` actualizado. **Errores:** `DATOS_NO_VALIDOS` (sin cliente, producto o formato que no está en la lista, cantidad, lista vacía), `SIN_PERSONA`, `SIN_JORNADA` (hoy la tienda no abre o no hay día de trabajo del almacén), `NO_AUTORIZADO` (el operario, Administración o una tienda sin reparto ni envío).
