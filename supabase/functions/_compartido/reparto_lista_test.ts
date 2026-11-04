@@ -123,12 +123,14 @@ Deno.test("guardar_reparto: referencia que ya no está en la hoja, sin quién sa
   assertEquals(await codigo(cuerpo({ tipo: "envio", lineas: linea("renteria") })), "DATOS_NO_VALIDOS");
 });
 
-Deno.test("guardar_reparto: envío (sin quién sale) a Gipuzkoa, apartando el reparto de hoy antes del recuento", async () => {
+Deno.test("guardar_reparto: envío (sin quién sale) a Gipuzkoa; con el reparto de hoy sin salir no se aparta nada (R1c v1.58)", async () => {
   const f = falso({ ctx: { ...CTX, comprometido: { ...CTX.comprometido, reparto: [{ producto: "V2", formato: "4g", cantidad: 25 }] } } });
   await guardarRepartoDe(f.d, "p", { id_cliente: ID, tipo: "envio", lineas: [{ destino_id: "gipuzkoa", producto: "V2", formato: "4g", cantidad: 8 }] });
   const g = f.args("servidor_guardar_reparto")!;
   assertEquals([g.p_tipo, g.p_sale, g.p_texto], ["envio", null, "ENVÍO 28/10\n\nGIPUZKOA\n8x V2 4g"]);
-  assertEquals((g.p_produccion as { faltan: number }[])[0].faltan, 3);
+  // V2 4g: 30 en la hoja, tal cual (antes se apartaban las 25 del reparto y faltaban 3).
+  const prod = (g.p_produccion as { en_almacen: number; faltan: number; apartado_reparto: number }[])[0];
+  assertEquals([prod.apartado_reparto, prod.en_almacen, prod.faltan], [0, 30, 0]);
 });
 
 Deno.test("guardar_reparto: envío a Gipuzkoa y a Durango (aunque Durango esté cerrada como tienda), en ese orden", async () => {
@@ -140,13 +142,13 @@ Deno.test("guardar_reparto: envío a Gipuzkoa y a Durango (aunque Durango esté 
   assertEquals((g.p_bolsas as { destino_id: string }[]).map((b) => b.destino_id), ["gipuzkoa", "durango"]);
 });
 
-Deno.test("guardar_reparto: el envío aparta también los pedidos de tienda que salen hoy con el reparto (R1c)", async () => {
+Deno.test("guardar_reparto: el envío tampoco aparta los pedidos de tienda que salen hoy con el reparto (R1c v1.58)", async () => {
   const f = falso({ ctx: { ...CTX, comprometido: { ...CTX.comprometido,
     reparto: [{ producto: "V2", formato: "4g", cantidad: 20 }], pedidos_tienda: [{ producto: "V2", formato: "4g", cantidad: 6 }] } } });
   await guardarRepartoDe(f.d, "p", { id_cliente: ID, tipo: "envio", lineas: [{ destino_id: "gipuzkoa", producto: "V2", formato: "4g", cantidad: 8 }] });
-  // V2 4g: 30 en la hoja − 20 del reparto − 6 del pedido = 4; faltan 4.
+  // V2 4g: 30 en la hoja, tal cual (antes, 30 − 20 del reparto − 6 del pedido = 4 y faltaban 4).
   const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { en_almacen: number; faltan: number; apartado_reparto: number }[])[0];
-  assertEquals([prod.apartado_reparto, prod.en_almacen, prod.faltan], [26, 4, 4]);
+  assertEquals([prod.apartado_reparto, prod.en_almacen, prod.faltan], [0, 30, 0]);
   assertEquals(f.args("servidor_asignar_pedidos"), undefined);
 });
 
@@ -227,7 +229,7 @@ Deno.test("guardar_reparto: petición de más de 120 letras o de una tienda que 
   assertEquals((ok as Record<string, unknown>).error, undefined);
 });
 
-// ===== Tarea 14: almacén ahora (R1c) y pedidos que activan el reparto =====
+// ===== Tarea 14 y Tarea 29d: «Calcular» solo con la hoja (R1c v1.58) y pedidos que activan el reparto =====
 const conAlmacen = (bz1: string): DatosHoja => ({
   ...DATOS, productos: DATOS.productos.map((p) => p.nombre === "BZ1" ? { ...p, formatos: [{ formato: "4g", almacen: bz1 }] } : p),
 });
@@ -235,18 +237,39 @@ const mov = (m: Record<string, { producto: string; formato: string; cantidad: nu
   ({ recuento_en: "2026-10-27T17:15:00Z", producido: [], producido_reparto: [], producido_envio: [], salido: [], ...m });
 const bz1 = (cantidad: number) => [{ producto: "BZ1", formato: "4g", cantidad }];
 
-Deno.test("guardar_reparto: el hueco — 6 BZ1 4g hechas para stock con 4 en la hoja; se piden 5 más → no hay que hacer ninguna", async () => {
+Deno.test("29d · el caso del 04/11: la hoja dice 0, se produjeron 2 el día anterior sin recuento marcado → hay que producir 2", async () => {
+  // INDOOR PR RELAX 4g el 04/11 a las 08:28: 0 en la hoja; la cuenta propia de la app sumaba lo producido el 03/11
+  // (desde el recuento del 02/11 18:43) sin restar las bolsas del 03/11, y daba 2 en el almacén.
+  const lineas = [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 2 }];
+  const f = falso({ lectura: { ok: true, datos: conAlmacen("0") },
+                    ctx: { ...CTX, almacen: mov({ recuento_en: "2026-11-02T17:43:00Z", producido: bz1(2) } as never) } });
+  await guardarRepartoDe(f.d, "p", cuerpo({ lineas }));
+  const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { en_almacen: number; faltan: number; aviso: string | null }[])[0];
+  assertEquals([prod.en_almacen, prod.faltan, prod.aviso], [0, 2, null]);
+});
+
+Deno.test("29d · el caso del 04/11 sin granel: la hoja dice 0 y no hay granel → el aviso de siempre (quitar o coger de otra tienda)", async () => {
+  const datos: DatosHoja = { ...DATOS, productos: DATOS.productos.map((p) => p.nombre === "BZ1"
+    ? { ...p, granel: "0", formatos: [{ formato: "4g", almacen: "0", tiendas: { ALGORTA: "4", BILBAO: "1" } }] } : p) };
+  const f = falso({ lectura: { ok: true, datos }, ctx: { ...CTX, almacen: mov({ producido: bz1(2) }) } });
+  await guardarRepartoDe(f.d, "p", cuerpo({ lineas: [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 2 }] }));
+  const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { en_almacen: number; faltan: number; sin_granel?: boolean }[])[0];
+  assertEquals([prod.en_almacen, prod.faltan, prod.sin_granel], [0, 2, true]);
+  // En el envío, lo mismo con SIN_GRANEL: la cuenta propia ya no tapa que no hay cajas.
+  const e = falso({ lectura: { ok: true, datos: hojaEnvio("0", "0") }, ctx: { ...CTX, almacen: mov({ producido: bz1(2) }) } });
+  const r = await guardarRepartoDe(e.d, "p", envio([{ destino_id: "gipuzkoa", cantidad: 2 }])) as { error: { codigo: string } };
+  assertEquals([r.error.codigo, e.args("servidor_guardar_reparto")], ["SIN_GRANEL", undefined]);
+});
+
+Deno.test("guardar_reparto: lo producido desde el recuento no se suma — 6 BZ1 4g hechas con 4 en la hoja; se piden 5 → falta 1", async () => {
   const lineas = [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 5 }];
-  const sin = falso({ lectura: { ok: true, datos: conAlmacen("4") } });
-  await guardarRepartoDe(sin.d, "p", cuerpo({ lineas }));
-  assertEquals((sin.args("servidor_guardar_reparto")!.p_produccion as { faltan: number }[])[0].faltan, 1);
   const f = falso({ lectura: { ok: true, datos: conAlmacen("4") }, ctx: { ...CTX, almacen: mov({ producido: bz1(6) }) } });
   await guardarRepartoDe(f.d, "p", cuerpo({ lineas }));
   const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { en_almacen: number; faltan: number }[])[0];
-  assertEquals([prod.en_almacen, prod.faltan], [10, 0]);
+  assertEquals([prod.en_almacen, prod.faltan], [4, 1]);
 });
 
-Deno.test("guardar_reparto: lo producido para el propio reparto no cuenta dos veces (ya está hecho en sus elementos)", async () => {
+Deno.test("guardar_reparto: lo producido para el propio reparto tampoco cambia la cifra de la hoja", async () => {
   const lineas = [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 10 }];
   const f = falso({ lectura: { ok: true, datos: conAlmacen("4") },
                     ctx: { ...CTX, almacen: mov({ producido: bz1(6), producido_reparto: bz1(6) }) } });
@@ -254,12 +277,12 @@ Deno.test("guardar_reparto: lo producido para el propio reparto no cuenta dos ve
   assertEquals((f.args("servidor_guardar_reparto")!.p_produccion as { faltan: number }[])[0].faltan, 6);
 });
 
-Deno.test("guardar_reparto: el envío cuenta lo que ya ha salido (bolsas listas antes del recuento) y no lo vuelve a apartar", async () => {
+Deno.test("guardar_reparto: el envío no resta lo que ya ha salido desde el recuento: la hoja tiene que estar al día", async () => {
   const f = falso({ ctx: { ...CTX, almacen: mov({ salido: [{ producto: "V2", formato: "4g", cantidad: 25 }] }) } });
   await guardarRepartoDe(f.d, "p", { id_cliente: ID, tipo: "envio", lineas: [{ destino_id: "gipuzkoa", producto: "V2", formato: "4g", cantidad: 8 }] });
-  // V2 4g: 30 en la hoja − 25 que ya han salido = 5; el reparto ya no está pendiente: faltan 3.
+  // V2 4g: 30 en la hoja, tal cual (antes, 30 − 25 que ya habían salido = 5 y faltaban 3).
   const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { en_almacen: number; faltan: number; apartado_reparto: number }[])[0];
-  assertEquals([prod.apartado_reparto, prod.en_almacen, prod.faltan], [0, 5, 3]);
+  assertEquals([prod.apartado_reparto, prod.en_almacen, prod.faltan], [0, 30, 0]);
 });
 
 Deno.test("catalogo: los pedidos de tienda del reparto de hoy, para mostrarlos marcados y fijos («Pedido de Ane a tienda de Bilbao»)", async () => {
@@ -353,12 +376,12 @@ Deno.test("E-04 dos destinos: las cajas se las lleva el primero (Gipuzkoa); a Du
   assertEquals(r.error.referencias[0].mensaje, "BZ1 4g: pides 3, en el almacén hay 1 caja y no hay granel para hacer las otras 2.");
 });
 
-Deno.test("E-05 viernes con reparto el mismo día: primero se aparta lo del reparto", async () => {
-  // 6 en el almacén, 4 para el reparto de hoy que aún no ha salido: para el envío quedan 2.
+Deno.test("E-05 viernes con reparto el mismo día: ya no se aparta lo del reparto (R1c v1.58, solo la hoja)", async () => {
+  // 6 en la hoja y 4 para el reparto de hoy que aún no ha salido: el envío cuenta con las 6 (antes, con 2 y SIN_GRANEL).
   const f = falso({ lectura: { ok: true, datos: hojaEnvio("0", "6") },
                     ctx: { ...CTX, comprometido: { ...CTX.comprometido, reparto: bz1(4) } } });
-  const r = await guardarRepartoDe(f.d, "p", envio([{ destino_id: "gipuzkoa", cantidad: 3 }])) as { error: Record<string, unknown> };
-  assertEquals(r.error.mensaje, "BZ1 4g: pides 3, en el almacén hay 2 cajas y no hay granel para hacer la otra.");
+  const r = await guardarRepartoDe(f.d, "p", envio([{ destino_id: "gipuzkoa", cantidad: 3 }])) as Record<string, unknown>;
+  assertEquals([r.error, (f.args("servidor_guardar_reparto")!.p_produccion as { faltan: number }[])[0].faltan], [undefined, 0]);
 });
 
 Deno.test("E-06 tras SIN_GRANEL, el mismo id_cliente con la lista corregida («Dejarlo en 3») se guarda normal", async () => {

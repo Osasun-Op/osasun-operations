@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1, R3 y R4 (especificación V1)
 
-**Versión:** 1.2 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27). Tarea 15: el mini se llama MINI 10g (§3.3) y R4, productos con menos de 2 semanas (§4, `r4.ts`, R4-01 a R4-08). Tarea 16: producto sin granel en el reparto (§2.11, `sin_granel.ts`, R1e-01 a R1e-09). Tarea 17: envío sin granel (§2.11, E-01 a E-07).
+**Versión:** 1.3 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27). Tarea 15: el mini se llama MINI 10g (§3.3) y R4, productos con menos de 2 semanas (§4, `r4.ts`, R4-01 a R4-08). Tarea 16: producto sin granel en el reparto (§2.11, `sin_granel.ts`, R1e-01 a R1e-09). Tarea 17: envío sin granel (§2.11, E-01 a E-07). Tarea 29d: «Calcular» del reparto y del envío, solo con la hoja (R1c v1.58; §2.5, §2.10 y §2.11, A-03, A-05, C-06, E-05 y H-01 a H-02).
 
 > Especificación exacta de las reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto), **R3** (stock del almacén +35 %) y **R4** (cobertura a 2 semanas).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -76,7 +76,8 @@ en_almacen(p, f) = PRINCIPAL!R de la fila de formato
 faltan(p, f)     = max(0, pedido − en_almacen)
 ```
 - `en_almacen` vacío o negativo → **cuenta como 0, con aviso** en la línea (decidido, D-R1b).
-- **Envío pegado antes del recuento de la mañana del mismo día** (decidido en el PR #3, `ESTADO_DEL_SISTEMA.md` v1.11): la hoja aún no refleja las cajas del reparto aceptado ese día, así que primero se apartan: `disponible = max(0, en_almacen − pedido en el reparto de hoy)` y `faltan = max(0, pedido − disponible)`. Se devuelve `apartado_reparto` por referencia. Desde la Tarea 14 se aparta lo que aún no ha salido (bolsas sin terminar); lo que ya ha salido se resta como salido del almacén ahora (§2.10). El reparto nunca descuenta.
+- **«Calcular» del reparto y del envío: solo la hoja** (`ESTADO_DEL_SISTEMA.md` R1c v1.58, Tarea 29d; **sustituye** a lo que sigue): `en_almacen` es la cifra de la hoja leída al calcular, tal cual. Ni lo producido o salido desde el recuento ni lo apartado de otro reparto, envío o pedido: `apartado_reparto` es siempre 0 en `guardar_reparto`.
+- *Antes de la Tarea 29d* — **Envío pegado antes del recuento de la mañana del mismo día** (decidido en el PR #3, `ESTADO_DEL_SISTEMA.md` v1.11): la hoja aún no refleja las cajas del reparto aceptado ese día, así que primero se apartan: `disponible = max(0, en_almacen − pedido en el reparto de hoy)` y `faltan = max(0, pedido − disponible)`. Se devuelve `apartado_reparto` por referencia. Desde la Tarea 14 se aparta lo que aún no ha salido (bolsas sin terminar); lo que ya ha salido se resta como salido del almacén ahora (§2.10). El reparto nunca descuenta.
 - Lista de producción = referencias con `faltan > 0`; orden sugerido, el del catálogo. El operario elige el orden.
 - Bolsas = una por tienda (o destino) con sus referencias y cantidades del texto.
 - Duración prevista de la producción = cajas que faltan × 1 min; de las bolsas = tiendas × 3 min (§6.10).
@@ -174,6 +175,7 @@ El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 n
 
 ### 2.10 Pedidos de cliente, almacén ahora y cajas en camino (Tareas 12 y 14, `ESTADO_DEL_SISTEMA.md` v1.27, R1b y R1c)
 **Almacén ahora (R1c, rehecha en la Tarea 14).** La hoja solo cambia con los recuentos y con el «FIN DE DÍA» de cada tienda. Entre medias la app lleva su propia cuenta, **solo en sus cálculos y nunca en la hoja**. Hay una sola fuente: `motor.movimientos_almacen` y `motor.en_camino_en`, que usan todos (`servidor_preparar`, «coge / haz», `lista_stock`, `estado_actual`).
+- **«Calcular» del reparto y del envío no usa el almacén ahora** (R1c v1.58, Tarea 29d): usa la cifra de la hoja tal cual (§2.5). El almacén ahora sigue para el «coge / haz» de los pedidos, la lista del +35 % y las cajas en camino.
 - **Almacén ahora** = hoja del almacén + lo producido y marcado desde el último recuento − lo que ha salido desde ese recuento.
   - **Producido:** referencias de producción terminadas (del reparto, del envío, de los pedidos y de la lista del +35 %). De un pedido, solo lo que había que hacer («haz»).
   - **Salido:** las bolsas listas (reparto y pedidos de tienda), el envío preparado y los pedidos de Nacex preparados.
@@ -209,9 +211,9 @@ El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 n
 | --- | --- | --- |
 | A-01 | 12:45: almacén 5 y tienda 3 en la hoja, más 3 del reparto en camino | Cajas de todas partes: **11**. |
 | A-02 | 17:55: almacén 8 y Gipuzkoa 4 en la hoja, más 4 en la caja de Nacex | **16**. |
-| A-03 | El hueco: a las 09:30 se hacen 6 BZ1 4g (con 4 en la hoja); a las 11:00 se modifica el reparto pidiendo 5 más | Almacén ahora 10: **no hay que hacer ninguna**. |
+| A-03 | El hueco: a las 09:30 se hacen 6 BZ1 4g (con 4 en la hoja); a las 11:00 se modifica el reparto pidiendo 5 más | Desde la Tarea 29d, con la hoja: en el almacén 4, **falta 1** (antes, almacén ahora 10 y ninguna). |
 | A-04 | Antes del recuento: la hoja aún cuenta 3 cajas que ya salieron con las bolsas (almacén 8 y tienda 3 en la hoja) | 8 + 3 − 3 salidas + 3 en camino = **11** (no 14). |
-| A-05 | Lo producido para el propio reparto | No cuenta dos veces: ya está hecho en sus elementos. |
+| A-05 | Lo producido para el propio reparto | No cambia la cifra de la hoja; lo hecho se conserva en sus elementos al volver a calcular. |
 | A-06 | Cada recuento (mañana y tarde) | Pone a cero lo producido y lo salido; lo que va en camino sigue. |
 | A-07 | Reparto con bolsas listas a las 10:45 | En camino a su tienda hasta las 23:30 (a las 23:31, ya no). |
 | A-08 | Envío del miércoles preparado a las 16:30 | En camino a Gipuzkoa hasta el jueves a las 11:59 (a las 12:00, ya no). |
@@ -231,9 +233,11 @@ El texto ya no se pega: se elige cada referencia de una lista (`lista.ts`). R1 n
 | C-03 | Bolsas listas | Reparto y pedidos de tienda: salidos y en camino a su tienda (Bilbao 27, Portugalete 2). Nacex sigue en el almacén. |
 | C-04 | Al día siguiente | El reparto de ayer ya no va en camino. |
 | C-05 | Viernes: envío 6 y pedido de Nacex 2 preparados | En camino: Gipuzkoa 6. El pedido de Nacex, no (sale del stock). |
-| C-06 | Envío con reparto 20 y pedido de tienda 6 sin salir (V2 4g 30 en la hoja) | Apartadas 26: quedan 4. Con las bolsas ya listas (25 salidas), no se aparta nada: quedan 5. |
+| C-06 | Envío con reparto 20 y pedido de tienda 6 sin salir (V2 4g 30 en la hoja) | Desde la Tarea 29d, no se aparta nada: 30 (antes, apartadas 26 y quedaban 4). Con las bolsas ya listas (25 salidas), tampoco se restan: 30. |
+| H-01 | 29d · El 04/11: la hoja dice 0; se produjeron 2 el día anterior sin recuento marcado; se piden 2 | En el almacén 0: **hay que producir 2** (antes, la cuenta propia daba 2 y ninguna). |
+| H-02 | Lo mismo sin granel | Reparto: a la producción como sin granel (quitar o coger de otra tienda, R1e). Envío: `SIN_GRANEL`. |
 
-A-01, A-02 y A-04 son R3-24 a R3-26; A-03 y A-05, en `reparto_lista_test.ts`; A-06 a A-11 y C-01 a C-05, en `supabase/tests/19_almacen_ahora.sql` y `17_pedidos_cliente.sql`; P-01 a P-08, en la 17; C-06, en `reparto_lista_test.ts`.
+A-01, A-02 y A-04 son R3-24 a R3-26; A-03, A-05, H-01 y H-02, en `reparto_lista_test.ts`; A-06 a A-11 y C-01 a C-05, en `supabase/tests/19_almacen_ahora.sql` y `17_pedidos_cliente.sql`; P-01 a P-08, en la 17; C-06, en `reparto_lista_test.ts`.
 
 ### 2.11 Producto sin granel en el reparto (Tarea 16, `ESTADO_DEL_SISTEMA.md` v1.30, R1e)
 
@@ -268,7 +272,7 @@ Quien prepara el reparto no mira el almacén: **de dónde sale cada cosa lo deci
 | R1e-08 | WhatsApp de R1e-06 | «BILBAO / 2x V2 4g» (sin BZ1) y «PORTU / 2x BZ1 4g (de Algorta)» |
 | R1e-09 | Bolsas listas a las 10:45 | En camino a las 12:00: Bilbao +2 V2, Portu +2 BZ1, Algorta −2 BZ1; a las 23:45, nada. BZ1 no sale del almacén |
 
-**En el envío** (Tarea 17, `ESTADO_DEL_SISTEMA.md` v1.31): no hay ruta que pase por otra tienda, así que se comprueba **al calcular**, no en la producción. Con la misma cuenta que decide lo que falta (almacén ahora y, antes, lo apartado para el reparto del día), si una referencia hay que hacerla y su producto tiene granel ≤ 0, **no se guarda nada** y el error `SIN_GRANEL` dice, por destino, lo pedido y lo que hay (lo máximo que se puede mandar). Las cajas se las llevan los primeros destinos, en su orden (`sinGranelEnvio`, `sin_granel.ts`). La pantalla ofrece «Dejarlo en N» o «Quitarlo» y vuelve a calcular.
+**En el envío** (Tarea 17, `ESTADO_DEL_SISTEMA.md` v1.31): no hay ruta que pase por otra tienda, así que se comprueba **al calcular**, no en la producción. Con la misma cuenta que decide lo que falta (desde la Tarea 29d, la cifra de la hoja tal cual), si una referencia hay que hacerla y su producto tiene granel ≤ 0, **no se guarda nada** y el error `SIN_GRANEL` dice, por destino, lo pedido y lo que hay (lo máximo que se puede mandar). Las cajas se las llevan los primeros destinos, en su orden (`sinGranelEnvio`, `sin_granel.ts`). La pantalla ofrece «Dejarlo en N» o «Quitarlo» y vuelve a calcular.
 
 | # | Datos | Resultado |
 | --- | --- | --- |
@@ -276,7 +280,7 @@ Quien prepara el reparto no mira el almacén: **de dónde sale cada cosa lo deci
 | E-02 | Lo mismo, sin granel | `SIN_GRANEL`: «BZ1 4g: pides 5, en el almacén no hay cajas y no hay granel para hacerlas.» (`hay` 0). No se guarda nada |
 | E-03 | 3 en el almacén, sin granel | «BZ1 4g: pides 5, en el almacén hay 3 cajas y no hay granel para hacer las otras 2.» (`hay` 3) |
 | E-04 | Gipuzkoa 4 y Durango 3; 5 en el almacén, sin granel | Gipuzkoa se lleva 4; Durango: «pides 3, en el almacén hay 1 caja y no hay granel para hacer las otras 2.» |
-| E-05 | Viernes: 6 en el almacén, 4 apartadas para el reparto de hoy; el envío pide 3, sin granel | «pides 3, en el almacén hay 2 cajas y no hay granel para hacer la otra.» |
+| E-05 | Viernes: 6 en el almacén, 4 para el reparto de hoy sin salir; el envío pide 3, sin granel | Desde la Tarea 29d no se aparta lo del reparto: hay 6 y se guarda (antes, «pides 3, en el almacén hay 2 cajas…»). |
 | E-06 | Tras `SIN_GRANEL`, el mismo `id_cliente` con «Dejarlo en 3» | Se guarda normal |
 | E-07 | El reparto (no el envío) sin granel | Sin cambios: va a la producción (R1e-06) |
 

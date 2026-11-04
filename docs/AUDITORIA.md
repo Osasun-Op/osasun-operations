@@ -76,9 +76,11 @@ order by respuestas_500 + excepciones desc, funcion
 
 ## 3. Las funciones del servidor desplegadas (`list_edge_functions`)
 
-Tienen que estar estas seis, `ACTIVE` y con `verify_jwt: false` (comprueban ellas quién llama), y ninguna más. Son las carpetas de `supabase/functions/` (sin `_compartido`):
+Tienen que estar estas cinco, `ACTIVE` y con `verify_jwt: false` (comprueban ellas quién llama), y ninguna más. Son las carpetas de `supabase/functions/` (sin `_compartido`):
 
-`catalogo` · `enviar_correo` · `guardar_pedido_cliente` · `guardar_reparto` · `lista_stock` · `pegar_reparto` (obsoleta, publicada hasta que el coordinador diga quitarla).
+`catalogo` · `enviar_correo` · `guardar_pedido_cliente` · `guardar_reparto` · `lista_stock`.
+
+`pegar_reparto` se borró en la Tarea 29d (orden del propietario, 04/11/2026): si aún sale publicada en un proyecto, hay que borrarla de él.
 
 ## 4. Funciones rehechas en una migración: `scripts/comparar_funciones.py`
 

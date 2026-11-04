@@ -12,7 +12,7 @@ Deno.test("rpc/leerRespuesta: una función void responde sin cuerpo (204) → nu
 
 Deno.test("rpc/leerRespuesta: 200 con el cuerpo vacío (o solo espacios) → null", async () => {
   assertEquals(await leerRespuesta("servidor_guardar_cobertura", new Response("", { status: 200 })), null);
-  assertEquals(await leerRespuesta("servidor_anotar_sale", new Response(" \n", { status: 200 })), null);
+  assertEquals(await leerRespuesta("servidor_reparto_anotar_id_cliente", new Response(" \n", { status: 200 })), null);
 });
 
 Deno.test("rpc/leerRespuesta: JSON de siempre (objeto, texto, null)", async () => {

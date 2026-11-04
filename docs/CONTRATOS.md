@@ -1,6 +1,12 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.19 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.20 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.20 (Tarea 29d) — para Lovable: «Calcular» solo con la hoja.** Nada cambia de forma. 🧪 = solo en pruebas.
+> 1. **`guardar_reparto`** (§3.14), en el reparto y en el envío: `en_almacen` de cada referencia es **la cifra de la hoja leída al pulsar «Calcular»**, tal cual (`ESTADO_DEL_SISTEMA.md` R1c v1.58). Ya no suma lo producido ni resta lo salido desde el recuento, y el envío ya no aparta el reparto de hoy: `apartado_reparto` es siempre 0. La pantalla no tiene que cambiar nada; si enseña «apartado para el reparto», ya no saldrá.
+> 2. **La hoja tiene que estar al día al calcular.** Con 0 en la hoja y sin granel, sale lo de siempre: en el reparto, «quitar o coger de otra tienda» (§3.19); en el envío, `SIN_GRANEL`.
+> 3. **No cambia:** el «coge / haz» de los pedidos, la lista del +35 % (`lista_stock`) y las cajas en camino siguen con el almacén ahora (punto 6 de 1.3).
+> 4. **`pegar_reparto` ya no existe** (§3.8; **orden del propietario**, 04/11/2026): si alguna pantalla la llamaba todavía, que use `catalogo` + `guardar_reparto`.
 
 > **Cambios en 1.19 (Tarea 31) — para Lovable: productos atascados.** Solo se añade (§3.11, §9.1, §9.2, §9.15 a §9.17 y el apartado nuevo §9.23). 🧪 = solo en pruebas.
 > 1. **Tableta, el martes** (§9.23): tarea «Revisa los productos atascados» (`tipo: "atascados"`), por la mañana (Bilbao alterna), en todas las tiendas, franquicias incluidas. Lista de `productos_tienda()` con su formato y − y + (cajas), nota opcional por producto; se guarda con **`revisar_atascados`**. Lista vacía = «Nada atascado esta semana».
@@ -178,7 +184,7 @@
 
 - **Dos tipos de llamada:**
   - **Funciones de base de datos** (`supabase.rpc('nombre', {...})`): todo lo que no necesita Google Sheets.
-  - **Funciones del servidor** (`supabase.functions.invoke('nombre', {...})`): las que leen Sheets (`catalogo`, `guardar_reparto`, `guardar_pedido_cliente` y `lista_stock`; `pegar_reparto`, obsoleta).
+  - **Funciones del servidor** (`supabase.functions.invoke('nombre', {...})`): las que leen Sheets (`catalogo`, `guardar_reparto`, `guardar_pedido_cliente` y `lista_stock`; `pegar_reparto` se borró en la Tarea 29d).
 - Los **nombres de los parámetros** son los de este documento (ej. `supabase.rpc('iniciar_tarea', { tarea_id })`).
 - Las pantallas usan **solo la clave pública** y la sesión del usuario. El rol se comprueba dentro de cada función; esconder un botón no da ni quita permisos.
 - **Hora:** la decide el servidor. Las pantallas nunca envían «ahora».
@@ -333,8 +339,8 @@ Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas 
 - **`pedido_cliente`, obsoleto para las pantallas desde la Tarea 12:** el pedido de cliente se registra con `guardar_pedido_cliente` (§3.16). Sigue funcionando.
 - Desde la Tarea 7 la pantalla del operario usa `crear_incidencia` (llega mercancía y pedido de cliente crean esta misma tarea por dentro). `registrar_evento` sigue funcionando igual (lo usa Administración para un pedido de cliente).
 
-### 3.8 `pegar_reparto` (función del servidor) ✅ — **obsoleta desde la Tarea 10**
-> Sigue publicada y funcionando, pero las pantallas ya no la usan: el reparto se prepara con la lista (`catalogo` + `guardar_reparto`, §3.13 y §3.14). Se quitará cuando lo decida el coordinador.
+### 3.8 `pegar_reparto` (función del servidor) — **borrada en la Tarea 29d, por orden del propietario**
+> **Ya no existe** (orden del propietario, 04/11/2026, PR #35): estaba obsoleta desde la Tarea 10 y llevaba su propia copia de la regla antigua del envío. El reparto y el envío se preparan con la lista (`catalogo` + `guardar_reparto`, §3.13 y §3.14). Con ella se han quitado `servidor_anotar_sale` y, en `servidor_preparar`, `reparto_hoy` y `recuento_manana_hecho`. Lo que sigue queda solo como historia. La clave de la tarea del operario «Prepara el reparto» se sigue llamando `pegar_reparto` (no es la función).
 
 - **Entrada:** `{ texto, tipo: "reparto"|"envio", sale?: "operario"|"administracion", confirmar_fecha?: true }`
 - **`sale` = desplegable «¿Quién sale?»** ✅ Tarea 8: si llega, **manda sobre la línea `SALE:`** del texto (que pasa a ser opcional). Si el texto dice otra cosa, o trae dos `SALE:` distintas, no es un error: se acepta con lo del desplegable y queda anotado en el registro (`sale_distinto_del_texto`). Sin `sale` y sin `SALE:` → `FALTA_SALE`. Sin desplegable, dos `SALE:` distintas siguen siendo `REPARTO_CON_ERRORES` (`SALE_CONTRADICTORIA`).
@@ -495,7 +501,8 @@ Guarda el reparto (o el envío) preparado con la lista. **Sustituye a `pegar_rep
 ```
 - **Peticiones especiales** (Tarea 13): se guardan con el reparto (o el envío) y van a la bolsa de su tienda (§3.2). **No van a producción ni cuentan como stock.** Al modificar, las que siguen igual conservan si ya estaban metidas, las quitadas desaparecen y una nueva vuelve a abrir la bolsa si ya estaba terminada. Vienen en `peticiones`, con el nombre de la tienda (lista vacía si no hay). Si algo no está en el almacén, el operario lo avisa con Incidencia → «Hay que pedir o comprar algo».
 - **Pedidos de cliente para recoger en tienda** (Tarea 12): los que esperan al reparto de hoy entran solos al guardarlo (también al modificarlo, sin duplicarse). No cambian la producción del reparto: cada uno tiene su tarea, después de la producción, con «coge / haz» calculado al salir la tarea (después de lo oficial), y su bolsa aparte en la tienda. Vienen en `pedidos_cliente` (lista vacía si no hay).
-- **Envío** (Tarea 12): mientras la hoja aún cuenta en el almacén lo que sale con el reparto (hasta el recuento de la mañana hecho después de terminar las bolsas), aparta también las cajas de los pedidos de tienda de hoy, no solo las del reparto (R1c).
+- **Envío** (Tarea 12): *hasta la Tarea 29d*, mientras la hoja aún cuenta en el almacén lo que sale con el reparto (hasta el recuento de la mañana hecho después de terminar las bolsas), aparta también las cajas de los pedidos de tienda de hoy, no solo las del reparto (R1c).
+  **Desde la Tarea 29d** (R1c v1.58) no se aparta nada: `en_almacen` es la cifra de la hoja tal cual, en el reparto y en el envío.
 - **`texto_whatsapp`:** `REPARTO dd/mm` (o `ENVÍO dd/mm`), `SALE: ALMACÉN` / `SALE: YO` (solo reparto), y por cada tienda una línea en blanco, su código en mayúsculas y `Nx PRODUCTO FORMATO`, con los nombres exactos de la hoja; si la tienda tiene peticiones especiales, después de sus productos una línea `Además: rollos de TPV; muestras de V2` (separadas por «; »). Tiendas en el orden de `catalogo` y productos en el de la hoja. La pantalla lo copia **tal cual** con un botón para pegarlo en WhatsApp: no se abrevia nada.
 - **Producto sin granel** (Tarea 16, R1e): las referencias del reparto que hay que hacer y no tienen granel van a la producción con `sin_granel` (§3.2). Lo que decida el operario (§3.19) se conserva al modificar el reparto: lo de otra tienda sigue mientras la tienda lo siga pidiendo (como mucho, lo que pide ahora); lo quitado ya está en la línea, porque «Modificar reparto» la abre con la cantidad nueva. Si lo decidido ya no cubre lo que falta, la referencia vuelve a salir sin resolver. `texto_whatsapp` lleva siempre lo decidido.
 - **Reintentos:** repetir con el mismo `id_cliente` devuelve lo ya guardado (con su `texto_whatsapp`), sin volver a leer la hoja ni calcular, con `ya_guardado: true` y `aviso: { codigo: "REPARTO_YA_GUARDADO" }`. Cada vez que se pulsa «Guardar» en una lista nueva o modificada, `id_cliente` nuevo.

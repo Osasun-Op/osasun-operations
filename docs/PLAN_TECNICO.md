@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | **Postgres de Supabase** | Tablas, permisos (RLS) y funciones: motor de tareas, problemas, incidencias, cierres. | ✅ base (Tarea 2) |
 | **Supabase Auth** | Usuarios (Administración y operario), **solo con Google** y solo las cuentas de `cuentas_autorizadas` (hook «Before User Created»); al entrar por primera vez se da de alta su persona. | ✅ Tarea 5 |
-| **3 funciones del servidor (Edge Functions)** | `pegar_reparto` y `lista_stock`: las únicas que leen Google Sheets (R1 y R3). La lectura (`google.ts`, `hoja.ts`) está separada del cálculo (`r1.ts`, `r3.ts`). `enviar_correo`: envía cierres y avisos con Resend (`correo.ts`). | ✅ Tareas 3 y 4 |
+| **3 funciones del servidor (Edge Functions)** | `pegar_reparto` y `lista_stock`: las únicas que leen Google Sheets (R1 y R3); desde la Tarea 10 el reparto es `catalogo` y `guardar_reparto`, y `pegar_reparto` se borró en la Tarea 29d (orden del propietario, 04/11/2026). La lectura (`google.ts`, `hoja.ts`) está separada del cálculo (`r1.ts`, `r3.ts`). `enviar_correo`: envía cierres y avisos con Resend (`correo.ts`). | ✅ Tareas 3 y 4 |
 | **Tareas programadas (pg_cron)** | Generar la jornada a las 06:00 y los cierres de cada turno. | ✅ jornada (Tarea 2) y cierres (Tarea 4) |
 | **Correo (Resend, plan gratuito)** | Cierres por turno y aviso de retraso de la salida (D3). La base de datos pide el envío por `pg_net` a `enviar_correo` con una solicitud interna de un solo uso; la clave `RESEND_API_KEY` es un secreto de las funciones del servidor y el destino (`correo_administracion`) está en la configuración del entorno. | ✅ Tarea 4 |
 | **Realtime de Supabase** | Que una tarea nueva aparezca sola en el Chromebook o el Pixel: `tareas` y `tarea_elementos` publicadas. | ✅ Tarea 5 |
