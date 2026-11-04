@@ -5,6 +5,17 @@
 -- Martes 03/11, sale el operario. Horas de Madrid (+01).
 
 begin;
+-- Tarea 35: estas pruebas son de antes de «Empezar turno». Aquí el turno está abierto de su hora de inicio a la de fin,
+-- como si el operario lo empezara y lo terminara a su hora (solo dentro de esta transacción, que se deshace). La 40
+-- prueba los botones.
+create or replace function motor.en_turno(p_jornada uuid, p_ahora timestamptz)
+returns boolean language sql stable set search_path = '' as $$
+  select exists (select 1 from public.jornadas j
+                   join public.horarios h on h.persona_id = j.persona_id and h.dia_semana = extract(isodow from j.fecha)
+                  where j.id = p_jornada
+                    and p_ahora >= motor.en_local(j.fecha, h.hora_inicio)
+                    and p_ahora < motor.en_local(j.fecha, h.hora_fin))
+$$;
 -- Aísla la prueba de las jornadas reales del operario de pruebas (la tarea
 -- programada crea una cada día): sin pendientes que arrastrar. Se deshace al final.
 update public.tareas set estado = 'hecha'
