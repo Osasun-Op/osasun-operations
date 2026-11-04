@@ -70,7 +70,19 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 35 está fusionada (PR #39). Las siguientes del plan (el «Fin de turno» de las tiendas y los fichajes) las preparará el coordinador.
+**Tarea 36** (sección 7): dos retoques de las tiendas (la limpieza semanal y la hora del vídeo del sábado). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.67) y lo que hiciste en la Tarea 27. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya». Después irán el «Fin de turno» de las tiendas y los fichajes.
+
+---
+
+## 7. TAREA 36 (activa): la limpieza semanal y la hora del vídeo del sábado, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, v1.67 (propietario, 04/11/2026). Dos cambios pequeños en lo que hiciste en la Tarea 27; nada más. Solo en pruebas; producción espera.
+
+1. **«Limpieza de cristales»** (plantilla `limpieza_cristales`, jueves por la tarde) pasa a llamarse **«Limpieza semanal: cristales, polvo y baños»**, con un `porque` acorde («Para que la tienda esté limpia y se vea bien.»). Sigue siendo de un toque (`simple`, sin puntos): la limpieza no se controla. Mismo día, misma hora y las mismas tiendas que ahora (en las franquicias sigue desactivada). Si cambias el código de la plantilla, que no se rompa nada que lo use.
+2. **El vídeo del sábado** (`motor.video_sabado`): hoy sale disponible en el momento en que la persona elige su nombre (`least(disponible_desde, p_ahora)`), así que puede quedar arriba del todo, antes de la apertura, y hacerse ya. Que salga en su lista **a la hora de abrir de su turno, después de la apertura**: 11:00 si empieza por la mañana (como el viernes) y 17:00 si empieza por la tarde (Bilbao, 16:30), con su horario. Hasta esa hora, en gris como las demás. Todo lo demás del vídeo del sábado, igual (a quien no ha compartido esa semana, uno por persona).
+3. **Contratos**, con nota para Lovable si cambia algo que vea la tableta (el título y la hora vienen del servidor; la pantalla no tiene que cambiar).
+
+**Entrega:** PR **«Tarea 36 — Limpieza semanal y vídeo del sábado»**, con «Qué he leído y qué existía ya», pruebas en verde (el título nuevo el jueves; el sábado, quien empieza a las 10:45 tiene el vídeo a las 11:00, detrás de la apertura, y quien empieza por la tarde a las 17:00; Bilbao por la tarde a las 16:30), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
 
 ---
 
@@ -910,3 +922,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.67 | 04/11/2026 | Tarea 33 fusionada (PR #37), solo en pruebas (65 migraciones). Tarea 34 activa (efectivo de los días sin reparto), aprobada por el propietario. |
 | 1.68 | 04/11/2026 | Tarea 34 fusionada (PR #38), solo en pruebas (66 migraciones). Tarea 35 activa («Empezar turno» y «Fin de turno» del operario), aprobada por el propietario. |
 | 1.69 | 04/11/2026 | Tarea 35 fusionada (PR #39), solo en pruebas (67 migraciones; ya aplicada). Sin tarea activa. |
+| 1.70 | 04/11/2026 | Tarea 36 activa (limpieza semanal y hora del vídeo del sábado), aprobada por el propietario. |
