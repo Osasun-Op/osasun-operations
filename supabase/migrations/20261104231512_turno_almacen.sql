@@ -104,7 +104,7 @@ returns text language sql stable set search_path = '' as $$
    limit 1
 $$;
 
--- Lo que dice tarea_activa del turno (contratos §1.4): qué botón enseñar y «Has terminado».
+-- Lo que dice tarea_activa del turno (CONTRATOS §3.2): qué botón enseñar y «Has terminado».
 create or replace function motor.turno_json(p_jornada uuid, p_ahora timestamptz, p_tarea uuid)
 returns jsonb language plpgsql stable set search_path = '' as $$
 declare
@@ -306,7 +306,6 @@ declare
   v_turno text;
   v_ultimo text;
 begin
-  -- Fuera de su turno (Tarea 24), ninguna tarea nueva: solo la que tiene en curso, para terminarla.
   v_en_turno := motor.en_turno(p_jornada, p_ahora);
   -- Tarea 35: el turno lo empieza y lo termina el operario. Sin turno empezado, ninguna tarea.
   if not v_en_turno then
