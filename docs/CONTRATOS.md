@@ -6,6 +6,7 @@
 > 1. **`guardar_reparto`** (§3.14), en el reparto y en el envío: `en_almacen` de cada referencia es **la cifra de la hoja leída al pulsar «Calcular»**, tal cual (`ESTADO_DEL_SISTEMA.md` R1c v1.58). Ya no suma lo producido ni resta lo salido desde el recuento, y el envío ya no aparta el reparto de hoy: `apartado_reparto` es siempre 0. La pantalla no tiene que cambiar nada; si enseña «apartado para el reparto», ya no saldrá.
 > 2. **La hoja tiene que estar al día al calcular.** Con 0 en la hoja y sin granel, sale lo de siempre: en el reparto, «quitar o coger de otra tienda» (§3.19); en el envío, `SIN_GRANEL`.
 > 3. **No cambia:** el «coge / haz» de los pedidos, la lista del +35 % (`lista_stock`) y las cajas en camino siguen con el almacén ahora (punto 6 de 1.3).
+> 4. **`pegar_reparto` ya no existe** (§3.8; **orden del propietario**, 04/11/2026): si alguna pantalla la llamaba todavía, que use `catalogo` + `guardar_reparto`.
 
 > **Cambios en 1.19 (Tarea 31) — para Lovable: productos atascados.** Solo se añade (§3.11, §9.1, §9.2, §9.15 a §9.17 y el apartado nuevo §9.23). 🧪 = solo en pruebas.
 > 1. **Tableta, el martes** (§9.23): tarea «Revisa los productos atascados» (`tipo: "atascados"`), por la mañana (Bilbao alterna), en todas las tiendas, franquicias incluidas. Lista de `productos_tienda()` con su formato y − y + (cajas), nota opcional por producto; se guarda con **`revisar_atascados`**. Lista vacía = «Nada atascado esta semana».
@@ -183,7 +184,7 @@
 
 - **Dos tipos de llamada:**
   - **Funciones de base de datos** (`supabase.rpc('nombre', {...})`): todo lo que no necesita Google Sheets.
-  - **Funciones del servidor** (`supabase.functions.invoke('nombre', {...})`): las que leen Sheets (`catalogo`, `guardar_reparto`, `guardar_pedido_cliente` y `lista_stock`; `pegar_reparto`, obsoleta).
+  - **Funciones del servidor** (`supabase.functions.invoke('nombre', {...})`): las que leen Sheets (`catalogo`, `guardar_reparto`, `guardar_pedido_cliente` y `lista_stock`; `pegar_reparto` se borró en la Tarea 29d).
 - Los **nombres de los parámetros** son los de este documento (ej. `supabase.rpc('iniciar_tarea', { tarea_id })`).
 - Las pantallas usan **solo la clave pública** y la sesión del usuario. El rol se comprueba dentro de cada función; esconder un botón no da ni quita permisos.
 - **Hora:** la decide el servidor. Las pantallas nunca envían «ahora».
@@ -338,8 +339,8 @@ Botones «Retrasar 15 min» y «Retrasar 30 min» de la tarea de bolsas (bolsas 
 - **`pedido_cliente`, obsoleto para las pantallas desde la Tarea 12:** el pedido de cliente se registra con `guardar_pedido_cliente` (§3.16). Sigue funcionando.
 - Desde la Tarea 7 la pantalla del operario usa `crear_incidencia` (llega mercancía y pedido de cliente crean esta misma tarea por dentro). `registrar_evento` sigue funcionando igual (lo usa Administración para un pedido de cliente).
 
-### 3.8 `pegar_reparto` (función del servidor) ✅ — **obsoleta desde la Tarea 10**
-> Sigue publicada y funcionando, pero las pantallas ya no la usan: el reparto se prepara con la lista (`catalogo` + `guardar_reparto`, §3.13 y §3.14). Se quitará cuando lo decida el coordinador.
+### 3.8 `pegar_reparto` (función del servidor) — **borrada en la Tarea 29d, por orden del propietario**
+> **Ya no existe** (orden del propietario, 04/11/2026, PR #35): estaba obsoleta desde la Tarea 10 y llevaba su propia copia de la regla antigua del envío. El reparto y el envío se preparan con la lista (`catalogo` + `guardar_reparto`, §3.13 y §3.14). Con ella se han quitado `servidor_anotar_sale` y, en `servidor_preparar`, `reparto_hoy` y `recuento_manana_hecho`. Lo que sigue queda solo como historia. La clave de la tarea del operario «Prepara el reparto» se sigue llamando `pegar_reparto` (no es la función).
 
 - **Entrada:** `{ texto, tipo: "reparto"|"envio", sale?: "operario"|"administracion", confirmar_fecha?: true }`
 - **`sale` = desplegable «¿Quién sale?»** ✅ Tarea 8: si llega, **manda sobre la línea `SALE:`** del texto (que pasa a ser opcional). Si el texto dice otra cosa, o trae dos `SALE:` distintas, no es un error: se acepta con lo del desplegable y queda anotado en el registro (`sale_distinto_del_texto`). Sin `sale` y sin `SALE:` → `FALTA_SALE`. Sin desplegable, dos `SALE:` distintas siguen siendo `REPARTO_CON_ERRORES` (`SALE_CONTRADICTORIA`).

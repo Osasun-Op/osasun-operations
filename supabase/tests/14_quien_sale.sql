@@ -97,13 +97,10 @@ begin
            'items', '[{"producto": "V2", "formato": "4g", "cantidad": 1}]'::jsonb)),
          true, pg_temp.h('09:00'));
   v_rep := (r ->> 'reparto_id')::uuid;
-  perform public.servidor_anotar_sale(adm, v_rep, 'administracion', 'operario');
-  perform public.servidor_anotar_sale(adm, v_rep, 'operario', 'operario');
-  perform pg_temp.comprobar('Desplegable distinto de SALE: se anota una vez en el registro (si coinciden, nada)',
-    (select count(*) from public.registro_eventos where jornada_id = j and tipo = 'sale_distinto_del_texto'
-       and datos ->> 'sale_texto' = 'administracion' and datos ->> 'sale_elegido' = 'operario'
-       and datos ->> 'reparto' = v_rep::text) = 1
-    and (select count(*) from public.registro_eventos where jornada_id = j and tipo = 'sale_distinto_del_texto') = 1);
+  -- Tarea 29d: servidor_anotar_sale (la diferencia entre el desplegable y la línea SALE: del texto pegado) se ha
+  -- borrado con pegar_reparto (orden del propietario, 04/11/2026).
+  perform pg_temp.comprobar('Tarea 29d: servidor_anotar_sale ya no existe (pegar_reparto borrada)',
+    v_rep is not null and to_regprocedure('public.servidor_anotar_sale(uuid, uuid, text, text)') is null);
 
   update public.tareas set estado = 'hecha'
    where jornada_id = j and clave not in ('bolsas', 'salida_reparto', 'efectivo_reporte', 'recuento_manana',
@@ -142,8 +139,6 @@ declare
 begin
   perform pg_temp.comprobar('Operario: puede usar cambiar_quien_sale y mi_perfil trae las opciones',
     r -> 'error' ->> 'codigo' = 'DATOS_NO_VALIDOS' and jsonb_array_length(r2 -> 'quien_sale_opciones') = 2, r::text || r2::text);
-  perform pg_temp.comprobar('Operario: no puede usar la función del servidor que anota la diferencia',
-    pg_temp.rechazada($q$select public.servidor_anotar_sale(auth.uid(), gen_random_uuid(), 'operario', 'administracion')$q$));
 end;
 $$;
 reset role;
@@ -170,9 +165,8 @@ select set_config('request.jwt.claims', '', true);
 set local role anon;
 do $$
 begin
-  perform pg_temp.comprobar('Sin sesión no se puede cambiar quién sale ni anotar',
-    pg_temp.rechazada($q$select public.cambiar_quien_sale('operario')$q$)
-    and pg_temp.rechazada($q$select public.servidor_anotar_sale(gen_random_uuid(), gen_random_uuid(), 'operario', 'administracion')$q$));
+  perform pg_temp.comprobar('Sin sesión no se puede cambiar quién sale',
+    pg_temp.rechazada($q$select public.cambiar_quien_sale('operario')$q$));
 end;
 $$;
 reset role;

@@ -200,15 +200,11 @@ begin
   r := motor.retrasar_salida_de(op, gen_random_uuid(), 15, '2026-11-11 10:50+01');
   perform pg_temp.comprobar('Con las bolsas ya listas no se retrasa: ESTADO_NO_VALIDO', r -> 'error' ->> 'codigo' = 'ESTADO_NO_VALIDO', r::text);
 
-  -- Del PR #3: el envío pegado antes del recuento descuenta el reparto de hoy --------
+  -- Del PR #3, sustituido en la Tarea 29d: el envío ya no descuenta el reparto de hoy y pegar_reparto se ha
+  -- borrado (orden del propietario, 04/11/2026). servidor_preparar ya no da lo que solo usaba ella.
   r := public.servidor_preparar(op, '2026-11-11 11:30+01');
-  perform pg_temp.comprobar('Antes del recuento: servidor_preparar da el reparto de hoy (V2 4g 30, BZ1 4g 9) y recuento sin hacer',
-    r -> 'reparto_hoy' @> '[{"producto": "V2", "formato": "4g", "pedido": 30}, {"producto": "BZ1", "formato": "4g", "pedido": 9}]'
-    and not (r ->> 'recuento_manana_hecho')::boolean, (r -> 'reparto_hoy')::text);
-  update public.tareas set estado = 'hecha' where jornada_id = j2 and clave = 'recuento_manana';
-  r := public.servidor_preparar(op, '2026-11-11 13:05+01');
-  perform pg_temp.comprobar('Después del recuento: recuento_manana_hecho = true (el servidor ya no descuenta)',
-    (r ->> 'recuento_manana_hecho')::boolean, r::text);
+  perform pg_temp.comprobar('Tarea 29d: servidor_preparar ya no da reparto_hoy ni recuento_manana_hecho (pegar_reparto borrada)',
+    not (r ? 'reparto_hoy') and not (r ? 'recuento_manana_hecho') and r ? 'almacen' and r ? 'comprometido', r::text);
 end;
 $$;
 
