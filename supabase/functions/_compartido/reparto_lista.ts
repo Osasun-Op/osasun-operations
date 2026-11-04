@@ -6,8 +6,7 @@
 import type { Pestanas, ResultadoLectura } from "./google.ts";
 import type { Destino } from "./r1.ts";
 import { prepararReparto, referencias, validarLineas, validarPeticiones } from "./lista.ts";
-import { type Cajas, type Comprometido, listaPedido, SIN_COMPROMISOS } from "./pedidos.ts";
-import { ajusteAlmacen, aplicarAjuste, type MovimientosAlmacen, SIN_MOVIMIENTOS } from "./almacen.ts";
+import { type Cajas, listaPedido } from "./pedidos.ts";
 import { guardarCobertura } from "./r4.ts";
 import { marcarSinGranel, sinGranelEnvio } from "./sin_granel.ts";
 
@@ -36,10 +35,6 @@ interface Contexto {
     destinos_reparto?: { reparto: string[]; envio: string[] };
     stock_excluidos?: { producto: string; formato: string; motivo: string }[];
   };
-  /** R1c: lo comprometido hoy que aún no ha salido del almacén, y lo que va en camino (motor.comprometido_en). */
-  comprometido?: Comprometido;
-  /** R1c: lo producido y lo salido desde el último recuento (almacén ahora = hoja + producido − salido). */
-  almacen?: MovimientosAlmacen;
   /**
    * Pedidos de cliente para recoger en tienda que esperan. `envio_destino_id` (Tarea 30c): el destino del envío que
    * los lleva (GIPUZKOA para Donosti y Rentería); null si van en el reparto.
@@ -162,16 +157,11 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
   const pv = validarPeticiones(cuerpo.peticiones, destinos);
   if (!pv.ok) return error("DATOS_NO_VALIDOS", pv.mensaje, pv.detalle);
 
-  const c = ctx.comprometido ?? SIN_COMPROMISOS;
   const { texto, r } = prepararReparto({
     tipo, hoy: { dia: ctx.dia, mes: ctx.mes }, sale, lineas: v.lineas, destinos, peticiones: pv.peticiones,
-    // R1c: el almacén ahora (hoja + lo producido desde el recuento − lo que ha salido).
-    entradas: aplicarAjuste(entradas, ajusteAlmacen(ctx.almacen ?? SIN_MOVIMIENTOS, tipo)),
-    // Envío: primero se apartan las cajas del reparto y de los pedidos de tienda de
-    // hoy que aún no han salido (bolsas sin terminar). Lo decide motor.comprometido_en.
-    apartadoReparto: tipo === "envio"
-      ? [...c.reparto, ...c.pedidos_tienda].map((x) => ({ producto: x.producto, formato: x.formato, pedido: x.cantidad }))
-      : [],
+    // R1c (v1.58, Tarea 29d): «Calcular» usa la cifra de almacén de la hoja leída ahora, tal cual. Sin sumar lo
+    // producido ni restar lo salido desde el recuento, y sin apartar lo de otro reparto, envío o pedido.
+    entradas,
     permitirVacio: activanReparto,
   });
   // R1e: lo que hay que hacer sin granel se resuelve en la producción (quitarlo o de otra tienda).

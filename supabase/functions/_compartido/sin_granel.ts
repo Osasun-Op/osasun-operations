@@ -69,7 +69,7 @@ const cajas = (n: number) => `${n} ${n === 1 ? "caja" : "cajas"}`;
 /**
  * R1e en el envío (ESTADO v1.31): se comprueba al calcular, no en la producción,
  * porque no hay ruta que pase por otra tienda. Con la misma cuenta que decide lo
- * que falta (almacén ahora, apartado lo del reparto): lo que hay que hacer sin
+ * que falta (con la cifra de almacén de la hoja, R1c v1.58): lo que hay que hacer sin
  * granel. Las cajas que hay se las llevan los primeros destinos, en su orden.
  */
 export function sinGranelEnvio(
