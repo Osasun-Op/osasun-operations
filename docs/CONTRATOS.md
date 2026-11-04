@@ -1,6 +1,15 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.22 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.23 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.23 (Tarea 34) — para Lovable: el efectivo de los días sin reparto.** Solo se añade (§9.11 y §9.24). 🧪 = solo en pruebas.
+> 1. **«Recibe la bolsa»:** la X es ahora la suma del efectivo de los cierres que todavía no han ido en ninguna bolsa entregada. El lunes son el viernes y el sábado; también suma los días sin reparto y una bolsa que se quedó sin entregar.
+>    - **Con un cierre**, el texto del punto es el de siempre: «Bolsa de ayer entregada con 85,50 € en efectivo».
+>    - **Con varios:** «Bolsa entregada con 180,00 € en efectivo (cierres del 03/11 y 04/11)».
+>    - **La pantalla enseña el `texto` del punto** tal como viene.
+> 2. **`bolsa.efectivo`** (tableta y `resumen_tienda`) trae además **`dias`**: los días de los cierres que lleva. `esperado` es su suma.
+> 3. **Dashboard de la tienda:** «Efectivo: 180,00 € entregados (03/11 y 04/11)» en lugar de «Efectivo de ayer». Con un solo día, «Efectivo: 85,50 € entregados (17/12)». Con otra cantidad, la entregada y el motivo, como ahora.
+> 4. **«Otra cantidad»**, igual que ahora. Esos cierres quedan entregados y la diferencia queda explicada con el motivo; no pasa a la siguiente bolsa. Si un sábado se recoge algo, la tienda lo marca así en la tarea.
 
 > **Cambios en 1.22 (Tarea 33) — para Lovable: marcas en las pestañas del panel, totales de los cierres de caja y dónde está cada cosa.** Solo se añade (§9.8, §9.9, §9.17, §9.19 y el apartado nuevo §9.25). 🧪 = solo en pruebas. Sustituye al «resumen del día»: no hay aviso al cerrar.
 > 1. **Marcas en las pestañas** (solo Administración): cada centro de `tiendas().centros` trae `marcas: { rojo, sin_hacer, sin_abrir, texto }`.
@@ -973,7 +982,7 @@ Sale sola en `tienda_hoy().tareas` **cuando sale el reparto**, en las tiendas qu
 ```json
 {
   "reparto_id": "…", "fecha": "2026-12-18", "salida": "10:50", "recibida_a_las": null, "recibida_por": null,
-  "efectivo": { "esperado": 85.50, "de_fecha": "2026-12-17", "entregado": null, "motivo": null },
+  "efectivo": { "esperado": 85.50, "de_fecha": "2026-12-17", "entregado": null, "motivo": null, "dias": ["2026-12-17"] },
   "productos": [ { "clave": "producto:V2|4g", "producto": "V2", "formato": "4g", "cantidad": 3 } ],
   "peticiones": [ { "clave": "peticion:Muestra: V2 x2", "texto": "Muestra: V2 x2" } ],
   "pedidos": [ { "clave": "pedido:…", "pedido_id": "…", "cliente": "…", "lineas": [ { "producto": "BZ1", "formato": "4g", "cantidad": 1 } ] } ],
@@ -984,9 +993,14 @@ Sale sola en `tienda_hoy().tareas` **cuando sale el reparto**, en las tiendas qu
 - **Dos puntos** (`puntos`):
   1. **«Bolsa recibida»**: un toque con `marcar_punto`. La bolsa consta como recibida a esa hora, por quien está (`recibida_a_las`, `recibida_por`), y las demás tiendas lo ven (§9.13).
   2. **«Bolsa de ayer entregada con X € en efectivo»** (`pide: "efectivo"`, `efectivo_esperado: X`): X es el efectivo del último cierre de caja de la tienda (§9.14).
+     - **Desde la Tarea 34**, X es la suma del efectivo de los cierres que todavía no han ido en ninguna bolsa entregada. Son los posteriores al último cierre ya entregado (decisión del propietario, 04/11/2026):
+       - si el reparto pasa todos los días, es el de ayer, y **el lunes, el del viernes y el del sábado** (el sábado no hay reparto);
+       - si no ha pasado algún día, o una bolsa se quedó con el efectivo sin entregar, esos cierres van en la siguiente;
+       - si la tienda nunca ha entregado una bolsa, solo el último cierre.
+     - **Con varios cierres, el texto es otro:** «Bolsa entregada con 180,00 € en efectivo (cierres del 03/11 y 04/11)». `bolsa.efectivo.dias` dice cuáles son.
      - **Un toque** (`marcar_punto`) = entrega X.
-     - **Otra cantidad:** `entregar_efectivo({ elemento_id, cantidad, motivo })`, con el porqué (por ejemplo, «Monedas para cambio»). Sin porqué: `MOTIVO_OBLIGATORIO`.
-     - **Sin cierre anterior** (`efectivo_esperado: null`, texto «Bolsa de ayer entregada: di cuánto efectivo»): hay que decir la cantidad; un toque responde `FALTAN_DATOS` con `pide: "efectivo"`.
+     - **Otra cantidad:** `entregar_efectivo({ elemento_id, cantidad, motivo })`, con el porqué (por ejemplo, «Monedas para cambio»). Sin porqué: `MOTIVO_OBLIGATORIO`. Esos cierres quedan entregados y la diferencia no pasa a la siguiente bolsa (Tarea 34).
+     - **Sin cierre anterior** (`efectivo_esperado: null`, texto «Bolsa de ayer entregada: di cuánto efectivo»): hay que decir la cantidad; un toque responde `FALTAN_DATOS` con `pide: "efectivo"`. Desde la Tarea 34, también si todos los cierres anteriores ya se han entregado.
 - Con los dos puntos, la tarea queda hecha y sale «Coloca y apunta la reposición».
 - **`entregar_efectivo(elemento_id, cantidad?, motivo?)`:** euros con dos decimales como máximo; `motivo`, una línea (200 letras). **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `TODAVIA_NO`, `SIN_PERSONA`, `ESTADO_NO_VALIDO`, `FALTAN_DATOS`, `MOTIVO_OBLIGATORIO`, `DATOS_NO_VALIDOS`.
 
@@ -1145,7 +1159,7 @@ Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8, «Panel de Administraci
   "turnos": [ { "nombre": "…", "turno": "manana", "desde": "10:55" } ],
   "tareas": [ /* objeto tarea de la tienda, §9.2 */ ],
   "cuantas": { "total": 6, "hechas": 2, "pendientes": 4, "no_hechas": 0 },
-  "bolsa": { /* §9.11: salida, recibida_a_las, recibida_por, efectivo, reposicion, contenido */ },
+  "bolsa": { /* §9.11: salida, recibida_a_las, recibida_por, efectivo (con dias, Tarea 34), reposicion, contenido */ },
   "reparto": { /* §9.13: por dónde va */ },
   "envios": [ /* §9.21 */ ], "envios_sin_confirmar": 0,
   "incidencias": [ /* §9.20 */ ], "atascados": [ /* objeto atascado, §9.23 (solo los abiertos) */ ],
