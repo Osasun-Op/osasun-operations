@@ -1,6 +1,12 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.20 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.21 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.21 (Tarea 32) — para Lovable: el panel de Administración por centro.** Solo se añade (§9.19 y el apartado nuevo §9.24). 🧪 = solo en pruebas.
+> 1. **Selector arriba del panel:** `tiendas().centros`, en este orden: Almacén · Bilbao · Algorta · Barakaldo · Basauri · Portugalete · Donosti · Rentería (Durango, la última, cuando abra). Cada uno con `tipo` (`"almacen"` | `"tienda"`) y `va_en` (`"reparto"` | `"envio"`; `null` en el almacén). `tiendas().tiendas` no cambia (el desplegable de los avisos).
+> 2. **Almacén:** el panel de siempre, con `estado_actual()` (§4.3). No cambia nada.
+> 3. **Una tienda:** **`resumen_tienda({ tienda_id, fecha? })`** (hoy por defecto). Las mismas secciones que el almacén donde se pueda: quién está y quién ha estado, las tareas del día (el objeto tarea de la tienda, §9.2, con «hecha por» y la hora de fin) y cuántas van, la bolsa y la reposición (o los envíos), lo abierto (incidencias, atascados, avisos sin leer, peticiones y pedidos) y el cierre de caja. **Solo lee:** abrirlo no cambia nada en la tienda. Si ese día no abre, `abre: false` y `motivo`.
+> 4. **Las ventas**, con el bloque 2.
 
 > **Cambios en 1.20 (Tarea 29d) — para Lovable: «Calcular» solo con la hoja.** Nada cambia de forma. 🧪 = solo en pruebas.
 > 1. **`guardar_reparto`** (§3.14), en el reparto y en el envío: `en_almacen` de cada referencia es **la cifra de la hoja leída al pulsar «Calcular»**, tal cual (`ESTADO_DEL_SISTEMA.md` R1c v1.58). Ya no suma lo producido ni resta lo salido desde el recuento, y el envío ya no aparta el reparto de hoy: `apartado_reparto` es siempre 0. La pantalla no tiene que cambiar nada; si enseña «apartado para el reparto», ya no saldrá.
@@ -1024,6 +1030,7 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 
 ### 9.19 `tiendas()` 🧪 (Tarea 29)
 Las tiendas activas, para elegir a cuál mandar un aviso (Administración y el operario; una tienda, `NO_AUTORIZADO`): `{ tiendas: [{ id, codigo, nombre }] }`, por nombre. Con «Todas» se manda sin `tienda_id`.
+- **`centros`** (Tarea 32): el selector del panel, `[{ id, codigo, nombre, tipo: "almacen" | "tienda", va_en: "reparto" | "envio" | null }]`. Primero el almacén; después las tiendas activas en el orden de la ruta: las del reparto en el orden de `destinos_reparto` (Bilbao, Algorta, Barakaldo, Basauri, Portugalete), después las que reciben por el envío de otro destino (Donosti y Rentería, por Gipuzkoa) y después las de envío propio (Durango, cuando abra). Sale de la configuración.
 
 ### 9.20 Incidencias de tienda: `crear_incidencia_tienda(id_cliente, opcion, texto?, producto?)` 🧪 (Tarea 30)
 Botón «Incidencia» de la tableta, en cualquier momento (`ESTADO_DEL_SISTEMA.md` E2-8). Sin foto ni urgencia. Todas llegan a **Administración como incidencia abierta** (§9.17). **A Eder no le sale nada.**
@@ -1088,3 +1095,44 @@ Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8 v1.56 y v1.57; 04/11/202
   - La incidencia queda cerrada con la decisión («Promoción: …», «Al almacén», «Recogida: …»). **Salida:** `incidencias_tiendas()`. **Errores:** `ESTADO_NO_VALIDO` (ya decidido), `DATOS_NO_VALIDOS` (decisión que no toca o promoción sin texto), `NO_ENCONTRADO`, `SIN_JORNADA`.
 - **Operario:** sus recogidas en `incidencias_abiertas()` (§3.11). Al cerrarla, el atascado queda entregado; si lo ha pedido una tienda que recibe por envío (Donosti, Rentería, Durango), queda como petición de esa tienda para **su siguiente envío** (decisión del propietario, 04/11/2026; §9.16).
 - **Configuración** (por tienda, clave `atascados`): `"ofrecer"` o `"administracion"` (Donosti, Rentería y Durango, que recibe por envío; decisión del propietario, 04/11/2026).
+
+### 9.24 Panel de Administración por centro: `resumen_tienda(tienda_id, fecha?)` 🧪 (Tarea 32)
+Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8, «Panel de Administración»; bloque 1, punto 23). **El panel solo informa:** cada cosa llega sola a quien toca.
+- **Selector:** `tiendas().centros` (§9.19). Al elegir el **Almacén**, el panel de siempre (`estado_actual()`, §4.3). Al elegir una **tienda**, `resumen_tienda`.
+- **`resumen_tienda({ tienda_id, fecha? })`:** solo Administración (el operario y las tiendas, `NO_AUTORIZADO`).
+  - `fecha` es hoy por defecto. Un día pasado sale como quedó al final del día; un día que viene da `DATOS_NO_VALIDOS`.
+  - **Solo lee:** no crea la lista del día ni tareas, no prepara la bolsa ni los envíos y no pasa atascados a Administración. Lo que la tableta hace al abrirse, aquí no.
+  - Por eso «Recibe la bolsa» y los envíos nuevos salen cuando la tienda abre la tableta, igual que los ve ella.
+- **Salida:**
+```json
+{
+  "tienda": { "id": "…", "codigo": "BASAURI", "nombre": "Basauri" }, "fecha": "2026-12-15", "ahora": "12:00",
+  "abre": true, "motivo": null, "cerrado": false, "horario": [ { "turno": "manana", "inicio": "11:00", "fin": "13:30" } ],
+  "va_en": "reparto",
+  "en_turno": { "persona_id": "…", "nombre": "…", "turno": "manana", "desde": "10:55" },
+  "turnos": [ { "nombre": "…", "turno": "manana", "desde": "10:55" } ],
+  "tareas": [ /* objeto tarea de la tienda, §9.2 */ ],
+  "cuantas": { "total": 6, "hechas": 2, "pendientes": 4, "no_hechas": 0 },
+  "bolsa": { /* §9.11: salida, recibida_a_las, recibida_por, efectivo, reposicion, contenido */ },
+  "reparto": { /* §9.13: por dónde va */ },
+  "envios": [ /* §9.21 */ ], "envios_sin_confirmar": 0,
+  "incidencias": [ /* §9.20 */ ], "atascados": [ /* objeto atascado, §9.23 (solo los abiertos) */ ],
+  "avisos": [ { "id": "…", "texto": "…", "fecha": "…", "de": "Administración" } ],
+  "peticiones": [ /* §9.15, solo las pendientes */ ], "pedidos": [ /* §9.22 */ ],
+  "cierre_caja": { "fecha": "2026-12-14", "z": 812.4, "ventas": 37, "efectivo": 120, "glovo": 15.5, "por": "…", "es_de_ese_dia": false }
+}
+```
+- **`abre: false`:** enseñar solo `motivo`. Puede ser:
+  - «Ese día no abre»;
+  - «Ese día la tienda está cerrada (lo ha marcado Administración)»;
+  - «Todavía no tiene la lista del día (se prepara a las 06:00 o al abrir la tableta)»;
+  - «Todavía no ha entrado con su cuenta».
+- **Quién está:** `en_turno` es quien está ahora (solo hoy; `null` si nadie ha empezado). `turnos` es quién ha estado ese día, en orden.
+- **Tareas:** las mismas que ve la tienda, con su hora, `estado`, `hecha_por` y `hora_fin`. `no_hecha: true` quiere decir que la tienda ya cerró sin hacerla. `cuantas` resume las tareas para la cabecera.
+- **Bolsa o envíos:**
+  - `bolsa` y `reparto` son de las tiendas del reparto (`null` si ese día no hay);
+  - `envios` y `envios_sin_confirmar` son de las que reciben por envío (Rentería; Durango cuando abra).
+- **Lo abierto:** las mismas listas que la tableta. `atascados` solo trae los abiertos (ofrecidos, con Administración, en promoción o por recoger).
+- **Cierre de caja:** el de ese día o, si no lo hay, el último de los 60 días anteriores. `es_de_ese_dia` dice cuál es. En las franquicias, `efectivo` y `glovo` vienen vacíos.
+- **Errores:** `NO_ENCONTRADO` (no es una tienda), `DATOS_NO_VALIDOS` (un día que viene) y `NO_AUTORIZADO`.
+- **Las ventas**, con el bloque 2.
