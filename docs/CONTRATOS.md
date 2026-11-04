@@ -1,6 +1,24 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.21 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.22 · **Fecha:** 04/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.22 (Tarea 33) — para Lovable: marcas en las pestañas del panel, totales de los cierres de caja y dónde está cada cosa.** Solo se añade (§9.8, §9.9, §9.17, §9.19 y el apartado nuevo §9.25). 🧪 = solo en pruebas. Sustituye al «resumen del día»: no hay aviso al cerrar.
+> 1. **Marcas en las pestañas** (solo Administración): cada centro de `tiendas().centros` trae `marcas: { rojo, sin_hacer, sin_abrir, texto }`.
+>    - **●N en rojo:** `rojo` es lo que tiene que resolver Administración.
+>    - **«N sin hacer» y «sin abrir»:** en texto, sin color.
+>    - **Si hay varias, juntas:** «Basauri ●2 · 3 sin hacer». `texto` ya viene montado (sin el nombre), o `null` si no hay nada.
+>    - **Refrescar:** volver a pedir `tiendas()` al cambiar de pestaña y cada minuto.
+> 2. **Al abrir la pestaña de un centro:** llamar a **`marcar_tienda_vista({ tienda_id })`**. Quita su «N sin hacer» (solo para quien entra) y devuelve sus marcas para pintarlas ya.
+> 3. **«Cierres de caja» del menú «Tiendas»:** `cierres_caja()` trae `totales` por día.
+>    - **Propias:** Z, ventas, efectivo y Glovo.
+>    - **Franquicias:** Z y ventas.
+>    - **Cada grupo con `faltan`:** enseñar «Falta [tienda]».
+>    - **Las cuentas las hace la base de datos;** la pantalla no suma.
+> 4. **Dónde está ahora cada cosa del panel:**
+>    - **Avisos** al almacén y a las tiendas: en el botón «Avisos» de abajo (§9.9).
+>    - **Peticiones de las tiendas:** solo en «Preparar reparto» / «Preparar envío» (§9.16), fuera del menú «Tiendas» (§9.17).
+>    - **Cierres de caja:** en el menú «Tiendas» (con los totales) y en el dashboard de cada tienda (`resumen_tienda().cierre_caja`, §9.24).
+>    - **Personas** (§9.8), **Incidencias** (§9.17, con «Cerrar» y las decisiones de los atascados), **Días cerrados** (§9.9) y **Vídeos**: en el menú «Tiendas».
 
 > **Cambios en 1.21 (Tarea 32) — para Lovable: el panel de Administración por centro.** Solo se añade (§9.19 y el apartado nuevo §9.24). 🧪 = solo en pruebas.
 > 1. **Selector arriba del panel:** `tiendas().centros`, en este orden: Almacén · Bilbao · Algorta · Barakaldo · Basauri · Portugalete · Donosti · Rentería (Durango, la última, cuando abra). Cada uno con `tipo` (`"almacen"` | `"tienda"`) y `va_en` (`"reparto"` | `"envio"`; `null` en el almacén). `tiendas().tiendas` no cambia (el desplegable de los avisos).
@@ -919,6 +937,7 @@ Cierra el aviso (`tienda_hoy().avisos[].id`) y anota quién lo leyó (el de `en_
   - `cuando`: `siempre` (por defecto), `entre_semana` o `sabados`. `turno`: `manana`, `tarde` o `null` (los dos). Solo sirven para poner su nombre el primero en la tienda (`sugerida`).
   - **Salida:** `{ persona: { … } }`. **Errores:** `NO_ENCONTRADO`, `DATOS_NO_VALIDOS` («Elige la tienda.», el nombre, `cuando` o `turno` no válidos).
 - `tienda_id` de cada tienda: el de `personas_tienda()`.
+- **Dónde** (Tarea 33): en el menú «Tiendas» del panel, «Personas».
 
 ### 9.9 Administración: días cerrados y avisos a las tiendas 🧪
 - **`marcar_dia_cerrado(fecha, tienda_id?, cerrado?, motivo?)`:** festivos y cierres. Sin `tienda_id`, **todas las tiendas**. `cerrado: false` lo quita. Ese día la tienda no tiene lista; si la lista ya estaba hecha (el mismo día), lo pendiente queda `cancelada` con el motivo «Tienda cerrada ese día» (y vuelve si se quita).
@@ -929,6 +948,11 @@ Cierra el aviso (`tienda_hoy().avisos[].id`) y anota quién lo leyó (el de `en_
   - **Salida:** `{ avisos: [aviso], sin_aviso: [{ tienda, motivo }] }`. `sin_aviso`: las tiendas que no lo reciben («Todavía no ha entrado con su cuenta» o «Ese día no abre»).
   - **Errores:** `DATOS_NO_VALIDOS` (falta el texto, fecha pasada, tienda no válida), `SIN_JORNADA` (para una sola tienda que no puede recibirlo; `error.sin_aviso` dice por qué).
 - **`avisos_tiendas()`:** `{ avisos: [{ id, fecha, texto, tienda_id, tienda, estado, leido, cerrado_en, nota, creado_por, de }] }`, de la última semana y los que vienen, los más nuevos primero. `nota` dice quién lo leyó («Leído por …»); `creado_por`, el nombre de quien lo mandó, y `de` (Tarea 29), «Almacén» o «Administración». Administración los ve todos; **el operario, solo los que ha mandado él** (Tarea 29 🧪).
+- **Dónde** (Tarea 33):
+  - **Los días cerrados**, en el menú «Tiendas» del panel.
+  - **Los avisos**, en un solo botón «Avisos» abajo, que sustituye a «Aviso para el almacén» y a «Avisos» del menú «Tiendas»:
+    - para el almacén (`crear_aviso_almacen`, con su contacto), para una tienda o para todas (`crear_aviso_tienda`), y el día;
+    - ahí se ven los mandados (`avisos_tiendas()` y los del almacén, §3.21), con «Leído» y «Cancelar».
 - **Cancelar un aviso:** `cancelar_aviso_almacen(aviso_id)` (§3.21), la misma de los avisos del almacén. Administración, todos (también los que manda el almacén). **El operario, solo los suyos a las tiendas** (Tarea 29 🧪), con la nota «Cancelado por el almacén»; uno que no ha mandado él da `NO_AUTORIZADO` («Solo puedes cancelar los avisos a las tiendas que has mandado tú.»).
 
 ### 9.10 Errores nuevos 🧪
@@ -1017,10 +1041,17 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 
 ### 9.17 Administración: `cierres_caja` · `incidencias_tiendas` · `cerrar_incidencia_tienda` · `descartar_peticion_tienda` 🧪 (Tarea 28)
 - **`cierres_caja(desde?, hasta?, tienda_id?)`:** `{ cierres: [{ fecha, tienda_id, tienda, z, ventas, efectivo, glovo, por, guardado_en }] }`, los más nuevos primero (por defecto, la última semana). Lectura preparada para el panel (Tarea 30).
+  - **`totales`** (Tarea 33): `[{ fecha, propias: { z, ventas, efectivo, glovo, cierres, faltan }, franquicias: { z, ventas, cierres, faltan } }]`, un día por elemento y los más nuevos primero.
+    - **Qué días salen:** los días en que abría alguna tienda o hay algún cierre.
+    - **`faltan`:** `[{ tienda_id, tienda }]`, las tiendas de ese grupo que abrían ese día (con su horario y sin día cerrado) y no tienen cierre. Hoy, solo las que ya han pasado su hora de cierre. Enseñar «Falta [tienda]».
+    - **Qué es franquicia:** la tienda con el cierre de caja corto (Z y nº de ventas; hoy Donosti y Rentería). Sale de la configuración: Durango, con su «Cierre del día» completo, va con las propias.
+    - **Con `tienda_id`:** los totales son los de esa tienda.
+  - **Dónde** (Tarea 33): en el menú «Tiendas», «Cierres de caja», todos juntos con el total de cada día; y en el dashboard de cada tienda (§9.24).
 - **`incidencias_tiendas()`:** `{ incidencias: [{ id, tienda_id, tienda, opcion, texto, fecha, a_las, estado, cerrada_en, nota }] }`: las abiertas primero y las cerradas de la última semana. `opcion`: `"falta_reposicion"` (Tarea 28); desde la Tarea 30, `"sin_producto"`, `"descuadre"`, `"comentario_cliente"` y `"otros"` (§9.20); y desde la Tarea 30b, `"falta_envio"` (§9.21); y desde la Tarea 31, `"atascado"`, con el objeto `atascado` (§9.23; `null` en las demás). Por ejemplo, `"falta_reposicion"` («Falta en la bolsa del reparto del 18/12: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Nombre)»). Es el aviso en la app: mostrarlas en el panel.
 - **`cerrar_incidencia_tienda(incidencia_id, nota?)`:** la cierra al resolverla (`nota`, una línea). **Salida:** `incidencias_tiendas()`. **Errores:** `NO_ENCONTRADO`, `DATOS_NO_VALIDOS`.
 - **`descartar_peticion_tienda(peticion_id, motivo?)`** («No va»): quitar una muestra o un material pendiente que no va a ir. `motivo` opcional (una línea, 120 letras); la tienda ve «No va: [motivo]» o, sin motivo, «No va: lo ha quitado Administración». **Salida:** `{ peticion: {…} }`. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya atendida o descartada), `DATOS_NO_VALIDOS` (motivo demasiado largo).
-- **Dónde:** en «Preparar reparto» / «Preparar envío» (§9.16) y en el panel, sección «Tiendas»: una lista de **peticiones pendientes** de todas las tiendas (`peticiones_tiendas_pendientes('reparto')` y `('envio')`) con el botón «No va» en cada una, para quitarlas sin abrir el reparto.
+- **Dónde:** en «Preparar reparto» / «Preparar envío» (§9.16), con el botón «No va» en cada una. **Desde la Tarea 33 salen del menú «Tiendas»** (ESTADO v1.61): ya no hay lista de peticiones pendientes en el panel. Siguen llegando solas a la casilla y a la bolsa de Eder («Además, mete:»).
+- **`incidencias_tiendas()` y `cerrar_incidencia_tienda`, dónde** (Tarea 33): en el menú «Tiendas», «Incidencias», con «Cerrar» y las decisiones de los atascados (§9.23). El número en rojo de cada pestaña sale de aquí (§9.25).
 
 ### 9.18 Errores nuevos (Tarea 28) 🧪
 | Código | Qué hace la pantalla |
@@ -1031,6 +1062,7 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 ### 9.19 `tiendas()` 🧪 (Tarea 29)
 Las tiendas activas, para elegir a cuál mandar un aviso (Administración y el operario; una tienda, `NO_AUTORIZADO`): `{ tiendas: [{ id, codigo, nombre }] }`, por nombre. Con «Todas» se manda sin `tienda_id`.
 - **`centros`** (Tarea 32): el selector del panel, `[{ id, codigo, nombre, tipo: "almacen" | "tienda", va_en: "reparto" | "envio" | null }]`. Primero el almacén; después las tiendas activas en el orden de la ruta: las del reparto en el orden de `destinos_reparto` (Bilbao, Algorta, Barakaldo, Basauri, Portugalete), después las que reciben por el envío de otro destino (Donosti y Rentería, por Gipuzkoa) y después las de envío propio (Durango, cuando abra). Sale de la configuración.
+- **`marcas`** (Tarea 33, solo para Administración; el operario no las recibe): `{ rojo, sin_hacer, sin_abrir, texto }` en cada centro (§9.25).
 
 ### 9.20 Incidencias de tienda: `crear_incidencia_tienda(id_cliente, opcion, texto?, producto?)` 🧪 (Tarea 30)
 Botón «Incidencia» de la tableta, en cualquier momento (`ESTADO_DEL_SISTEMA.md` E2-8). Sin foto ni urgencia. Todas llegan a **Administración como incidencia abierta** (§9.17). **A Eder no le sale nada.**
@@ -1101,8 +1133,8 @@ Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8, «Panel de Administraci
 - **Selector:** `tiendas().centros` (§9.19). Al elegir el **Almacén**, el panel de siempre (`estado_actual()`, §4.3). Al elegir una **tienda**, `resumen_tienda`.
 - **`resumen_tienda({ tienda_id, fecha? })`:** solo Administración (el operario y las tiendas, `NO_AUTORIZADO`).
   - `fecha` es hoy por defecto. Un día pasado sale como quedó al final del día; un día que viene da `DATOS_NO_VALIDOS`.
-  - **Solo lee:** no crea la lista del día ni tareas, no prepara la bolsa ni los envíos y no pasa atascados a Administración. Lo que la tableta hace al abrirse, aquí no.
-  - Por eso «Recibe la bolsa» y los envíos nuevos salen cuando la tienda abre la tableta, igual que los ve ella.
+  - **Solo lee:** no crea la lista del día ni tareas, no prepara la bolsa ni los envíos y no pasa atascados a Administración. Lo que la app de la tienda hace al entrar, aquí no.
+  - Por eso «Recibe la bolsa» y los envíos nuevos salen cuando la tienda entra en la app (lo hace nada más conectarse), igual que los ve ella.
 - **Salida:**
 ```json
 {
@@ -1125,14 +1157,33 @@ Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8, «Panel de Administraci
 - **`abre: false`:** enseñar solo `motivo`. Puede ser:
   - «Ese día no abre»;
   - «Ese día la tienda está cerrada (lo ha marcado Administración)»;
-  - «Todavía no tiene la lista del día (se prepara a las 06:00 o al abrir la tableta)»;
+  - «Todavía no tiene la lista del día (se prepara a las 06:00 o al entrar en la app)»;
   - «Todavía no ha entrado con su cuenta».
 - **Quién está:** `en_turno` es quien está ahora (solo hoy; `null` si nadie ha empezado). `turnos` es quién ha estado ese día, en orden.
 - **Tareas:** las mismas que ve la tienda, con su hora, `estado`, `hecha_por` y `hora_fin`. `no_hecha: true` quiere decir que la tienda ya cerró sin hacerla. `cuantas` resume las tareas para la cabecera.
 - **Bolsa o envíos:**
   - `bolsa` y `reparto` son de las tiendas del reparto (`null` si ese día no hay);
   - `envios` y `envios_sin_confirmar` son de las que reciben por envío (Rentería; Durango cuando abra).
-- **Lo abierto:** las mismas listas que la tableta. `atascados` solo trae los abiertos (ofrecidos, con Administración, en promoción o por recoger).
+- **Lo abierto:** las mismas listas que ve la tienda en la app. `atascados` solo trae los abiertos (ofrecidos, con Administración, en promoción o por recoger).
 - **Cierre de caja:** el de ese día o, si no lo hay, el último de los 60 días anteriores. `es_de_ese_dia` dice cuál es. En las franquicias, `efectivo` y `glovo` vienen vacíos.
 - **Errores:** `NO_ENCONTRADO` (no es una tienda), `DATOS_NO_VALIDOS` (un día que viene) y `NO_AUTORIZADO`.
 - **Las ventas**, con el bloque 2.
+
+### 9.25 Marcas en las pestañas del panel: `tiendas().centros[].marcas` · `marcar_tienda_vista(tienda_id)` 🧪 (Tarea 33)
+Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8 v1.62, «Marcas en las pestañas»). **Sustituyen al «resumen del día»:** no hay aviso ni correo al cerrar.
+- **`marcas`** de cada centro, solo para Administración:
+  - **`rojo`** (número): lo que tiene que resolver Administración. Se pinta **●N en rojo**.
+    - **En una tienda:** sus incidencias abiertas de `incidencias_tiendas()` (§9.17), con los atascados por decidir.
+    - **En el almacén:** los problemas abiertos (`estado_actual().problemas_abiertos`, los del botón «Resolver»).
+    - **Baja** al cerrarlos o decidirlos.
+  - **`sin_hacer`** (número): las tareas que la tienda dejó sin hacer al cerrar (las `no_hecha`, de los últimos 7 días) que esa persona de Administración no ha visto. Se pinta **«N sin hacer»**, en texto y sin color.
+    - **Se quita cuando entra en esa tienda** del panel (`marcar_tienda_vista`).
+    - **Es por persona:** cada persona de Administración tiene las suyas.
+  - **`sin_abrir`** (sí o no): hoy la tienda abre (no es domingo ni está marcada cerrada), ha pasado media hora desde que empieza un turno (mañana o tarde, con su horario; Bilbao, por la tarde, desde las 16:30) y nadie ha empezado ese turno. Se pinta **«sin abrir»**, en texto y sin color.
+    - **Se quita** cuando alguien empieza ese turno o cuando acaba el turno (solo sale mientras dura; decisión del propietario, PR #37).
+    - **Sirve también para un festivo sin marcar.**
+  - **`texto`:** lo que se pinta junto al nombre de la pestaña, ya montado, por ejemplo «●2 · 3 sin hacer» (`null` si no hay nada). Pintar el «●N» en rojo y lo demás sin color.
+- **`marcar_tienda_vista({ tienda_id })`:** llamarlo **al abrir la pestaña de un centro** (`tienda_id` es el `id` de `tiendas().centros`; también vale el del almacén).
+  - **Qué guarda:** quién ha entrado y cuándo. `resumen_tienda` sigue siendo solo de lectura.
+  - **Salida:** `{ centro_id, marcas }`, con las marcas de ese centro ya al día.
+  - **Errores:** `NO_ENCONTRADO`; `NO_AUTORIZADO` para el operario o una tienda.
