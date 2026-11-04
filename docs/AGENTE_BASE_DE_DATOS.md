@@ -70,7 +70,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 29d está fusionada (PR #35). Quedan de tiendas la **32** (panel con selector) y la **33** (resumen del día), que preparará el coordinador.
+**Tarea 32** (sección 7): el panel de Administración por centro. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 («Panel de Administración» y la regla general de las franquicias) y lo que hiciste en las Tareas 27 a 31. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
 
 ---
 
@@ -100,7 +100,7 @@ Ninguna. La Tarea 29d está fusionada (PR #35). Quedan de tiendas la **32** (pan
 
 ---
 
-## 7. TAREA 32 (preparada, pendiente de aprobación del propietario): el panel de Administración por centro, en pruebas
+## 7. TAREA 32 (activa): el panel de Administración por centro, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8 («Panel de Administración») y `AGENTE_COORDINADOR.md`, bloque 1, punto 23 y nota del 03/11 («Panel (Tarea 32)»). Reutiliza: `estado_actual()` (almacén), `tienda_hoy_de` y sus piezas (tareas con puntos y «hecha por», `en_turno`, bolsa, envíos, incidencias, atascados, peticiones, pedidos), `cierres_caja()`, `incidencias_tiendas()` y `tiendas()`. **Nada al lado:** lo que ya calcula la tableta se lee igual para Administración. Solo en pruebas; producción espera.
 
@@ -851,3 +851,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.61 | 04/11/2026 | Tarea 31 fusionada (PR #34), solo en pruebas. Activa: 29d. |
 | 1.62 | 04/11/2026 | Tarea 29d fusionada (PR #35), solo en pruebas; `pegar_reparto` borrada del código (falta borrarla del panel de Supabase). Sin tarea activa. |
 | 1.63 | 04/11/2026 | Tarea 32 preparada (panel de Administración por centro), pendiente de aprobación. |
+| 1.64 | 04/11/2026 | Tarea 32 activa (panel por centro), aprobada por el propietario. |
