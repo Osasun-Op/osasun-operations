@@ -107,6 +107,10 @@ begin
             and bool_and(p.alterna_turno)
        from public.plantillas_tarea p join public.centros_trabajo c on c.id = p.centro_id
       where p.codigo = 'revisa_atascados' and c.tipo = 'tienda'));
+  perform pg_temp.comprobar('Lo de Donosti, Rentería y Durango va directo a Administración; lo de las demás se ofrece',
+    (select string_agg(c.codigo, ',' order by c.codigo) from public.configuracion k join public.centros_trabajo c on c.id = k.centro_id
+      where k.clave = 'atascados' and k.valor #>> '{}' = 'administracion') = 'DONOSTI,DURANGO,RENTERIA'
+    and (select count(*) = 5 from public.configuracion k where k.clave = 'atascados' and k.valor #>> '{}' = 'ofrecer'));
   r := motor.tienda_hoy_de(basauri, pg_temp.a('2026-12-15', '11:05'));
   perform pg_temp.comprobar('El martes sale en la lista de Basauri con su tipo «atascados»',
     exists (select 1 from jsonb_array_elements(r -> 'tareas') t
