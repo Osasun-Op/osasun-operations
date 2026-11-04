@@ -70,7 +70,26 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 32 está fusionada (PR #36). Queda de tiendas la **Tarea 33** (resumen del día), que preparará el coordinador.
+**Tarea 33** (sección 7): marcas en las pestañas del panel y totales de los cierres de caja. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.61 y v1.62: «Cómo queda el panel» y «Marcas en las pestañas») y lo que hiciste en las Tareas 28 y 32. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya». Después irá la Tarea 34 (efectivo de los días sin reparto), que preparará el coordinador.
+
+---
+
+## 7. TAREA 33 (activa): marcas en las pestañas del panel y totales de los cierres de caja, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, v1.61 y v1.62 («Cómo queda el panel» y «Marcas en las pestañas»), y `AGENTE_COORDINADOR.md`, notas del 04/11 («Panel reorganizado» y «Decisiones del propietario»). Reutiliza: `tiendas().centros` (Tarea 32), `resumen_tienda` y sus piezas (`cuantas`, `no_hecha`, `en_turno`, horario y días cerrados), `incidencias_tiendas()` (abiertas; los atascados con `decisiones`), los problemas abiertos de `estado_actual()` y `cierres_caja()`. **Sustituye al «resumen del día»** (aviso al cerrar, bloque 1, punto 28): no se crea ninguna incidencia ni correo. Solo en pruebas; producción espera.
+
+1. **Marcas por centro, solo para Administración** (el operario sigue viendo `tiendas()` como ahora). En `tiendas().centros` o en una función nueva, sin duplicar lo que ya se calcula:
+   - **`rojo`** (número): en una tienda, sus incidencias abiertas de `incidencias_tiendas()` (los atascados por decidir ya están ahí); en el almacén, los problemas abiertos (los del botón «Resolver»). Baja al cerrarlos o decidirlos.
+   - **`sin_hacer`** (número): las tareas de la tienda que quedaron `no_hecha` en días ya cerrados y que Administración todavía no ha visto. **Se quita cuando Administración entra en esa tienda** del panel: una llamada nueva que la pantalla hace al abrir la pestaña (`resumen_tienda` sigue siendo solo de lectura). Guarda quién lo ha visto y cuándo, por persona de Administración.
+   - **`sin_abrir`** (sí o no): hoy la tienda abre (no es domingo ni está marcada cerrada), ha pasado media hora desde la apertura de un turno (mañana o tarde, con su horario; Bilbao, por la tarde, desde las 16:30) y nadie ha empezado ese turno. Se quita cuando alguien lo empieza.
+2. **Totales de los cierres de caja por día** en `cierres_caja()` (las cuentas, en el servidor): para cada día, **propias** (Z, ventas, efectivo y Glovo) y **franquicias** (Donosti y Rentería: Z y ventas) por separado, cada grupo con **`faltan`**: las tiendas de ese grupo que abrían ese día y no tienen cierre (hoy, solo las que ya han pasado su hora de cierre). Qué tienda es franquicia sale de la configuración, no del nombre (Durango, cuando abra, va con las propias aunque reciba por envío).
+3. **Contratos**, con nota para Lovable:
+   - las marcas y cómo se ven: ●N en rojo; «N sin hacer» y «sin abrir» en texto, sin color; juntas si hay varias («Basauri ●2 · 3 sin hacer»);
+   - la llamada al abrir una tienda;
+   - los totales en «Cierres de caja» del menú «Tiendas»;
+   - **dónde está ahora cada cosa del panel** (§9.8, §9.9 y §9.17): los avisos al almacén y a las tiendas, en el botón «Avisos» de abajo; las peticiones de las tiendas, solo en «Preparar reparto» / «Preparar envío» (fuera del menú «Tiendas»); los cierres de caja, en el menú «Tiendas» y en el dashboard de cada tienda.
+
+**Entrega:** PR **«Tarea 33 — Marcas del panel y totales de cierres»**, con «Qué he leído y qué existía ya», pruebas en verde (cada marca en sus casos; que entrar en una tienda quita solo su «sin hacer»; totales de propias y franquicias con `faltan`), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
 
 ---
 
@@ -853,3 +872,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.63 | 04/11/2026 | Tarea 32 preparada (panel de Administración por centro), pendiente de aprobación. |
 | 1.64 | 04/11/2026 | Tarea 32 activa (panel por centro), aprobada por el propietario. |
 | 1.65 | 04/11/2026 | Tarea 32 fusionada (PR #36), solo en pruebas. Sin tarea activa. |
+| 1.66 | 04/11/2026 | Tarea 33 activa (marcas en las pestañas del panel y totales de los cierres de caja), aprobada por el propietario. Después, la Tarea 34 (efectivo de los días sin reparto). |
