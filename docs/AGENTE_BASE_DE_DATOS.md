@@ -70,11 +70,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 36** (sección 7): dos retoques de las tiendas (la limpieza semanal y la hora del vídeo del sábado). Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` E2-8 (v1.67) y lo que hiciste en la Tarea 27. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya». Después irán el «Fin de turno» de las tiendas y los fichajes.
+Ninguna. La Tarea 36 está fusionada (PR #40). Las siguientes del plan de turnos (el «Fin de turno» de las tiendas y los fichajes) las preparará el coordinador.
 
 ---
 
-## 7. TAREA 36 (activa): la limpieza semanal y la hora del vídeo del sábado, en pruebas
+## 7.0 TAREA 36 (fusionada en el PR #40; solo en pruebas, producción espera): la limpieza semanal y la hora del vídeo del sábado, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` E2-8, v1.67 (propietario, 04/11/2026). Dos cambios pequeños en lo que hiciste en la Tarea 27; nada más. Solo en pruebas; producción espera.
 
@@ -923,3 +923,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.68 | 04/11/2026 | Tarea 34 fusionada (PR #38), solo en pruebas (66 migraciones). Tarea 35 activa («Empezar turno» y «Fin de turno» del operario), aprobada por el propietario. |
 | 1.69 | 04/11/2026 | Tarea 35 fusionada (PR #39), solo en pruebas (67 migraciones; ya aplicada). Sin tarea activa. |
 | 1.70 | 04/11/2026 | Tarea 36 activa (limpieza semanal y hora del vídeo del sábado), aprobada por el propietario. |
+| 1.71 | 04/11/2026 | Tarea 36 fusionada (PR #40), solo en pruebas (68 migraciones). Sin tarea activa. |
