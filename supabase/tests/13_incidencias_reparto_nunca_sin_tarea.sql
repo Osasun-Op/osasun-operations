@@ -280,9 +280,11 @@ begin
     r ->> 'estado' = 'reintentar' and (select estado = 'reintentar' from motor.correos where tipo = 'incidencia' and ref = i6::text), r::text);
 
   -- Estoy bloqueado: el flujo de problemas de siempre, sobre la tarea en curso.
+  -- Tarea 37: la mercancía de las 15:42 (urgente) sigue sin recibir, así que entra sobre la revisión del envío (no
+  -- obligatoria y sin referencias) en cuanto se pide la tarea activa. El problema se abre sobre la revisión, por su id.
   perform motor.iniciar_tarea_de(op, pg_temp.tarea(j, 'revisar_envio'), pg_temp.h(lun, '16:20'));
-  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'bloqueado', 'No encuentro la hoja de envíos', null, null, null, 'no_encuentro', null, pg_temp.h(lun, '16:21'));
-  perform pg_temp.comprobar('Estoy bloqueado: abre un problema en la tarea en curso, que queda bloqueada; «llama ahora»',
+  r := motor.crear_incidencia_de(op, gen_random_uuid(), 'bloqueado', 'No encuentro la hoja de envíos', null, null, pg_temp.tarea(j, 'revisar_envio'), 'no_encuentro', null, pg_temp.h(lun, '16:21'));
+  perform pg_temp.comprobar('Estoy bloqueado: abre un problema en la tarea (la revisión del envío), que queda bloqueada; «llama ahora»',
     r -> 'incidencia' = 'null'::jsonb and r -> 'problema' ->> 'tipo' = 'no_encuentro' and r ->> 'pasos' = 'Llama a Administración ahora.'
     and (select estado = 'bloqueada' from public.tareas where id = pg_temp.tarea(j, 'revisar_envio')), r::text);
   r2 := motor.crear_incidencia_de(op, gen_random_uuid(), 'bloqueado', 'otra vez', null, null, pg_temp.tarea(j, 'revisar_envio'), null, null, pg_temp.h(lun, '16:22'));
