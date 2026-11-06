@@ -70,11 +70,11 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-**Tarea 37** (sección 7): lo que tiene hora entra también entre dos referencias. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` §6.4 (v1.68, primer punto) y lo que hiciste en las Tareas 21, 24 y 35. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
+Ninguna. La Tarea 37 está fusionada (PR #41). Las siguientes del plan de turnos (el «Fin de turno» de las tiendas y los fichajes) esperan a que el propietario diga el próximo paso.
 
 ---
 
-## 7. TAREA 37 (activa): lo que tiene hora entra también entre dos referencias, en pruebas
+## 7.0 TAREA 37 (fusionada en el PR #41; solo en pruebas, producción espera): lo que tiene hora entra también entre dos referencias, en pruebas
 
 **Contexto:** `ESTADO_DEL_SISTEMA.md` §6.4, v1.68 (primer punto), y `AGENTE_COORDINADOR.md`, nota del 06/11 a las 12:30. **Qué pasó el 06/11:** Eder hizo las bolsas (10:23) y empezó el +35 % (`cola_stock`, 10:25). Terminó la referencia V2 a las 10:43, dos minutos antes de la salida (`salida_reparto`, `hora_programada` 10:45), y no empezó ni terminó otra. La salida no le saltó hasta que cerró el +35 % a las 12:22 (con motivo y 6 sin hacer): para la app, el reparto salió a las 12:22 y las tiendas no tuvieron «Recibe la bolsa» hasta entonces. **Causa:** el paso a lo que tiene hora solo se comprueba en `motor.tras_elemento`, al terminar una referencia (punto de encaje); a las 10:43 aún no tocaba, y después nada lo volvió a comprobar, porque `elegir_tarea` siempre deja primero lo que está en curso (`escalon` 1). Reutiliza: `tras_elemento` (la pausa cuando `elegir_tarea` da escalón 2–4), `elegir_tarea`, `escalon`, `tarea_activa_de` y la pausa que ya existe (lo hecho se guarda; en «Hoy» consta la interrupción). Solo en pruebas; producción espera.
 
@@ -943,3 +943,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.70 | 04/11/2026 | Tarea 36 activa (limpieza semanal y hora del vídeo del sábado), aprobada por el propietario. |
 | 1.71 | 04/11/2026 | Tarea 36 fusionada (PR #40), solo en pruebas (68 migraciones). Sin tarea activa. |
 | 1.72 | 06/11/2026 | Tarea 37 activa (lo que tiene hora entra también entre dos referencias), aprobada por el propietario. |
+| 1.73 | 06/11/2026 | Tarea 37 fusionada (PR #41), solo en pruebas (69 migraciones; ya aplicada). Sin tarea activa. |
