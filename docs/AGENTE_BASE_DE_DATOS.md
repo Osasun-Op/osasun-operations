@@ -70,7 +70,25 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## Tarea activa
 
-Ninguna. La Tarea 36 está fusionada (PR #40). Las siguientes del plan de turnos (el «Fin de turno» de las tiendas y los fichajes) las preparará el coordinador.
+**Tarea 37** (sección 7): lo que tiene hora entra también entre dos referencias. Lee antes `docs/CONSTITUCION_TECNICA.md`, `ESTADO_DEL_SISTEMA.md` §6.4 (v1.68, primer punto) y lo que hiciste en las Tareas 21, 24 y 35. **Solo en pruebas: no se pasa a producción.** El PR lleva «Qué he leído y qué existía ya».
+
+---
+
+## 7. TAREA 37 (activa): lo que tiene hora entra también entre dos referencias, en pruebas
+
+**Contexto:** `ESTADO_DEL_SISTEMA.md` §6.4, v1.68 (primer punto), y `AGENTE_COORDINADOR.md`, nota del 06/11 a las 12:30. **Qué pasó el 06/11:** Eder hizo las bolsas (10:23) y empezó el +35 % (`cola_stock`, 10:25). Terminó la referencia V2 a las 10:43, dos minutos antes de la salida (`salida_reparto`, `hora_programada` 10:45), y no empezó ni terminó otra. La salida no le saltó hasta que cerró el +35 % a las 12:22 (con motivo y 6 sin hacer): para la app, el reparto salió a las 12:22 y las tiendas no tuvieron «Recibe la bolsa» hasta entonces. **Causa:** el paso a lo que tiene hora solo se comprueba en `motor.tras_elemento`, al terminar una referencia (punto de encaje); a las 10:43 aún no tocaba, y después nada lo volvió a comprobar, porque `elegir_tarea` siempre deja primero lo que está en curso (`escalon` 1). Reutiliza: `tras_elemento` (la pausa cuando `elegir_tarea` da escalón 2–4), `elegir_tarea`, `escalon`, `tarea_activa_de` y la pausa que ya existe (lo hecho se guarda; en «Hoy» consta la interrupción). Solo en pruebas; producción espera.
+
+1. **Al pedir la tarea activa** (`tarea_activa`, que la pantalla pide cada minuto y al volver), si la tarea en curso **no es obligatoria** y **no tiene ninguna referencia empezada**, se hace la misma comprobación que en `tras_elemento`: si ya toca algo de escalón 2–4 (un problema, lo urgente, lo que tiene hora: la salida, el recuento, Nacex), la tarea en curso se pausa como ahora y sale lo que toca. Cuenta como «sin ninguna referencia empezada»:
+   - una tarea con referencias entre dos de ellas (el caso del +35 %);
+   - una tarea no obligatoria sin referencias («Orden y limpieza», compras, una de Administración sin hora).
+   **Una sola regla:** la de `tras_elemento`, sin copiarla.
+2. **No cambia:**
+   - a mitad de una referencia, lo que tiene hora entra al terminarla, como ahora;
+   - lo obligatorio en curso no se pausa;
+   - las bolsas (con la producción hecha, solo ellas; Tarea 29), la salida solo con las bolsas hechas y lo de los turnos (Tarea 35).
+3. **Contratos**, con nota para Lovable: la pantalla no cambia (cuando se pausa, `tarea_activa` ya trae lo que toca).
+
+**Entrega:** PR **«Tarea 37 — Lo que tiene hora entra entre dos referencias»**, con «Qué he leído y qué existía ya», pruebas en verde (el caso del 06/11: V2 terminada a las 10:43; a las 10:45 sale la salida y el +35 % queda pausado con lo hecho, y vuelve a salir después; a mitad de una referencia, espera a que la termine; una obligatoria en curso no se pausa; «Orden y limpieza» en curso se pausa al llegar el recuento; reparto, bolsas y turnos igual), una llamada real, registros sin errores y cómo deshacer. No se pasa a producción.
 
 ---
 
@@ -924,3 +942,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.69 | 04/11/2026 | Tarea 35 fusionada (PR #39), solo en pruebas (67 migraciones; ya aplicada). Sin tarea activa. |
 | 1.70 | 04/11/2026 | Tarea 36 activa (limpieza semanal y hora del vídeo del sábado), aprobada por el propietario. |
 | 1.71 | 04/11/2026 | Tarea 36 fusionada (PR #40), solo en pruebas (68 migraciones). Sin tarea activa. |
+| 1.72 | 06/11/2026 | Tarea 37 activa (lo que tiene hora entra también entre dos referencias), aprobada por el propietario. |
