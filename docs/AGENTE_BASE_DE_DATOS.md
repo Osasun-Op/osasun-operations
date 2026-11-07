@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.7 · **Fecha:** 26/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.74 · **Fecha:** 07/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -63,10 +63,16 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 
 ## 6. Cómo recibes el trabajo
 
-- Tu **tarea activa** es la que figure en la sección «Tarea activa» de este archivo, en `main`. Cuando el propietario te escriba «Ejecuta tu tarea activa», lees este archivo actualizado y la ejecutas.
-- Las **correcciones** del coordinador a una entrega llegan como **comentarios en tu PR**. Léelos antes de seguir.
+**Desde el 07/11/2026** (decisión del propietario; sustituye a la forma de antes):
+- **Tus tareas te llegan como encargo copiado por el propietario,** con su número de ticket (T-XXXX). El coordinador trabaja en el proyecto de Claude «Desarrollo de software operativo» y en este repositorio solo lee.
+- **Cada tarea nueva lleva su número de ticket junto a su número de tarea,** en el encargo, en la sección «Tarea activa», en la rama y en el título del PR (por ejemplo, «T-0001 · Tarea 38 — …»).
+- **El coordinador revisa tu PR con su descripción.** Por eso la descripción tiene que bastar para revisarlo: «Qué he leído y qué existía ya», pruebas, llamada real, registros, deshacer y dudas.
+- **El propietario lo fusiona.** Tú nunca fusionas.
+- **`docs/ESTADO_DEL_SISTEMA.md` lo pones al día tú, en el PR de cada tarea,** cuando cambia una regla (constitución, regla 7). Cada PR que lo cambie pone al día su cabecera (versión, fecha y estado).
+- **Las correcciones** llegan como un encargo nuevo del propietario o como comentarios en tu PR. Léelos antes de seguir.
 - Puedes **consultar** Google Sheets con los conectores de Google, que tienen los permisos completos del propietario. **Nunca escribes con ellos.**
-- Al terminar, no hace falta que nadie copie tu resumen: el coordinador lee tu PR directamente.
+
+Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de este archivo, que escribía el coordinador en `main`, y él mismo leía y revisaba el PR. Las tareas ya hechas (hasta la 37) se quedan como están.
 
 ## Tarea activa
 
@@ -944,3 +950,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.71 | 04/11/2026 | Tarea 36 fusionada (PR #40), solo en pruebas (68 migraciones). Sin tarea activa. |
 | 1.72 | 06/11/2026 | Tarea 37 activa (lo que tiene hora entra también entre dos referencias), aprobada por el propietario. |
 | 1.73 | 06/11/2026 | Tarea 37 fusionada (PR #41), solo en pruebas (69 migraciones; ya aplicada). Sin tarea activa. |
+| 1.74 | 07/11/2026 | T-0000: cómo llegan las tareas desde el 07/11/2026 (encargo copiado por el propietario con número de ticket; revisión del coordinador con la descripción del PR; fusiona el propietario; ESTADO al día en el PR de cada tarea). Cada tarea nueva lleva su número de ticket. |

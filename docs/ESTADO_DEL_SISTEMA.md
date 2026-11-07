@@ -1,6 +1,12 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.69 · **Fecha:** 26/10/2026 · **Estado:** diseño aprobado por el propietario. Propuesta técnica de BD aprobada (PR #1). Tarea 2 (estructura base y jornada automática) hecha en pruebas. Tarea 3 (reparto y stock) hecha en pruebas. Tareas 2 a 4 (motor completo) hechas en pruebas. Acceso con Google hecho en pruebas (PR #5). En curso: pantallas con Lovable.
+**Versión:** 1.70 · **Fecha:** 07/11/2026 · **Estado:**
+- **Almacén:** en uso real en el entorno de pruebas.
+- **Tiendas:** en prueba en Basauri, Portugalete y Rentería, en el entorno de pruebas (69 migraciones; la última, Tarea 37, PR #41).
+- **Producción:** montada y sin usar, sin lo de tiendas. Espera a que el propietario dé por probado lo de tiendas.
+- **Cómo se trabaja desde el 07/11/2026:** con tickets (T-XXXX). Ver §11.
+
+> **Regla (07/11/2026):** cada PR que cambie este documento pone al día esta cabecera (versión, fecha y estado).
 
 ---
 
@@ -8,6 +14,7 @@
 
 - Es la **fuente de verdad técnica** del proyecto. Todo agente lo lee antes de trabajar.
 - Lo aprobado aquí no se cambia por iniciativa propia. Las propuestas se envían al coordinador, el propietario las aprueba y entonces se actualiza este documento.
+- **Desde el 07/11/2026** lo actualiza el agente de base de datos en el PR de cada tarea, y el coordinador lo revisa (§11).
 - Cada cambio se anota en el **Historial** (sección 15).
 - La documentación operativa (manual del almacén y sus actualizaciones) está separada en `ACTUALIZACIONES_MANUAL_ALMACEN.md`.
 
@@ -456,12 +463,21 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 
 | Agente | Alcance | Prohibido |
 | --- | --- | --- |
-| **Coordinador** (sesión de Claude Code en la nube, instrucciones en `docs/AGENTE_COORDINADOR.md`) | Comunicación con el propietario, registro general, este documento, reparto de trabajo, revisión de entregas y PR, contratos entre módulos | Decisiones de negocio. Escribir código o tocar Supabase. |
+| **Coordinador** (desde el 07/11/2026, en el proyecto de Claude «Desarrollo de software operativo»; sus instrucciones y el sistema de tickets están allí, en `claude/agentes/AGENTE_COORDINADOR.md` y `claude/coordinacion/SISTEMA_TICKETS.md`) | Comunicación con el propietario, reparto de trabajo con tickets, revisión de los PR con su descripción y contratos entre módulos. En este repositorio solo lee | Decisiones de negocio. Escribir código. Escribir en este repositorio o en Supabase. |
 | **Base de datos** | El único que toca Supabase: tablas, permisos, funciones, motor de tareas, cálculos y lectura de Sheets. Trabaja **siempre en un entorno en la nube**. | Pantallas. Usar el ordenador del propietario. |
 | **Almacén (Lovable)** | Pantallas del operario y panel de Administración | Crear o cambiar tablas. Si necesita datos nuevos, lo pide al coordinador. |
 | **Tiendas (Lovable)** | Se crea al empezar la Etapa 2 | — |
 
-**Contrato entre módulos:** las pantallas solo usan las funciones y vistas que publica el agente de base de datos. Cualquier dato o función nueva se pide al coordinador, que la encarga al agente de base de datos y actualiza este documento.
+**Contrato entre módulos:** las pantallas solo usan las funciones y vistas que publica el agente de base de datos. Cualquier dato o función nueva se pide al coordinador, que la encarga al agente de base de datos.
+
+**Cómo se trabaja desde el 07/11/2026** (decisión del propietario):
+1. **El trabajo se organiza con tickets** (T-XXXX).
+2. **Las tareas del agente de base de datos le llegan como encargo copiado por el propietario,** con su número de ticket.
+3. **El agente entrega un PR.** El PR pone al día también este documento (y su cabecera) cuando cambia una regla.
+4. **El coordinador lo revisa con la descripción del PR.**
+5. **El propietario lo fusiona.**
+
+Todo entra por PR, también este documento (constitución, regla 7). Las instrucciones de las pantallas (Lovable) están en el proyecto de Claude y en el Knowledge de Lovable.
 
 ---
 
@@ -598,3 +614,4 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | 1.67 | 04/11/2026 | E2-8: «Limpieza de cristales» pasa a «Limpieza semanal: cristales, polvo y baños»; el vídeo del sábado, a la hora de abrir del turno de quien empieza, después de la apertura (Tarea 36). |
 | 1.68 | 06/11/2026 | §6.4: lo que tiene hora entra también cuando no hay ninguna referencia empezada (entre dos referencias o en una tarea no obligatoria sin referencias), en cuanto llega su hora (Tarea 37). |
 | 1.69 | 06/11/2026 | §6.4: Tarea 37 hecha en pruebas (PR #41): sobre una no obligatoria sin referencia empezada entran también lo urgente y volver a llamar por un problema (escalones 2–4); caso raro de la revisión inicial a las 08:45. |
+| 1.70 | 07/11/2026 | Cabecera al día (almacén en uso real en pruebas; tiendas en prueba en Basauri, Portugalete y Rentería; producción montada sin usar). Decisión del propietario (T-0000): el coordinador pasa al proyecto de Claude «Desarrollo de software operativo» y en el repositorio solo lee; el trabajo va con tickets; el encargo lo copia el propietario, el coordinador revisa el PR y el propietario lo fusiona; este documento lo actualiza el agente de base de datos en el PR de cada tarea (§0 y §11). Regla nueva: cada PR que cambie este documento pone al día la cabecera. |

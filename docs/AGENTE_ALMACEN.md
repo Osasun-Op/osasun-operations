@@ -1,5 +1,7 @@
 # Agente de pantallas (Lovable) — Instrucciones
 
+> **OBSOLETO desde el 07/11/2026:** sus instrucciones viven ahora en el proyecto de Claude «Desarrollo de software operativo» y en el Knowledge de Lovable. Este archivo ya no se usa ni se mantiene.
+
 **Versión:** 1.0 · **Fecha:** 27/10/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 > El original de este archivo está en `Osasun-Op/osasun-operations/docs/`. El coordinador mantiene una copia en el repositorio `osasun-pantallas`, junto con `CONTRATOS.md`. **No edites esas copias:** si algo no cuadra, díselo al propietario para que lo traslade al coordinador.
