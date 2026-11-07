@@ -1,6 +1,8 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.26 · **Fecha:** 06/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.27 · **Fecha:** 07/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.27 (T-0002) — sin cambios para Lovable.** Solo se pone al día el texto de §9 «Cómo funciona», «Tareas activadas por tienda», que seguía como en la 1.12 (Tarea 27). Ahora dice lo que tienen y no tienen las franquicias, construido en las Tareas 30, 30b, 30c y 31. No cambia ninguna función ni ningún dato.
 
 > **Cambios en 1.26 (Tarea 37) — para Lovable: la pantalla no cambia.** Solo cuándo entra lo que tiene hora (§3.2). 🧪 = solo en pruebas.
 > 1. **Si la tarea en curso no es obligatoria y no tiene ninguna referencia empezada** (entre dos referencias del +35 %, o «Orden y limpieza», compras o una de Administración sin hora), lo que tiene hora entra en cuanto llega su hora. También lo urgente y un problema. Basta con que la pantalla pida `tarea_activa` (cada minuto y al volver).
@@ -924,7 +926,10 @@ La tableta de las tiendas (`AGENTE_BASE_DE_DATOS.md` Tareas 27 y 28; `ESTADO_DEL
 - **Una cuenta de Google por tienda** (cuentas autorizadas con `rol: "tienda"` y su tienda; la ficha se crea sola la primera vez, §7.2). `mi_perfil()` devuelve `rol: "tienda"` y `centro: { id, nombre }` de la tienda; con ese rol la pantalla abre la tableta. Durango está inactiva: no tiene cuenta ni tareas.
 - **Lo que ve una tienda:** solo lo suyo. Las funciones del almacén (`tarea_activa`, `crear_incidencia`, `catalogo`, `guardar_reparto`…) y las de Administración le responden `NO_AUTORIZADO`, y la base de datos no le deja leer nada de Administración ni de otras tiendas.
 - **Horario de cada tienda** (se configura por tienda; hoy): de lunes a viernes, 11:00–13:30 y 17:00–20:30 (Bilbao, tarde 16:30–20:30); sábado, igual, pero cierran a las 19:30, salvo Bilbao (20:30); Donosti y Rentería, el sábado por la tarde cerrado; domingo, nada. Un **día cerrado** (§9.9) no tiene lista.
-- **Tareas activadas por tienda.** Las propias tienen todas; las franquicias (Donosti y Rentería), solo los avisos y el vídeo de la semana.
+- **Tareas activadas por tienda.** Las propias tienen todas. Las franquicias (Donosti y Rentería), desde las Tareas 30, 30b, 30c y 31:
+  - **tienen** los avisos, el vídeo de la semana, las muestras, los atascados (§9.23), las incidencias con un solo cuadro de texto libre (§9.20), los pedidos de cliente para recoger en su tienda (§9.22), «Envíos» (solo Rentería, §9.21) y el cierre de caja corto, con la Z y el nº de ventas (§9.14);
+  - **no tienen** aperturas, cierres de turno, limpieza, «Recibe la bolsa», reposición ni pedir material.
+  - **Lo que tiene cada tienda se activa por tienda en la configuración** (las plantillas activas de cada tienda, `incidencias_tienda`, `pedir_material` y `recibe_envio`), no en el código. **Lo manda el servidor en `tienda_hoy()`:** la pantalla enseña lo que llega.
 
 ### 9.1 `tienda_hoy()` 🧪
 Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la crea (como `tarea_activa`). `empezar_turno`, `marcar_punto`, `terminar_tarea_tienda`, `compartir_video` y `marcar_aviso_leido` devuelven también esto, ya actualizado: pintarlo directamente.
