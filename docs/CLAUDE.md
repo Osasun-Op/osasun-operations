@@ -8,9 +8,9 @@ Este repositorio contiene el software de supervisión operativa de Osasun Wellne
 2. **`docs/ESTADO_DEL_SISTEMA.md`**: la fuente de verdad del negocio, en las partes que toca tu tarea.
 3. **`docs/CONTRATOS.md`**: las funciones que toca tu tarea.
 4. **Tus instrucciones**, según el rol del mensaje de arranque:
-   - Coordinador → `docs/AGENTE_COORDINADOR.md`
+   - Coordinador → sus instrucciones están en el proyecto de Claude «Desarrollo de software operativo» (`claude/agentes/AGENTE_COORDINADOR.md`). En este repositorio solo lee (ver `docs/AGENTE_COORDINADOR.md`).
    - Base de datos → `docs/AGENTE_BASE_DE_DATOS.md`
-   - Pantallas (Lovable) → `docs/AGENTE_ALMACEN.md` (trabaja en el repositorio `osasun-pantallas`, con una copia de ese archivo y de `CONTRATOS.md`)
+   - Pantallas (Lovable) → sus instrucciones están en el proyecto de Claude y en el Knowledge de Lovable. Ya no usan `docs/AGENTE_ALMACEN.md` (obsoleto desde el 07/11/2026).
 5. **El código que ya existe** sobre lo que vas a tocar: buscar antes de escribir.
 6. Contexto operativo, si hace falta: `docs/ACTUALIZACIONES_MANUAL_ALMACEN.md`.
 
