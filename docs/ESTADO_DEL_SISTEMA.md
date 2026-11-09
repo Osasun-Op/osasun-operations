@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.70 · **Fecha:** 07/11/2026 · **Estado:**
+**Versión:** 1.71 · **Fecha:** 07/11/2026 · **Estado:**
 - **Almacén:** en uso real en el entorno de pruebas.
 - **Tiendas:** en prueba en Basauri, Portugalete y Rentería, en el entorno de pruebas (69 migraciones; la última, Tarea 37, PR #41).
 - **Producción:** montada y sin usar, sin lo de tiendas. Espera a que el propietario dé por probado lo de tiendas.
@@ -465,8 +465,11 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 | --- | --- | --- |
 | **Coordinador** (desde el 07/11/2026, en el proyecto de Claude «Desarrollo de software operativo»; sus instrucciones y el sistema de tickets están allí, en `claude/agentes/AGENTE_COORDINADOR.md` y `claude/coordinacion/SISTEMA_TICKETS.md`) | Comunicación con el propietario, reparto de trabajo con tickets, revisión de los PR con su descripción y contratos entre módulos. En este repositorio solo lee | Decisiones de negocio. Escribir código. Escribir en este repositorio o en Supabase. |
 | **Base de datos** | El único que toca Supabase: tablas, permisos, funciones, motor de tareas, cálculos y lectura de Sheets. Trabaja **siempre en un entorno en la nube**. | Pantallas. Usar el ordenador del propietario. |
-| **Almacén (Lovable)** | Pantallas del operario y panel de Administración | Crear o cambiar tablas. Si necesita datos nuevos, lo pide al coordinador. |
-| **Tiendas (Lovable)** | Se crea al empezar la Etapa 2 | — |
+| **Pantallas del almacén** (desde el 07/11/2026, en el proyecto de Claude «Desarrollo de software operativo»; instrucciones en `claude/agentes/`) | Pantallas del operario: Chromebook y Pixel | Crear o cambiar tablas. Si necesita datos nuevos, lo pide al coordinador. |
+| **Pantallas de la tienda** (ídem) | La tablet de las tiendas | Crear o cambiar tablas. Si necesita datos nuevos, lo pide al coordinador. |
+| **Pantallas del panel de Administración** (ídem) | El panel de Administración | Crear o cambiar tablas. Si necesita datos nuevos, lo pide al coordinador. |
+
+**Los tres agentes de pantallas** dan órdenes a un solo proyecto de Lovable, una orden a la vez y con la aprobación del propietario (decisión del propietario, 07/11/2026).
 
 **Contrato entre módulos:** las pantallas solo usan las funciones y vistas que publica el agente de base de datos. Cualquier dato o función nueva se pide al coordinador, que la encarga al agente de base de datos.
 
@@ -615,3 +618,4 @@ Todo entra por PR, también este documento (constitución, regla 7). Las instruc
 | 1.68 | 06/11/2026 | §6.4: lo que tiene hora entra también cuando no hay ninguna referencia empezada (entre dos referencias o en una tarea no obligatoria sin referencias), en cuanto llega su hora (Tarea 37). |
 | 1.69 | 06/11/2026 | §6.4: Tarea 37 hecha en pruebas (PR #41): sobre una no obligatoria sin referencia empezada entran también lo urgente y volver a llamar por un problema (escalones 2–4); caso raro de la revisión inicial a las 08:45. |
 | 1.70 | 07/11/2026 | Cabecera al día (almacén en uso real en pruebas; tiendas en prueba en Basauri, Portugalete y Rentería; producción montada sin usar). Decisión del propietario (T-0000): el coordinador pasa al proyecto de Claude «Desarrollo de software operativo» y en el repositorio solo lee; el trabajo va con tickets; el encargo lo copia el propietario, el coordinador revisa el PR y el propietario lo fusiona; este documento lo actualiza el agente de base de datos en el PR de cada tarea (§0 y §11). Regla nueva: cada PR que cambie este documento pone al día la cabecera. |
+| 1.71 | 07/11/2026 | §11 (T-0002): las filas «Almacén (Lovable)» y «Tiendas (Lovable)» pasan a ser los tres agentes de pantallas del proyecto de Claude «Desarrollo de software operativo» (almacén, tienda y panel de Administración), que dan órdenes a un solo proyecto de Lovable, una a la vez y con la aprobación del propietario. No cambia ninguna regla. |
