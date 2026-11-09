@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.71 · **Fecha:** 07/11/2026 · **Estado:**
+**Versión:** 1.72 · **Fecha:** 09/11/2026 · **Estado:**
 - **Almacén:** en uso real en el entorno de pruebas.
 - **Tiendas:** en prueba en Basauri, Portugalete y Rentería, en el entorno de pruebas (69 migraciones; la última, Tarea 37, PR #41).
 - **Producción:** montada y sin usar, sin lo de tiendas. Espera a que el propietario dé por probado lo de tiendas.
@@ -352,7 +352,7 @@ Las tareas de tipo «él propone, Administración aprueba» (envío a Gipuzkoa/D
 
 ## 8. Interfaces (punto 4, aprobado)
 
-**Estilo:** blanco y negro, con inspiración en Apple y Holded. **Color solo de forma puntual, para lo que tiene que llamar la atención** (decisión del propietario, 30/10/2026); de momento, únicamente el botón rojo con el número de incidencias sin cerrar del operario. No se usa para presionar con el tiempo. **Marca (27/10/2026):** logotipo «ŌSASUN», isotipo «Ō» (favicon e icono) y tipografía geométrica cercana a la del lema. Las formas de colores de la marca solo se usan como acento en la pantalla de entrada; las pantallas de trabajo siguen siendo monocromas. Las referencias se distinguen por tipografía: el formato (4 g / 10 g) grande y en negrita, y la categoría escrita debajo.
+**Estilo:** blanco y negro, con inspiración en Apple y Holded. **Color solo de forma puntual, para lo que tiene que llamar la atención** (decisión del propietario, 30/10/2026); de momento, únicamente el botón rojo con el número de incidencias sin cerrar del operario. **Excepciones para los avisos que necesitan más visibilidad** (decisión del propietario, 09/11/2026): el rojo vale también para los avisos urgentes que piden una decisión; de momento, el aviso de salida sin bolsas del operario (franja fija arriba y en rojo, hecha en Lovable el 09/11, T-0008). No se usa para presionar con el tiempo. **Marca (27/10/2026):** logotipo «ŌSASUN», isotipo «Ō» (favicon e icono) y tipografía geométrica cercana a la del lema. Las formas de colores de la marca solo se usan como acento en la pantalla de entrada; las pantallas de trabajo siguen siendo monocromas. Las referencias se distinguen por tipografía: el formato (4 g / 10 g) grande y en negrita, y la categoría escrita debajo.
 
 ### Operario
 - **Chromebook:**
@@ -478,7 +478,7 @@ Los agentes pueden **consultar** Sheets con los conectores de Google de la cuent
 2. **Las tareas del agente de base de datos le llegan como encargo copiado por el propietario,** con su número de ticket.
 3. **El agente entrega un PR.** El PR pone al día también este documento (y su cabecera) cuando cambia una regla.
 4. **El coordinador lo revisa con la descripción del PR.**
-5. **El propietario lo fusiona.**
+5. **Lo fusiona el agente de base de datos, solo con el «sí» expreso del propietario a ese PR,** que lo da después de revisarlo con el coordinador. Antes de fusionar, el agente comprueba que la rama sigue en el commit revisado; después dice el commit que queda en `main`. A mano (el propietario), solo como excepción (decisión del propietario, 09/11/2026).
 
 Todo entra por PR, también este documento (constitución, regla 7). Las instrucciones de las pantallas (Lovable) están en el proyecto de Claude y en el Knowledge de Lovable.
 
@@ -619,3 +619,4 @@ Todo entra por PR, también este documento (constitución, regla 7). Las instruc
 | 1.69 | 06/11/2026 | §6.4: Tarea 37 hecha en pruebas (PR #41): sobre una no obligatoria sin referencia empezada entran también lo urgente y volver a llamar por un problema (escalones 2–4); caso raro de la revisión inicial a las 08:45. |
 | 1.70 | 07/11/2026 | Cabecera al día (almacén en uso real en pruebas; tiendas en prueba en Basauri, Portugalete y Rentería; producción montada sin usar). Decisión del propietario (T-0000): el coordinador pasa al proyecto de Claude «Desarrollo de software operativo» y en el repositorio solo lee; el trabajo va con tickets; el encargo lo copia el propietario, el coordinador revisa el PR y el propietario lo fusiona; este documento lo actualiza el agente de base de datos en el PR de cada tarea (§0 y §11). Regla nueva: cada PR que cambie este documento pone al día la cabecera. |
 | 1.71 | 07/11/2026 | §11 (T-0002): las filas «Almacén (Lovable)» y «Tiendas (Lovable)» pasan a ser los tres agentes de pantallas del proyecto de Claude «Desarrollo de software operativo» (almacén, tienda y panel de Administración), que dan órdenes a un solo proyecto de Lovable, una a la vez y con la aprobación del propietario. No cambia ninguna regla. |
+| 1.72 | 09/11/2026 | Dos decisiones del propietario (T-0009): (1) §11, quién fusiona: el agente de base de datos, solo con el «sí» expreso del propietario a ese PR, que lo da después de revisarlo con el coordinador; antes comprueba que la rama sigue en el commit revisado y después dice el commit de `main`; a mano, solo como excepción. (2) §8, Estilo: el rojo vale también para los avisos urgentes que piden una decisión; de momento, el aviso de salida sin bolsas del operario (franja fija arriba, en rojo; Lovable, 09/11, T-0008). |

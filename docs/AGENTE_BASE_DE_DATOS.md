@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.74 · **Fecha:** 07/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.75 · **Fecha:** 09/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -44,7 +44,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 - Si falta un dato, **lo preguntas**; no lo supones. Lista las preguntas al final de tu entrega.
 - Tus resúmenes de entrega van **en lenguaje de negocio**: qué has hecho, qué cambia, qué riesgo hay y qué decisión se necesita.
 
-- **Producción (desde el 02/11/2026):** cuando el propietario fusione un PR tuyo con migraciones o funciones del servidor, pásalas a producción siguiendo `docs/AUDITORIA.md` §5 y cuéntalo en un comentario de ese PR. En producción nunca ejecutas pruebas que escriban.
+- **Producción (desde el 02/11/2026):** cuando se fusione un PR tuyo con migraciones o funciones del servidor, pásalas a producción siguiendo `docs/AUDITORIA.md` §5 y cuéntalo en un comentario de ese PR. En producción nunca ejecutas pruebas que escriban.
   - **Excepción, tiendas (decisión del propietario, 02/11/2026):** desde la migración `20261102190536_tiendas_primera_parte` (Tarea 27), **producción espera** hasta que el propietario diga que lo de tiendas está probado en Basauri y Portugalete. Producción se queda con 46 migraciones; las siguientes también esperan y se pasan juntas, en orden, cuando él lo apruebe.
 
 ## 5. Principios técnicos obligatorios
@@ -67,7 +67,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 - **Tus tareas te llegan como encargo copiado por el propietario,** con su número de ticket (T-XXXX). El coordinador trabaja en el proyecto de Claude «Desarrollo de software operativo» y en este repositorio solo lee.
 - **Cada tarea nueva lleva su número de ticket junto a su número de tarea,** en el encargo, en la sección «Tarea activa», en la rama y en el título del PR (por ejemplo, «T-0001 · Tarea 38 — …»).
 - **El coordinador revisa tu PR con su descripción.** Por eso la descripción tiene que bastar para revisarlo: «Qué he leído y qué existía ya», pruebas, llamada real, registros, deshacer y dudas.
-- **El propietario lo fusiona.** Tú nunca fusionas.
+- **Lo fusionas tú, solo con el «sí» expreso del propietario a ese PR,** que lo da después de revisarlo con el coordinador. Antes de fusionar, compruebas que la rama sigue en el commit revisado; después dices el commit que queda en `main`. A mano (el propietario), solo como excepción (decisión del propietario, 09/11/2026; sustituye a «El propietario lo fusiona. Tú nunca fusionas.»).
 - **`docs/ESTADO_DEL_SISTEMA.md` lo pones al día tú, en el PR de cada tarea,** cuando cambia una regla (constitución, regla 7). Cada PR que lo cambie pone al día su cabecera (versión, fecha y estado).
 - **Las correcciones** llegan como un encargo nuevo del propietario o como comentarios en tu PR. Léelos antes de seguir.
 - Puedes **consultar** Google Sheets con los conectores de Google, que tienen los permisos completos del propietario. **Nunca escribes con ellos.**
@@ -951,3 +951,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.72 | 06/11/2026 | Tarea 37 activa (lo que tiene hora entra también entre dos referencias), aprobada por el propietario. |
 | 1.73 | 06/11/2026 | Tarea 37 fusionada (PR #41), solo en pruebas (69 migraciones; ya aplicada). Sin tarea activa. |
 | 1.74 | 07/11/2026 | T-0000: cómo llegan las tareas desde el 07/11/2026 (encargo copiado por el propietario con número de ticket; revisión del coordinador con la descripción del PR; fusiona el propietario; ESTADO al día en el PR de cada tarea). Cada tarea nueva lleva su número de ticket. |
+| 1.75 | 09/11/2026 | T-0009: quién fusiona (§6): el agente de base de datos, solo con el «sí» expreso del propietario a ese PR, tras revisarlo con el coordinador; antes comprueba que la rama sigue en el commit revisado y después dice el commit de `main`; a mano, solo como excepción. §4: «cuando se fusione un PR tuyo». (T-0002, PR #43, no cambió este archivo.) |
