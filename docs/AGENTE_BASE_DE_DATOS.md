@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.76 · **Fecha:** 11/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.77 · **Fecha:** 11/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -76,11 +76,11 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 ## Tarea activa
 
-**T-0010 · Tarea 38** (sección 7.0): cajas de otra tienda, el aviso a la tienda de origen y la caja en la lista de la que recibe. En su PR, pendiente del «sí» del propietario. Solo en pruebas: espera con todo lo de tiendas.
+Ninguna. La T-0010 · Tarea 38 está fusionada (PR #45, commit `043ec45` en `main`; solo en pruebas, espera con todo lo de tiendas). La siguiente, cuando el propietario diga el próximo paso.
 
 ---
 
-## 7.0 T-0010 · TAREA 38 (activa): cajas de otra tienda, el aviso a la tienda de origen y la caja en la lista de la que recibe, en pruebas
+## 7.0 T-0010 · TAREA 38 (fusionada en el PR #45; solo en pruebas, producción espera): cajas de otra tienda, el aviso a la tienda de origen y la caja en la lista de la que recibe, en pruebas
 
 **Contexto:** encargo T-0010 copiado por el propietario. **Decisión del propietario (11/11/2026):** cuando una tienda recibe cajas de otra (R1e, «otra tienda»), la tienda de origen recibe un aviso en su tablet en el momento en que el operario prepara la bolsa y marca esa línea, no antes (por si hay que modificar algo); y la tienda que recibe ve esas cajas en la lista de su bolsa. Igual para todas las tiendas. Reutiliza: las decisiones «otra tienda» (R1e), el elemento «llamada», los avisos del almacén a las tiendas (`crear_aviso_tienda`) y la forma de `de` de la Tarea 28.
 
@@ -92,7 +92,9 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 No cambia: el trabajo del operario (ningún paso nuevo), la ruta y sus paradas, las cuentas del almacén (R1c), las pantallas.
 
-**Entrega:** PR **«T-0010 · Tarea 38 — Cajas de otra tienda»**. Se fusiona con el «sí» del propietario a ese PR, tras revisarlo con el coordinador. No se pasa a producción.
+**Entrega:** PR **«T-0010 · Tarea 38 — Cajas de otra tienda»** (#45), fusionado con el «sí» del propietario el 11/11/2026 (commit `043ec45` en `main`). No se pasa a producción.
+
+**Decisiones del propietario en la revisión (11/11/2026), «se deja así»:** si la tienda de origen no puede recibir el aviso (no ha entrado con su cuenta o ese día no abre), no se crea y el operario no ve nada; si se desmarca o se modifica la línea después de marcarla, el aviso ya creado se queda. Si da problemas, se revisará.
 
 ---
 
@@ -969,3 +971,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.74 | 07/11/2026 | T-0000: cómo llegan las tareas desde el 07/11/2026 (encargo copiado por el propietario con número de ticket; revisión del coordinador con la descripción del PR; fusiona el propietario; ESTADO al día en el PR de cada tarea). Cada tarea nueva lleva su número de ticket. |
 | 1.75 | 09/11/2026 | T-0009: quién fusiona (§6): el agente de base de datos, solo con el «sí» expreso del propietario a ese PR, tras revisarlo con el coordinador; antes comprueba que la rama sigue en el commit revisado y después dice el commit de `main`; a mano, solo como excepción. §4: «cuando se fusione un PR tuyo». (T-0002, PR #43, no cambió este archivo.) |
 | 1.76 | 11/11/2026 | T-0010 · Tarea 38 activa (cajas de otra tienda: aviso a la tienda de origen al marcar la línea y la caja en la lista de la que recibe), en su PR. |
+| 1.77 | 11/11/2026 | T-0010 · Tarea 38 fusionada (PR #45, `043ec45`), con las dos decisiones de la revisión. Tarea activa: ninguna. |
