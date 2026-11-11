@@ -1,6 +1,12 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.27 · **Fecha:** 07/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.28 · **Fecha:** 11/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.28 (T-0010 · Tarea 38) — sin cambios para Lovable.** El texto viene del servidor y la tablet ya enseña los avisos y el campo `de`. 🧪 = solo en pruebas.
+> 1. **Bolsas del operario** (§3.2): el elemento `tipo: "llamada"` dice «Avisa a Algorta para que prepare 2 BZ1 4g para su retirada» (antes, «Llama a…»). Se marca igual.
+> 2. **Al marcarlo**, la tienda de origen recibe un aviso del almacén para hoy (§9.9): «Prepara 2 BZ1 4g para Portugalete: lo recoge hoy el reparto». Es uno por elemento.
+> 3. **`bolsa.productos`** (§9.11): desde que está marcado, las cajas de la otra tienda se suman a la línea de su producto, con `de: [{ origen_id, origen, cantidad }]`. Es la forma de antes de la Tarea 29; la tablet ya lo pinta como «3 (1 de Algorta)».
+> 4. **«Falta algo»** (§9.12), igual. Cada elemento de `faltan` de una línea con `de` trae además `traia` («traía 3: 2 del almacén y 1 de Algorta»), que también va en el texto de la incidencia.
 
 > **Cambios en 1.27 (T-0002) — sin cambios para Lovable.** Solo se pone al día el texto de §9 «Cómo funciona», «Tareas activadas por tienda», que seguía como en la 1.12 (Tarea 27). Ahora dice lo que tienen y no tienen las franquicias, construido en las Tareas 30, 30b, 30c y 31. No cambia ninguna función ni ningún dato.
 
@@ -373,7 +379,7 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 - `siguiente`: una línea con lo que viene después. Si antes llega una tarea con hora, se anuncia esa con su hora.
 - `pregunta`: reservado; hoy siempre `null`. La pregunta «¿Quién sale hoy?» la devuelve `pegar_reparto` (`FALTA_SALE`).
 - `elementos` ✅: `[ { id, tipo, producto, formato, texto, categoria, destino, destino_id, bolsa, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla) y, dentro de la tienda, por `bolsa`: «Bolsa de reposición» y, si hay pedidos de cliente, «Pedido de cliente · [cliente]» (Tarea 12; en el envío, «Pedido de cliente · [cliente] · [tienda]», Tarea 30c). **Peticiones especiales** (Tarea 13): `tipo: "peticion"`, con su texto en `texto` (y en `producto`), `cantidad` 1 y `formato` vacío; van en la bolsa de su tienda después de las cajas, para mostrarlas bajo «Además, mete:». En los demás elementos, `texto` es `null`. En las listas de producción, `bolsa` es `null`; en los pedidos de cliente, `motivo` dice «Coge N del almacén» o «Haz N».
-  - **Aviso de llamada** (Tarea 16, R1e): `tipo: "llamada"`, en la bolsa de reposición de la tienda que recibe algo de otra tienda, con su `texto` («Llama a Algorta para que prepare 2 BZ1 4g para su retirada») y `cantidad` 1. Se muestra y se marca como una petición especial; la tienda no está completa sin él.
+  - **Aviso de llamada** (Tarea 16, R1e): `tipo: "llamada"`, en la bolsa de reposición de la tienda que recibe algo de otra tienda, con su `texto` («Avisa a Algorta para que prepare 2 BZ1 4g para su retirada»; hasta la Tarea 38, «Llama a…») y `cantidad` 1. Se muestra y se marca como una petición especial; la tienda no está completa sin él. **Desde la Tarea 38 🧪**, al marcarlo la tienda de origen recibe un aviso del almacén (§9.9) y la que recibe ve esas cajas en su lista (§9.11). Ningún paso nuevo para el operario.
   - **Referencia sin granel** (Tarea 16, R1e), solo en «Producción del reparto»: además trae `sin_granel: true`, `para: [{ destino_id, destino, pedido, faltan }]` (las tiendas que la reciben; lo que hay en el almacén se lo llevan las primeras del reparto), `tiendas_con_stock: [{ destino_id, destino, cajas }]` (las demás tiendas del reparto con cajas de esa referencia en PRINCIPAL), `resuelto` y `decisiones: [{ destino_id, destino, accion, origen_id, origen, cantidad }]`. Sin resolver, al elegirla sale el aviso «No hay granel» con las dos opciones por tienda (§3.19). Resuelta, queda `estado: "hecho"`, `cantidad` 0 y `motivo` «No se produce: 3 se quitan de Bilbao; 2 para Portugalete de Algorta.».
 - La elección sigue `PLAN_TECNICO.md` §2.3. **Nunca devuelve avisos de tiempo ni de presión** (§6.7): solo tareas.
 - Solo para el operario: Administración recibe `NO_AUTORIZADO`.
@@ -1039,6 +1045,7 @@ Cierra el aviso (`tienda_hoy().avisos[].id`) y anota quién lo leyó (el de `en_
   - **Salida:** `{ avisos: [aviso], sin_aviso: [{ tienda, motivo }] }`. `sin_aviso`: las tiendas que no lo reciben («Todavía no ha entrado con su cuenta» o «Ese día no abre»).
   - **Errores:** `DATOS_NO_VALIDOS` (falta el texto, fecha pasada, tienda no válida), `SIN_JORNADA` (para una sola tienda que no puede recibirlo; `error.sin_aviso` dice por qué).
 - **`avisos_tiendas()`:** `{ avisos: [{ id, fecha, texto, tienda_id, tienda, estado, leido, cerrado_en, nota, creado_por, de }] }`, de la última semana y los que vienen, los más nuevos primero. `nota` dice quién lo leyó («Leído por …»); `creado_por`, el nombre de quien lo mandó, y `de` (Tarea 29), «Almacén» o «Administración». Administración los ve todos; **el operario, solo los que ha mandado él** (Tarea 29 🧪).
+- **Aviso automático de cajas de otra tienda** (Tarea 38 🧪, propietario, 11/11/2026). Cuando el operario marca en las bolsas «Avisa a [origen]…» (§3.2), el servidor crea un aviso del almacén (`de: "Almacén"`) para la tienda de origen, con fecha de hoy: «Prepara N [producto formato] para [destino]: lo recoge hoy el reparto». Es el mismo aviso de `crear_aviso_tienda`, uno por elemento: marcarlo otra vez no crea otro. Antes de marcarlo, no hay aviso (por si hay que modificar algo). Si la tienda de origen todavía no ha entrado con su cuenta, o ese día no abre, no se crea, y la respuesta de `marcar_cajas` es la de siempre (propietario, 11/11/2026: se deja así).
 - **Dónde** (Tarea 33):
   - **Los días cerrados**, en el menú «Tiendas» del panel.
   - **Los avisos**, en un solo botón «Avisos» abajo, que sustituye a «Aviso para el almacén» y a «Avisos» del menú «Tiendas»:
@@ -1071,7 +1078,7 @@ Sale sola en `tienda_hoy().tareas` **cuando sale el reparto**, en las tiendas qu
   "reposicion": null
 }
 ```
-  Desde la Tarea 29 ya no trae `de` (lo que viene de otra tienda no va en la bolsa del almacén).
+  Desde la Tarea 29 ya no trae `de` (lo que viene de otra tienda no va en la bolsa del almacén). **Desde la Tarea 38 🧪 (propietario, 11/11/2026), vuelve:** cuando el operario marca «Avisa a [origen]…» (§3.2), las cajas de la otra tienda se suman a la línea de su producto, con `de: [{ origen_id, origen, cantidad }]` (por ejemplo, `"cantidad": 3, "de": [{ "origen": "Algorta", "cantidad": 1 }]`: 2 del almacén y 1 de Algorta). Si no lleva nada de ese producto del almacén, la línea trae solo lo de la otra tienda. La `clave` no cambia. Una tienda que solo recibe cajas de otra tienda tiene igualmente su «Recibe la bolsa».
 - **Dos puntos** (`puntos`):
   1. **«Bolsa recibida»**: un toque con `marcar_punto`. La bolsa consta como recibida a esa hora, por quien está (`recibida_a_las`, `recibida_por`), y las demás tiendas lo ven (§9.13).
   2. **«Bolsa de ayer entregada con X € en efectivo»** (`pide: "efectivo"`, `efectivo_esperado: X`): X es el efectivo del último cierre de caja de la tienda (§9.14).
@@ -1091,6 +1098,7 @@ Sale al terminar «Recibe la bolsa» (`tipo: "reposicion"`), con la misma `bolsa
 - **«Reposición metida, todo bien»:** `apuntar_reposicion({ tarea_id })`.
 - **«Falta algo»:** `apuntar_reposicion({ tarea_id, faltan: [{ clave, cantidad? }], nota? })`, eligiendo de la lista (`clave` de `bolsa.productos`, `bolsa.peticiones` o `bolsa.pedidos`) y cuántas (de 1 a lo que traía; sin `cantidad`, todas). `nota`, una línea (200 letras).
   - Llega a **Administración como incidencia abierta** (§9.17, `incidencias_tiendas`), que la cierra al resolverla. **A Eder no le sale nada.**
+  - **Si falta algo de una línea con `de`** (Tarea 38 🧪), la incidencia dice de dónde venía cada caja: «1x CBD DRY 4g (traía 3: 2 del almacén y 1 de Algorta)». En `faltan`, ese elemento trae además `traia`.
 - En los dos casos la tarea queda hecha y `bolsa.reposicion` dice `{ resultado: "bien" | "falta", a_las, por, faltan, incidencia_id }`.
 - **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya apuntada), `SIN_PERSONA`, `DATOS_NO_VALIDOS` («Elige de la lista lo que falta.», cantidad fuera de rango, repetida).
 

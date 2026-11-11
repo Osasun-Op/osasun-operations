@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.75 · **Fecha:** 09/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.76 · **Fecha:** 11/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -76,7 +76,23 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 ## Tarea activa
 
-Ninguna. La Tarea 37 está fusionada (PR #41). Las siguientes del plan de turnos (el «Fin de turno» de las tiendas y los fichajes) esperan a que el propietario diga el próximo paso.
+**T-0010 · Tarea 38** (sección 7.0): cajas de otra tienda, el aviso a la tienda de origen y la caja en la lista de la que recibe. En su PR, pendiente del «sí» del propietario. Solo en pruebas: espera con todo lo de tiendas.
+
+---
+
+## 7.0 T-0010 · TAREA 38 (activa): cajas de otra tienda, el aviso a la tienda de origen y la caja en la lista de la que recibe, en pruebas
+
+**Contexto:** encargo T-0010 copiado por el propietario. **Decisión del propietario (11/11/2026):** cuando una tienda recibe cajas de otra (R1e, «otra tienda»), la tienda de origen recibe un aviso en su tablet en el momento en que el operario prepara la bolsa y marca esa línea, no antes (por si hay que modificar algo); y la tienda que recibe ve esas cajas en la lista de su bolsa. Igual para todas las tiendas. Reutiliza: las decisiones «otra tienda» (R1e), el elemento «llamada», los avisos del almacén a las tiendas (`crear_aviso_tienda`) y la forma de `de` de la Tarea 28.
+
+1. La línea del operario en las bolsas (`llamada`): «Avisa a [origen] para que prepare N [producto formato] para su retirada».
+2. Al marcarla (el mismo toque), un aviso del almacén para la tienda de origen, de hoy: «Prepara N [producto formato] para [destino]: lo recoge hoy el reparto». Uno por elemento.
+3. `bolsa.productos` de la tienda que recibe: desde que está marcada, esas cajas se suman a la línea de su producto, con `de: [{ origen, cantidad }]`; si no lleva nada del almacén de ese producto, una línea solo con eso. La clave no cambia.
+4. «Falta algo», igual; la incidencia dice de dónde venía cada caja.
+5. Una tienda que solo recibe cajas de otra tienda tiene igualmente su «Recibe la bolsa» y su lista.
+
+No cambia: el trabajo del operario (ningún paso nuevo), la ruta y sus paradas, las cuentas del almacén (R1c), las pantallas.
+
+**Entrega:** PR **«T-0010 · Tarea 38 — Cajas de otra tienda»**. Se fusiona con el «sí» del propietario a ese PR, tras revisarlo con el coordinador. No se pasa a producción.
 
 ---
 
@@ -952,3 +968,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.73 | 06/11/2026 | Tarea 37 fusionada (PR #41), solo en pruebas (69 migraciones; ya aplicada). Sin tarea activa. |
 | 1.74 | 07/11/2026 | T-0000: cómo llegan las tareas desde el 07/11/2026 (encargo copiado por el propietario con número de ticket; revisión del coordinador con la descripción del PR; fusiona el propietario; ESTADO al día en el PR de cada tarea). Cada tarea nueva lleva su número de ticket. |
 | 1.75 | 09/11/2026 | T-0009: quién fusiona (§6): el agente de base de datos, solo con el «sí» expreso del propietario a ese PR, tras revisarlo con el coordinador; antes comprueba que la rama sigue en el commit revisado y después dice el commit de `main`; a mano, solo como excepción. §4: «cuando se fusione un PR tuyo». (T-0002, PR #43, no cambió este archivo.) |
+| 1.76 | 11/11/2026 | T-0010 · Tarea 38 activa (cajas de otra tienda: aviso a la tienda de origen al marcar la línea y la caja en la lista de la que recibe), en su PR. |
