@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Modelo de datos (V1)
 
-**Versión:** 1.2 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 16).
+**Versión:** 1.3 · **Fecha:** 11/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). Construidas en pruebas las tablas marcadas con ✅ (Tareas 2 a 16).
 
 > Lo mínimo que necesita la V1 de `ESTADO_DEL_SISTEMA.md` (§12). Lo marcado como **«previsto, no implementado»** es V1.1 y solo figura cuando no añade complejidad.
 > ✅ = existe en el proyecto de pruebas (migraciones en `supabase/migrations/`). El resto llega en su tarea.
@@ -150,7 +150,7 @@ Referencias de producción, cajas de cada bolsa, peticiones especiales (Tarea 13
 | Campo | Tipo | Notas |
 | --- | --- | --- |
 | tarea_id | FK | |
-| tipo | `referencia_produccion` · `caja_bolsa` · `peticion` · `llamada` | `peticion` (Tarea 13, R1d): una petición especial en la bolsa de su tienda; el texto va en `producto`, `formato` vacío y `cantidad` 1. `llamada` (Tarea 16, R1e): «Llama a [origen] para que prepare N … para su retirada», igual que una petición, con `calculo` = `{ origen_id, producto, formato, cantidad }`. Una referencia de producción sin granel guarda en `calculo` `sin_granel`, `para`, `tiendas_con_stock` y, al decidir, `decisiones` (`[{ destino_id, accion, origen_id, cantidad }]`), `resuelto`, `resuelto_por` y `resuelto_en`: de ahí salen las bolsas, los avisos de llamada, las paradas, el texto para WhatsApp y las cuentas. |
+| tipo | `referencia_produccion` · `caja_bolsa` · `peticion` · `llamada` | `peticion` (Tarea 13, R1d): una petición especial en la bolsa de su tienda; el texto va en `producto`, `formato` vacío y `cantidad` 1. `llamada` (Tarea 16, R1e): «Avisa a [origen] para que prepare N … para su retirada» (hasta la Tarea 38, «Llama a…»), igual que una petición; al marcarlo, la tienda de origen recibe un aviso del almacén (Tarea 38), con `calculo` = `{ origen_id, producto, formato, cantidad }`. Una referencia de producción sin granel guarda en `calculo` `sin_granel`, `para`, `tiendas_con_stock` y, al decidir, `decisiones` (`[{ destino_id, accion, origen_id, cantidad }]`), `resuelto`, `resuelto_por` y `resuelto_en`: de ahí salen las bolsas, los avisos de llamada, las paradas, el texto para WhatsApp y las cuentas. |
 | lote | text | Lista dentro de la tarea: `reparto`, `envio`, o el turno (`manana`/`tarde`) en la de stock. Único (tarea, tipo, lote, destino, producto, formato). |
 | producto, formato, categoria | text | Tal como en PRINCIPAL. |
 | destino_id | FK → centros_trabajo | Tienda o destino de la bolsa. |

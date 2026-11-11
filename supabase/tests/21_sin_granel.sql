@@ -166,10 +166,10 @@ begin
     and (select count(*) from public.registro_eventos where tipo = 'sin_granel_resuelto' and tarea_id = v_prod) = 1, r::text);
   perform pg_temp.comprobar('La producción sigue como siempre: sin nada más que hacer, queda hecha',
     (select estado from public.tareas where id = v_prod) = 'hecha');
-  perform pg_temp.comprobar('Bolsas: Bilbao sin BZ1; Portu sin cajas de BZ1 y con «Llama a Algorta…» (como una petición)',
+  perform pg_temp.comprobar('Bolsas: Bilbao sin BZ1; Portu sin cajas de BZ1 y con «Avisa a Algorta…» (como una petición; Tarea 38: antes «Llama a…»)',
     pg_temp.bolsa(v_bolsas) = '[["BILBAO", "caja_bolsa", "V2", 2, "pendiente"],
-                                ["PORTU", "llamada", "Llama a Algorta para que prepare 2 BZ1 4g para su retirada", 1, "pendiente"]]'
-    and (select x ->> 'texto' = 'Llama a Algorta para que prepare 2 BZ1 4g para su retirada' and x ->> 'bolsa' = 'Bolsa de reposición'
+                                ["PORTU", "llamada", "Avisa a Algorta para que prepare 2 BZ1 4g para su retirada", 1, "pendiente"]]'
+    and (select x ->> 'texto' = 'Avisa a Algorta para que prepare 2 BZ1 4g para su retirada' and x ->> 'bolsa' = 'Bolsa de reposición'
            from jsonb_array_elements(motor.tarea_json(v_bolsas) -> 'elementos') x where x ->> 'tipo' = 'llamada'),
     pg_temp.bolsa(v_bolsas)::text);
   r := (select x from jsonb_array_elements(motor.tarea_json(v_prod) -> 'elementos') x where x ->> 'producto' = 'BZ1');
@@ -219,7 +219,7 @@ begin
     (select estado = 'hecho' and (calculo ->> 'resuelto')::boolean from public.tarea_elementos where id = v_el)
     and (select estado from public.tareas where id = v_prod) = 'hecha'
     and pg_temp.bolsa(v_bolsas) = '[["BILBAO", "caja_bolsa", "V2", 2, "pendiente"],
-                                    ["PORTU", "llamada", "Llama a Algorta para que prepare 2 BZ1 4g para su retirada", 1, "pendiente"]]'
+                                    ["PORTU", "llamada", "Avisa a Algorta para que prepare 2 BZ1 4g para su retirada", 1, "pendiente"]]'
     and r ->> 'texto_whatsapp' = E'REPARTO 16/12\nSALE: ALMACÉN\n\nBILBAO\n2x V2 4g\n\nPORTU\n2x BZ1 4g (de Algorta)', r::text);
   r := pg_temp.guardar(j, 'h21-c', 0, 2, '2026-12-16 09:51+01');
   perform pg_temp.comprobar('El mismo reparto otra vez: se recalcula (Tarea 23) y la decisión de Algorta se conserva',
