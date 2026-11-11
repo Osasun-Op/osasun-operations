@@ -206,7 +206,10 @@ begin
   -- 7. «Falta algo» de la caja de otra tienda.
   r := motor.tienda_hoy_de(basauri, pg_temp.a('11:20'));
   perform motor.marcar_punto_de(basauri, (pg_temp.punto(r, 'recibe_bolsa', 1) ->> 'id')::uuid, pg_temp.a('11:20'));
-  perform motor.entregar_efectivo_de(basauri, (pg_temp.punto(r, 'recibe_bolsa', 2) ->> 'id')::uuid, 40, null, pg_temp.a('11:21'));
+  -- Lo que espera el punto (en pruebas, el último cierre real de la tienda): esta prueba no va del efectivo.
+  perform motor.entregar_efectivo_de(basauri, (pg_temp.punto(r, 'recibe_bolsa', 2) ->> 'id')::uuid,
+                                     coalesce((pg_temp.punto(r, 'recibe_bolsa', 2) ->> 'efectivo_esperado')::numeric, 40), null,
+                                     pg_temp.a('11:21'));
   t := pg_temp.tarea(motor.tienda_hoy_de(basauri, pg_temp.a('11:30')), 'reposicion');
   r := motor.apuntar_reposicion_de(basauri, (t ->> 'id')::uuid, '[{"clave": "producto:CBD DRY|4g", "cantidad": 1}]', null,
                                    pg_temp.a('11:30'));
