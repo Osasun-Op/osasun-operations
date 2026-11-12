@@ -216,7 +216,7 @@ begin
   perform pg_temp.comprobar('«Falta algo»: como siempre, y la incidencia dice de dónde venía cada caja',
     pg_temp.tarea(r, 'reposicion') ->> 'estado' = 'hecha'
     and (select descripcion from public.incidencias where opcion = 'falta_reposicion' and persona_id = basauri)
-        = 'Falta en la bolsa del reparto del 15/12: 1x CBD DRY 4g (traía 3: 2 del almacén y 1 de Algorta) (Ane Prueba)',
+        = 'Bolsa del reparto del 15/12. Falta: 1x CBD DRY 4g (traía 3: 2 del almacén y 1 de Algorta) (Ane Prueba)',
     (select descripcion from public.incidencias where opcion = 'falta_reposicion' and persona_id = basauri));
 end;
 $$;

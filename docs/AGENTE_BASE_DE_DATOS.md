@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.77 · **Fecha:** 11/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.78 · **Fecha:** 12/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -68,6 +68,7 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 - **Cada tarea nueva lleva su número de ticket junto a su número de tarea,** en el encargo, en la sección «Tarea activa», en la rama y en el título del PR (por ejemplo, «T-0001 · Tarea 38 — …»).
 - **El coordinador revisa tu PR con su descripción.** Por eso la descripción tiene que bastar para revisarlo: «Qué he leído y qué existía ya», pruebas, llamada real, registros, deshacer y dudas.
 - **Lo fusionas tú, solo con el «sí» expreso del propietario a ese PR,** que lo da después de revisarlo con el coordinador. Antes de fusionar, compruebas que la rama sigue en el commit revisado; después dices el commit que queda en `main`. A mano (el propietario), solo como excepción (decisión del propietario, 09/11/2026; sustituye a «El propietario lo fusiona. Tú nunca fusionas.»).
+- **Todo va en el mismo PR** (decisión del propietario, 11/11/2026): los documentos de una tarea se ponen al día en su propio PR, también lo que decida el propietario al revisarlo (con un commit en ese PR antes de su «sí»; el «sí» vale para el commit que queda) y la tarea ya como «fusionada en el PR #N» (el número se sabe al abrirlo). No se abre otro PR después de fusionar. El commit de `main` se dice al fusionar.
 - **`docs/ESTADO_DEL_SISTEMA.md` lo pones al día tú, en el PR de cada tarea,** cuando cambia una regla (constitución, regla 7). Cada PR que lo cambie pone al día su cabecera (versión, fecha y estado).
 - **Las correcciones** llegan como un encargo nuevo del propietario o como comentarios en tu PR. Léelos antes de seguir.
 - Puedes **consultar** Google Sheets con los conectores de Google, que tienen los permisos completos del propietario. **Nunca escribes con ellos.**
@@ -76,7 +77,24 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 ## Tarea activa
 
-Ninguna. La T-0010 · Tarea 38 está fusionada (PR #45, commit `043ec45` en `main`; solo en pruebas, espera con todo lo de tiendas). La siguiente, cuando el propietario diga el próximo paso.
+Ninguna. La T-0011 · Tarea 39 está fusionada (PR #47; solo en pruebas, espera con todo lo de tiendas). La siguiente, cuando el propietario diga el próximo paso.
+
+---
+
+## 7.0 T-0011 · TAREA 39 (fusionada en el PR #47; solo en pruebas, producción espera): reposición y envíos, lo que llega de más, en pruebas
+
+**Contexto:** encargo T-0011 copiado por el propietario. **Decisión del propietario (12/11/2026):** en «Coloca y apunta la reposición» y en «Envíos», la tienda puede marcar también lo que llega de más, no solo lo que falta. La pantalla la hará después el agente de tienda.
+
+1. `apuntar_reposicion` (`CONTRATOS.md` §9.12) y `confirmar_envio` (§9.21) aceptan además `llegado: [{ clave, cantidad }]` (lo que ha llegado de cada caja de la lista; el servidor saca si falta o sobra) y `de_mas: [{ producto, formato, cantidad }]` (lo que no está en la lista, de `productos_tienda()`). `faltan`, igual.
+2. Si falta o sobra algo, la incidencia de siempre para Administración, con «Falta: … · Sobra: …» (con de dónde venía cada caja, Tarea 38). Si no, «todo bien».
+3. Un solo código para los dos: `motor.faltan_de_lista`, `motor.faltan_texto` y `motor.diferencias_texto`.
+4. Errores: `DATOS_NO_VALIDOS`, con una frase para enseñar tal cual.
+
+No cambia: «todo bien», el trabajo del operario, las cuentas del almacén, la hoja, las pantallas.
+
+**Entrega:** PR **«T-0011 · Tarea 39 — Lo que llega de más»** (#47). Fusionado con el «sí» del propietario el 12/11/2026. No se pasa a producción.
+
+**Decisiones del propietario en la revisión (12/11/2026), aprobadas como están:** (1) el texto de la incidencia empieza por de qué es («Bolsa del reparto del 15/12. Falta: … · Sobra: …», «Envío del 16/12. …»); (2) `resultado: "falta"` es «Falta o sobra algo», también cuando solo sobra (lo que sobra va en `sobran`); (3) topes: `llegado` de 0 a 9999 y `de_mas` de 1 a 99.
 
 ---
 
@@ -972,3 +990,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.75 | 09/11/2026 | T-0009: quién fusiona (§6): el agente de base de datos, solo con el «sí» expreso del propietario a ese PR, tras revisarlo con el coordinador; antes comprueba que la rama sigue en el commit revisado y después dice el commit de `main`; a mano, solo como excepción. §4: «cuando se fusione un PR tuyo». (T-0002, PR #43, no cambió este archivo.) |
 | 1.76 | 11/11/2026 | T-0010 · Tarea 38 activa (cajas de otra tienda: aviso a la tienda de origen al marcar la línea y la caja en la lista de la que recibe), en su PR. |
 | 1.77 | 11/11/2026 | T-0010 · Tarea 38 fusionada (PR #45, `043ec45`), con las dos decisiones de la revisión. Tarea activa: ninguna. |
+| 1.78 | 12/11/2026 | T-0011 · Tarea 39 (lo que llega de más), fusionada en el PR #47. §6: todo va en el mismo PR (decisión del propietario, 11/11/2026). |
