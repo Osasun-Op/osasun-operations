@@ -1,6 +1,18 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.29 · **Fecha:** 11/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.30 · **Fecha:** 12/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.30 (T-0011 · Tarea 39) — para Lovable (agente de tienda).** 🧪 = solo en pruebas. En «Coloca y apunta la reposición» (§9.12) y en «Envíos» (§9.21), la tienda marca también lo que llega de más. Solo se añaden campos: lo de ahora sigue funcionando.
+> La pantalla:
+> 1. **«Reposición metida, todo bien»** (en «Envíos», «Todo bien»): como ahora.
+> 2. **«Falta o sobra algo»:**
+>    1. cada caja de la lista (`productos`) empieza en lo que tenía que llegar (`cantidad`), y la tienda pone lo que ha llegado con − y + (− falta, + sobra). Va en `llegado: [{ clave, cantidad }]` (basta con las que cambian);
+>    2. las peticiones y los pedidos de cliente, como botones, para lo que falta (como ahora, en `faltan`);
+>    3. una casilla **«Ha llegado algo que no está en la lista»** que, al marcarla, enseña la lista de productos (`productos_tienda()`, §9.15: producto y formato) con − y +. Va en `de_mas: [{ producto, formato, cantidad }]`;
+>    4. la nota (`nota`, como ahora);
+>    5. enviar.
+> 3. **Si falta o sobra lo calcula el servidor.** Si al final no falta ni sobra nada, queda como «todo bien».
+> 4. **Después**, `bolsa.reposicion` trae además `sobran` (como `faltan`), y en los dos casos la incidencia de Administración dice «Falta: … · Sobra: …».
 
 > **Cambios en 1.29 — sin cambios para Lovable.** §9.9: lo que pasa con el aviso a la tienda de origen si se desmarca o se modifica la línea (decisión del propietario, 11/11/2026). La Tarea 38 está fusionada (PR #45).
 
@@ -1095,14 +1107,18 @@ Sale sola en `tienda_hoy().tareas` **cuando sale el reparto**, en las tiendas qu
 - Con los dos puntos, la tarea queda hecha y sale «Coloca y apunta la reposición».
 - **`entregar_efectivo(elemento_id, cantidad?, motivo?)`:** euros con dos decimales como máximo; `motivo`, una línea (200 letras). **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `TODAVIA_NO`, `SIN_PERSONA`, `ESTADO_NO_VALIDO`, `FALTAN_DATOS`, `MOTIVO_OBLIGATORIO`, `DATOS_NO_VALIDOS`.
 
-### 9.12 «Coloca y apunta la reposición» · `apuntar_reposicion(tarea_id, faltan?, nota?)` 🧪 (Tarea 28)
+### 9.12 «Coloca y apunta la reposición» · `apuntar_reposicion(tarea_id, faltan?, nota?, llegado?, de_mas?)` 🧪 (Tarea 28; Tarea 39)
 Sale al terminar «Recibe la bolsa» (`tipo: "reposicion"`), con la misma `bolsa` (lo que tenía que llegar).
 - **«Reposición metida, todo bien»:** `apuntar_reposicion({ tarea_id })`.
 - **«Falta algo»:** `apuntar_reposicion({ tarea_id, faltan: [{ clave, cantidad? }], nota? })`, eligiendo de la lista (`clave` de `bolsa.productos`, `bolsa.peticiones` o `bolsa.pedidos`) y cuántas (de 1 a lo que traía; sin `cantidad`, todas). `nota`, una línea (200 letras).
   - Llega a **Administración como incidencia abierta** (§9.17, `incidencias_tiendas`), que la cierra al resolverla. **A Eder no le sale nada.**
   - **Si falta algo de una línea con `de`** (Tarea 38 🧪), la incidencia dice de dónde venía cada caja: «1x CBD DRY 4g (traía 3: 2 del almacén y 1 de Algorta)». En `faltan`, ese elemento trae además `traia`.
-- En los dos casos la tarea queda hecha y `bolsa.reposicion` dice `{ resultado: "bien" | "falta", a_las, por, faltan, incidencia_id }`.
-- **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya apuntada), `SIN_PERSONA`, `DATOS_NO_VALIDOS` («Elige de la lista lo que falta.», cantidad fuera de rango, repetida).
+- **«Falta o sobra algo»** (Tarea 39 🧪, propietario, 12/11/2026): además de `faltan`, o en su lugar:
+  - **`llegado: [{ clave, cantidad }]`:** por cada caja de `bolsa.productos`, lo que ha llegado de verdad (entero, 0 o más; puede ser más de lo que traía). El servidor lo compara con lo que traía: menos, falta la diferencia; más, sobra la diferencia; igual, nada. Las cajas que no vengan, como siempre (lo que traía). Solo cajas de `productos`; una misma `clave` no puede ir en `faltan` y en `llegado`.
+  - **`de_mas: [{ producto, formato, cantidad? }]`:** lo que ha llegado y no está en la lista, de `productos_tienda()` (§9.15; `formato` uno de los de ese producto, `""` si no tiene). `cantidad` de 1 a 99 (sin ella, 1). Cada producto, una vez; si ya está en la lista, va en `llegado`.
+  - **Si falta o sobra algo:** la incidencia de siempre (`falta_reposicion`), con «Bolsa del reparto del 15/12. Falta: 1x V2 4g · Sobra: 1x CBD DRY 4g (traía 3: 2 del almacén y 1 de Algorta); 1x BZ1 4g (no estaba en la lista). La caja venía abierta (Nombre)», y la tarea queda con «Falta o sobra algo». **Si no falta ni sobra nada,** «todo bien», como `apuntar_reposicion({ tarea_id })`.
+- En los dos casos la tarea queda hecha y `bolsa.reposicion` dice `{ resultado: "bien" | "falta", a_las, por, faltan, sobran, incidencia_id }`. `resultado: "falta"` es «Falta o sobra algo». `sobran` (Tarea 39), como `faltan`: `[{ clave, texto, cantidad, traia?, fuera_de_lista? }]`; `fuera_de_lista: true` en lo de `de_mas` (su `clave` empieza por `de_mas:`).
+- **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO`, `ESTADO_NO_VALIDO` (ya apuntada: repetir no crea otra incidencia), `SIN_PERSONA`, `DATOS_NO_VALIDOS`, con una frase para enseñar tal cual: «Elige de la lista lo que falta.», «Pon lo que ha llegado de cada caja de la lista.», «Cuántas han llegado de V2 4g: un número entero, 0 o más.», «Elige de la lista: «X 4g» no está.», «V2 4g ya está en la lista: pon ahí lo que ha llegado.», «Cuántas cajas de BZ1 4g: de 1 a 99.», «Cada cosa, una sola vez.», «Cada producto, una sola vez.», cantidad de `faltan` fuera de rango y nota larga.
 
 ### 9.13 Por dónde va el reparto: `tienda_hoy().reparto` 🧪 (Tarea 28)
 `null` si hoy la tienda no tiene parada en el reparto. Si la tiene:
@@ -1182,7 +1198,7 @@ Botón «Incidencia» de la tableta, en cualquier momento (`ESTADO_DEL_SISTEMA.m
 - **`tienda_hoy().incidencias`:** las de la tienda abiertas y las cerradas hoy (las abiertas primero): `[{ id, opcion, texto, fecha, a_las, estado: "abierta" | "cerrada", estado_texto }]`. Mostrar `estado_texto`: «Abierta» o «Resuelta por Administración: [nota]» (sin nota, «Resuelta por Administración»). Incluye la de «Falta algo» de la reposición. Los avisos van aparte (`avisos`).
 - **Salida:** `tienda_hoy()` actualizado. **Errores:** `DATOS_NO_VALIDOS` (opción que no existe, producto que no está en la lista, sin texto, demasiado largo), `NO_AUTORIZADO` (la tienda no tiene esa opción; el operario y Administración), `SIN_PERSONA`, `SIN_JORNADA` (hoy la tienda no abre).
 
-### 9.21 «Envíos»: `tienda_hoy().envios` · `confirmar_envio(envio_id, faltan?, nota?)` 🧪 (Tarea 30b)
+### 9.21 «Envíos»: `tienda_hoy().envios` · `confirmar_envio(envio_id, faltan?, nota?, llegado?, de_mas?)` 🧪 (Tarea 30b; Tarea 39)
 Para las tiendas que **reciben por envío** en lugar de bolsa del reparto (configuración `recibe_envio` por tienda: hoy **Rentería**, que recibe el envío a Gipuzkoa entero y lo reparte con Donosti, y **Durango**, con el suyo; decisión del propietario, 03/11/2026). Para ellas no hay «Recibe la bolsa» ni reposición. **A Eder no le sale nada nuevo:** se usa lo que ya marca al preparar el envío.
 - **Cuándo sale:** desde el **día siguiente** a prepararlo, es decir, cuando el operario termina «Prepara el envío aprobado» (todo metido en la caja), entre semana por la tarde o el viernes por la mañana, **vaya quien vaya al reparto** (propietario, 03/11/2026). **No es una tarea con hora:** sigue en `envios` hasta que se confirma; **al confirmarlo desaparece en el momento**. Se miran los envíos de la última semana sin confirmar.
 - **`tienda_hoy().envios`:** los que quedan por confirmar, los más antiguos primero:
@@ -1197,9 +1213,10 @@ Para las tiendas que **reciben por envío** en lugar de bolsa del reparto (confi
   Cada pedido de `pedidos` trae además `tienda` (Tarea 30c: en el envío a Gipuzkoa, Donosti o Rentería). `preparado`: la hora a la que se terminó de preparar (mostrar «Preparado a las 17:00»). Lo que trae es **lo marcado al meterlo en la caja** (como `bolsa`, §9.11): lo que no se ha marcado no aparece. El envío a Gipuzkoa es uno para las dos tiendas, calculado con lo que hay en Donosti y Rentería juntas.
 - **`tienda_hoy().envios_sin_confirmar`:** cuántos quedan por confirmar (el número de la pestaña).
 - **«Todo bien»:** `confirmar_envio({ envio_id })`.
-- **«Falta algo»:** `confirmar_envio({ envio_id, faltan: [{ clave, cantidad? }], nota? })`, como en la reposición (§9.12): `clave` de `productos`, `peticiones` o `pedidos`, de 1 a lo que traía (sin `cantidad`, todas); `nota`, una línea (200 letras). Llega a **Administración como incidencia abierta** (`incidencias_tiendas()`, `opcion: "falta_envio"`, «Falta en el envío del 16/12: 1x V2 4g. La caja venía abierta (Nombre)»), y la tienda la ve en `tienda_hoy().incidencias`.
+- **«Falta algo»:** `confirmar_envio({ envio_id, faltan: [{ clave, cantidad? }], nota? })`, como en la reposición (§9.12): `clave` de `productos`, `peticiones` o `pedidos`, de 1 a lo que traía (sin `cantidad`, todas); `nota`, una línea (200 letras). Llega a **Administración como incidencia abierta** (`incidencias_tiendas()`, `opcion: "falta_envio"`, «Envío del 16/12. Falta: 1x V2 4g. La caja venía abierta (Nombre)»; hasta la Tarea 39, «Falta en el envío del 16/12: …»), y la tienda la ve en `tienda_hoy().incidencias`.
+- **«Falta o sobra algo»** (Tarea 39 🧪): `confirmar_envio({ envio_id, faltan?, llegado?, de_mas?, nota? })`, igual que en la reposición (§9.12), con `productos` del envío: lo que ha llegado de cada caja (`llegado`) y lo que no está en la lista (`de_mas`). La incidencia dice «Envío del 16/12. Falta: … · Sobra: …». Si no falta ni sobra nada, «Todo bien».
 - Hay que haber elegido quién está (`SIN_PERSONA`).
-- **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO` (no es un envío de esta tienda), `ESTADO_NO_VALIDO` («Ese envío ya está confirmado.»), `DATOS_NO_VALIDOS` (algo que no está en la lista, cantidad, nota larga), `SIN_PERSONA`, `SIN_JORNADA`; el operario y Administración, `NO_AUTORIZADO`.
+- **Salida:** `tienda_hoy()` actualizado. **Errores:** `NO_ENCONTRADO` (no es un envío de esta tienda), `ESTADO_NO_VALIDO` («Ese envío ya está confirmado.»), `DATOS_NO_VALIDOS` (los mismos que en §9.12: algo que no está en la lista, cantidad, nota larga), `SIN_PERSONA`, `SIN_JORNADA`; el operario y Administración, `NO_AUTORIZADO`.
 
 ### 9.22 Pedidos de cliente desde la tableta: `crear_pedido_tienda(id_cliente, cliente, lineas)` · `tienda_hoy().pedidos` 🧪 (Tarea 30c)
 Botón **«Pedido de cliente»** en todas las tiendas, franquicias incluidas (decisión del propietario, bloque 1 punto 20; 04/11/2026). Solo **para recoger en esa misma tienda**; nunca por Nacex (eso sigue siendo de Administración y del almacén).

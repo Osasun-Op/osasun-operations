@@ -412,10 +412,10 @@ begin
     and pg_temp.tarea(r, 'reposicion') -> 'bolsa' -> 'reposicion' ->> 'resultado' = 'falta'
     and jsonb_array_length(pg_temp.tarea(r, 'reposicion') -> 'bolsa' -> 'reposicion' -> 'faltan') = 2, r::text);
   r := motor.incidencias_tiendas_de(pg_temp.a('2026-12-18', '12:35'));
-  perform pg_temp.comprobar('Llega a Administración como incidencia abierta, con lo que falta',
+  perform pg_temp.comprobar('Llega a Administración como incidencia abierta, con lo que falta (Tarea 39: «Bolsa del reparto del …. Falta: …»)',
     jsonb_array_length(r -> 'incidencias') = 1 and r -> 'incidencias' -> 0 ->> 'tienda' = 'Basauri'
     and r -> 'incidencias' -> 0 ->> 'opcion' = 'falta_reposicion' and r -> 'incidencias' -> 0 ->> 'estado' = 'abierta'
-    and r -> 'incidencias' -> 0 ->> 'texto' = 'Falta en la bolsa del reparto del 18/12: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Ane Prueba)', r::text);
+    and r -> 'incidencias' -> 0 ->> 'texto' = 'Bolsa del reparto del 18/12. Falta: 1x V2 4g; Material: Rollos de TPV. La caja venía abierta (Ane Prueba)', r::text);
   perform pg_temp.comprobar('A Eder no le sale nada: ni incidencia ni tarea nueva, y su pantalla igual',
     not exists (select 1 from public.incidencias where persona_id = op and opcion = 'falta_reposicion')
     and (select jsonb_agg(jsonb_build_array(clave, estado) order by clave) from public.tareas where jornada_id = j) = (select v from _v where k = 'tareas_almacen')

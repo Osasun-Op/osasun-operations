@@ -158,7 +158,7 @@ begin
   perform pg_temp.comprobar('… y llega a Administración como incidencia abierta (y la tienda la ve en sus incidencias)',
     exists (select 1 from jsonb_array_elements(motor.incidencias_tiendas_de(pg_temp.a('2026-12-17', '11:20')) -> 'incidencias') x
              where x ->> 'tienda' = 'Rentería' and x ->> 'opcion' = 'falta_envio' and x ->> 'estado' = 'abierta'
-               and x ->> 'texto' = 'Falta en el envío del 16/12: 1x V2 4g. La caja venía abierta (Maite Prueba)')
+               and x ->> 'texto' = 'Envío del 16/12. Falta: 1x V2 4g. La caja venía abierta (Maite Prueba)')
     and r -> 'incidencias' -> 0 ->> 'opcion' = 'falta_envio', r::text);
   perform pg_temp.comprobar('Confirmar otra vez: ESTADO_NO_VALIDO, sin otra incidencia',
     pg_temp.err(motor.confirmar_envio_de(renteria, v_id, null, null, pg_temp.a('2026-12-17', '11:20'))) = 'ESTADO_NO_VALIDO'
@@ -300,9 +300,9 @@ select pg_temp.comprobar('Administración tampoco; ve los cierres cortos en cier
   and jsonb_array_length(public.cierres_caja('2026-12-19', '2026-12-19') -> 'cierres') = 1);
 reset role;
 select pg_temp.comprobar('Sin sesión, nada',
-  not has_function_privilege('anon', 'public.confirmar_envio(uuid, jsonb, text)', 'EXECUTE')
-  and not has_function_privilege('anon', 'motor.api_confirmar_envio(uuid, jsonb, text)', 'EXECUTE')
-  and not has_function_privilege('authenticated', 'motor.confirmar_envio_de(uuid, uuid, jsonb, text, timestamptz)', 'EXECUTE'));
+  not has_function_privilege('anon', 'public.confirmar_envio(uuid, jsonb, text, jsonb, jsonb)', 'EXECUTE')
+  and not has_function_privilege('anon', 'motor.api_confirmar_envio(uuid, jsonb, text, jsonb, jsonb)', 'EXECUTE')
+  and not has_function_privilege('authenticated', 'motor.confirmar_envio_de(uuid, uuid, jsonb, text, timestamptz, jsonb, jsonb)', 'EXECUTE'));
 
 select n, prueba, case when ok then 'OK' else 'FALLO' end as resultado, detalle from _r order by n;
 rollback;
