@@ -92,7 +92,9 @@ Ninguna. La T-0011 · Tarea 39 está fusionada (PR #47; solo en pruebas, espera 
 
 No cambia: «todo bien», el trabajo del operario, las cuentas del almacén, la hoja, las pantallas.
 
-**Entrega:** PR **«T-0011 · Tarea 39 — Lo que llega de más»** (#47). Se fusiona con el «sí» del propietario a ese PR, tras revisarlo con el coordinador. No se pasa a producción.
+**Entrega:** PR **«T-0011 · Tarea 39 — Lo que llega de más»** (#47). Fusionado con el «sí» del propietario el 12/11/2026. No se pasa a producción.
+
+**Decisiones del propietario en la revisión (12/11/2026), aprobadas como están:** (1) el texto de la incidencia empieza por de qué es («Bolsa del reparto del 15/12. Falta: … · Sobra: …», «Envío del 16/12. …»); (2) `resultado: "falta"` es «Falta o sobra algo», también cuando solo sobra (lo que sobra va en `sobran`); (3) topes: `llegado` de 0 a 9999 y `de_mas` de 1 a 99.
 
 ---
 
