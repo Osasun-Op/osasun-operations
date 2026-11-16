@@ -114,7 +114,7 @@ begin
   r := motor.estado_actual_de(pg_temp.h('10:05')) -> 'hoy';
   v_hoy := array(select x ->> 'titulo' from jsonb_array_elements(r) x);
   perform pg_temp.comprobar('Hoy: primero lo hecho y lo que está en curso, por cuándo empezó; después lo pendiente',
-    v_hoy[1:5] = array['Revisión inicial: estado de las tiendas, formulario de incidencias y stock empaquetado',
+    v_hoy[1:5] = array['Revisión inicial: estado de las tiendas, revisar incidencias y stock empaquetado',  -- Tarea 40: el título nuevo
                        'Prepara el reparto', 'Producción del reparto', 'Bolsas listas en la mesa de salida',
                        'Pasar las cajas de Slush Mints 4g a la bolsa de granel']
     -- nada hecho después de lo pendiente, y lo pendiente en el orden de antes (por hora): primero la salida

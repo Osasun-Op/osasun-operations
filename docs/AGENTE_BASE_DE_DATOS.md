@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.78 · **Fecha:** 12/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.79 · **Fecha:** 16/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -77,7 +77,21 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 ## Tarea activa
 
-Ninguna. La T-0011 · Tarea 39 está fusionada (PR #47; solo en pruebas, espera con todo lo de tiendas). La siguiente, cuando el propietario diga el próximo paso.
+Ninguna. La T-0012 · Tarea 40 está fusionada (PR #48; solo en pruebas, espera con todo lo de tiendas). La siguiente, cuando el propietario diga el próximo paso.
+
+---
+
+## 7.0 T-0012 · TAREA 40 (fusionada en el PR #48; solo en pruebas, producción espera): cierre de tiendas hasta una hora después, textos de las tareas y efectivo en la tarea del operario, en pruebas
+
+**Contexto:** encargo T-0012 copiado por el propietario. **Decisiones del propietario (16/11/2026):**
+
+1. **Las tareas de tienda se pueden marcar hasta una hora después del cierre** (entre semana, hasta las 21:30; el sábado, una hora después de su cierre; también el «Cierre de caja» de las franquicias). Pasado ese margen, lo pendiente queda como «no hecho», como antes. Un solo sitio: `motor.limite_tienda_en` (= `motor.cierre_tienda_en` + el ajuste `margen_cierre_tienda`, 60 minutos). Lo usan `tarea_tienda_json` (`no_hecha` y `se_puede_marcar`), `tarea_tienda_marcable` (todas las funciones que marcan), `marcas_panel_json` («N sin hacer») y `totales_cierres_de` (los «faltan»). «sin abrir» no cambia.
+2. **Textos nuevos de las plantillas** (almacén y tiendas), desde la jornada siguiente. El punto del cierre de caja se sigue reconociendo por su texto.
+3. **En `efectivo_reporte`, el «para qué»** con lo que ha apuntado cada tienda del reparto al entregar la bolsa de ayer (`motor.efectivo_tiendas_texto`, desde `motor.tarea_json`, con los datos del momento).
+
+No cambia: cómo elige tareas el motor del almacén, las horas de las tareas, lo que hace cada tarea, las pantallas.
+
+**Entrega:** PR **«T-0012 · Tarea 40 — Cierre hasta una hora después, textos y efectivo»** (#48). Se fusiona con el «sí» del propietario a ese PR, tras revisarlo con el coordinador. No se pasa a producción.
 
 ---
 
@@ -991,3 +1005,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.76 | 11/11/2026 | T-0010 · Tarea 38 activa (cajas de otra tienda: aviso a la tienda de origen al marcar la línea y la caja en la lista de la que recibe), en su PR. |
 | 1.77 | 11/11/2026 | T-0010 · Tarea 38 fusionada (PR #45, `043ec45`), con las dos decisiones de la revisión. Tarea activa: ninguna. |
 | 1.78 | 12/11/2026 | T-0011 · Tarea 39 (lo que llega de más), fusionada en el PR #47. §6: todo va en el mismo PR (decisión del propietario, 11/11/2026). |
+| 1.79 | 16/11/2026 | T-0012 · Tarea 40 (cierre de tiendas hasta una hora después, textos de las tareas y efectivo en la tarea del operario), fusionada en el PR #48. |
