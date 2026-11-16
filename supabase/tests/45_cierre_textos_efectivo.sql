@@ -244,7 +244,7 @@ begin
       || '· Algorta: sin datos en la app (todavía no la usa)' || E'\n'
       || '· Barakaldo: 120,00 € (cierre del 12/12)' || E'\n'
       || '· Basauri: 200,00 € (cierres del 11/12 y 12/12)' || E'\n'
-      || '· Portugalete: 80,00 €; su cierre dice 95,00 €. Motivo: «Monedas para cambio»',
+      || '· Portugalete: 80,00 € (cierre del 12/12); su cierre dice 95,00 €. Motivo: «Monedas para cambio»',
     motor.tarea_json(v_ef) ->> 'porque');
   perform pg_temp.comprobar('El título nuevo de la tarea del efectivo, y las demás tareas, con su «para qué» de siempre',
     motor.tarea_json(v_ef) ->> 'titulo'
@@ -255,6 +255,17 @@ begin
    where centro_id = pg_temp.d('BILBAO') and fecha = '2026-12-14';
   perform pg_temp.comprobar('Con los datos del momento: Bilbao, en cuanto lo apunta',
     (motor.tarea_json(v_ef) ->> 'porque') like '%· Bilbao: 150,00 € (cierre del 12/12)%', motor.tarea_json(v_ef) ->> 'porque');
+  -- Decisión del propietario (16/11/2026, PR #48): si no cuadra, también con los días; con varios, «sus cierres dicen».
+  update public.bolsas_tienda set efectivo_entregado = 180, efectivo_motivo = 'Falta cambio'
+   where centro_id = pg_temp.d('BASAURI') and fecha = '2026-12-14';
+  perform pg_temp.comprobar('No cuadra con dos cierres: con los días y «sus cierres dicen»',
+    (motor.tarea_json(v_ef) ->> 'porque') like '%· Basauri: 180,00 € (cierres del 11/12 y 12/12); sus cierres dicen 200,00 €. Motivo: «Falta cambio»%',
+    motor.tarea_json(v_ef) ->> 'porque');
+  -- Una tienda que entrega efectivo sin cierre de caja anterior en la app.
+  update public.bolsas_tienda set efectivo_esperado = null, efectivo_de = null, efectivo_dias = null
+   where centro_id = pg_temp.d('BILBAO') and fecha = '2026-12-14';
+  perform pg_temp.comprobar('Sin cierre de caja anterior en la app: «(sin cierre de caja en la app)»',
+    (motor.tarea_json(v_ef) ->> 'porque') like '%· Bilbao: 150,00 € (sin cierre de caja en la app)%', motor.tarea_json(v_ef) ->> 'porque');
 end;
 $$;
 

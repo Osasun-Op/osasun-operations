@@ -91,7 +91,9 @@ Ninguna. La T-0012 · Tarea 40 está fusionada (PR #48; solo en pruebas, espera 
 
 No cambia: cómo elige tareas el motor del almacén, las horas de las tareas, lo que hace cada tarea, las pantallas.
 
-**Entrega:** PR **«T-0012 · Tarea 40 — Cierre hasta una hora después, textos y efectivo»** (#48). Se fusiona con el «sí» del propietario a ese PR, tras revisarlo con el coordinador. No se pasa a producción.
+**Entrega:** PR **«T-0012 · Tarea 40 — Cierre hasta una hora después, textos y efectivo»** (#48). Fusionado con el «sí» del propietario el 16/11/2026. No se pasa a producción.
+
+**Decisiones del propietario en la revisión (16/11/2026):** (1) pasado el margen, el servidor también rechaza marcar con `ESTADO_NO_VALIDO` («Ya ha pasado la hora: esta tarea queda como no hecha.»); (2) una tienda que entrega efectivo sin cierre de caja anterior en la app sale como «150,00 € (sin cierre de caja en la app)»; (3) cuando el efectivo no cuadra, la línea lleva también los días de los cierres, como cuando cuadra: «· Portugalete: 80,00 € (cierres del 13/11 y 14/11); sus cierres dicen 95,00 €. Motivo: «…»» (con uno, «(cierre del 15/11); su cierre dice …»). La 3 va en una migración aparte del mismo PR (`20261116153012_efectivo_dias_si_no_cuadra`), porque la de la Tarea 40 ya estaba aplicada en pruebas.
 
 ---
 
