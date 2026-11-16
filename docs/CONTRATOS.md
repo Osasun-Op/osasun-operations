@@ -1,6 +1,11 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.30 · **Fecha:** 12/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.31 · **Fecha:** 16/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.31 (T-0012 · Tarea 40) — sin cambios para Lovable.** 🧪 = solo en pruebas. Los campos son los mismos; cambia lo que traen:
+> 1. **Tiendas (§9.2):** `no_hecha` pasa a `true` una hora después de la hora de cierre (no a la hora de cierre), y `se_puede_marcar` sigue `true` hasta entonces. Pasado el margen, marcar devuelve `ESTADO_NO_VALIDO` («Ya ha pasado la hora: esta tarea queda como no hecha.»). Las marcas del panel (§9.25, «N sin hacer») y los «faltan» de los cierres de caja (§9.17), con la misma hora.
+> 2. **Textos nuevos** de las tareas del almacén y de las tiendas (§9.2), desde la jornada siguiente. Vienen del servidor.
+> 3. **Operario (§3.2):** el «para qué» (`porque`) de la tarea del efectivo trae, en varias líneas, lo que ha apuntado cada tienda del reparto. La pantalla ya lo enseña en varias líneas.
 
 > **Cambios en 1.30 (T-0011 · Tarea 39) — para Lovable (agente de tienda).** 🧪 = solo en pruebas. En «Coloca y apunta la reposición» (§9.12) y en «Envíos» (§9.21), la tienda marca también lo que llega de más. Solo se añaden campos: lo de ahora sigue funcionando.
 > La pantalla:
@@ -394,6 +399,7 @@ Lo que muestra el Chromebook (y el Pixel). Si la jornada de hoy no existe, la ge
 - `pregunta`: reservado; hoy siempre `null`. La pregunta «¿Quién sale hoy?» la devuelve `pegar_reparto` (`FALTA_SALE`).
 - `elementos` ✅: `[ { id, tipo, producto, formato, texto, categoria, destino, destino_id, bolsa, cantidad, cantidad_hecha, motivo, orden_sugerido, estado } ]`. En bolsas, agrupar por `destino` (una tienda por pantalla) y, dentro de la tienda, por `bolsa`: «Bolsa de reposición» y, si hay pedidos de cliente, «Pedido de cliente · [cliente]» (Tarea 12; en el envío, «Pedido de cliente · [cliente] · [tienda]», Tarea 30c). **Peticiones especiales** (Tarea 13): `tipo: "peticion"`, con su texto en `texto` (y en `producto`), `cantidad` 1 y `formato` vacío; van en la bolsa de su tienda después de las cajas, para mostrarlas bajo «Además, mete:». En los demás elementos, `texto` es `null`. En las listas de producción, `bolsa` es `null`; en los pedidos de cliente, `motivo` dice «Coge N del almacén» o «Haz N».
   - **Aviso de llamada** (Tarea 16, R1e): `tipo: "llamada"`, en la bolsa de reposición de la tienda que recibe algo de otra tienda, con su `texto` («Avisa a Algorta para que prepare 2 BZ1 4g para su retirada»; hasta la Tarea 38, «Llama a…») y `cantidad` 1. Se muestra y se marca como una petición especial; la tienda no está completa sin él. **Desde la Tarea 38 🧪**, al marcarlo la tienda de origen recibe un aviso del almacén (§9.9) y la que recibe ve esas cajas en su lista (§9.11). Ningún paso nuevo para el operario.
+  - **La tarea del efectivo** (`clave: "efectivo_reporte"`, Tarea 40 🧪): su `porque` se monta con los datos del momento, por cada tienda con parada en el reparto de hoy y en el orden de la ruta: «Efectivo apuntado por cada tienda:» y una línea por tienda: «· Basauri: 120,00 € (cierre del 15/11)» (con varios, «(cierres del 13/11 y 14/11)»), «· Portugalete: 80,00 € (cierres del 13/11 y 14/11); sus cierres dicen 95,00 €. Motivo: «Monedas para cambio»» (con uno, «(cierre del 15/11); su cierre dice …»), «· Bilbao: 150,00 € (sin cierre de caja en la app)» (lo que ha escrito la tienda, sin cierre anterior con el que comparar), «· Bilbao: todavía no ha apuntado la bolsa de ayer» o «· Algorta: sin datos en la app (todavía no la usa)». Va en varias líneas (`\n`). Sin reparto, el de siempre. Si sale Administración, no hay esa tarea.
   - **Referencia sin granel** (Tarea 16, R1e), solo en «Producción del reparto»: además trae `sin_granel: true`, `para: [{ destino_id, destino, pedido, faltan }]` (las tiendas que la reciben; lo que hay en el almacén se lo llevan las primeras del reparto), `tiendas_con_stock: [{ destino_id, destino, cajas }]` (las demás tiendas del reparto con cajas de esa referencia en PRINCIPAL), `resuelto` y `decisiones: [{ destino_id, destino, accion, origen_id, origen, cantidad }]`. Sin resolver, al elegirla sale el aviso «No hay granel» con las dos opciones por tienda (§3.19). Resuelta, queda `estado: "hecho"`, `cantidad` 0 y `motivo` «No se produce: 3 se quitan de Bilbao; 2 para Portugalete de Algorta.».
 - La elección sigue `PLAN_TECNICO.md` §2.3. **Nunca devuelve avisos de tiempo ni de presión** (§6.7): solo tareas.
 - Solo para el operario: Administración recibe `NO_AUTORIZADO`.
@@ -995,16 +1001,16 @@ Todo lo de la tableta para hoy, de una vez. Si la jornada de hoy no existe, la c
 - **Tarea 28:** `tipo` también `reposicion` (§9.12) y `muestras` (§9.15). Cada punto trae además `pide` (`null`, `"efectivo"` o `"cierre_caja"`), `efectivo_esperado` (solo en el del efectivo) y `datos` (lo apuntado). La tarea trae `bolsa` («Recibe la bolsa» y la reposición, §9.11) y `muestras` («Revisa las muestras»); en las demás, `null`.
 - **`hora`:** orientativa. Antes de esa hora, `se_puede_marcar: false` (mostrarla en gris con «desde las 10:50»). No hay avisos de retraso.
 - **`estado`:** `pendiente`, `hecha` o `cancelada` (el vídeo con «Hoy no he podido», o la tienda cerrada ese día: `motivo`). `hecha_por` y `hora_fin` dicen quién y a qué hora; cada punto, igual (`hecho_por`, `a_las`).
-- **`no_hecha: true`:** la tienda ya ha cerrado y quedó sin hacer. Queda así; **no pasa al día siguiente**.
+- **`no_hecha: true`:** ha pasado **una hora desde la hora de cierre** de la tienda (Tarea 40 🧪; antes, a la hora de cierre) y quedó sin hacer. Queda así; **no pasa al día siguiente**. Hasta entonces, `se_puede_marcar` sigue `true` (entre semana, hasta las 21:30; el sábado, una hora después de su cierre; también el «Cierre de caja» de las franquicias). Pasado el margen, marcar devuelve `ESTADO_NO_VALIDO` («Ya ha pasado la hora: esta tarea queda como no hecha.»). El margen es un ajuste del servidor (60 minutos).
 - **`video`** (solo en `tipo: video`, cuando ya se ha hecho): `{ enlace, aprendido, no_pudo }`.
 - **Las tareas** (decididas por el propietario; el horario de cada tienda manda):
 
 | Tarea | Días | Desde | Puntos |
 | --- | --- | --- | --- |
-| Apertura de la mañana | L–S | 10 min antes de abrir (10:50) | Fichar en Woffu · Abrir · Cartelería · Glovo · Barrido y puesta a punto |
-| Cierre de la mañana | L–S | 10 min antes de cerrar (13:20) | Ventas y stock de la plantilla al día (todo en verde) · Incidencias del turno registradas |
-| Apertura de la tarde | L–S, si hay tarde | 10 min antes (16:50; Bilbao 16:20) | Fichar · Abrir · Cartelería · Glovo |
-| Cierre del día | L–S | 10 min antes del cierre del día | Ventas del día en la plantilla (todo en verde) · Suelo fregado · **Cierre de caja en la app: Z, nº de ventas, efectivo y Glovo** (Tarea 28, §9.14) · Efectivo contado y en la bolsa para mañana · Incidencias de la tarde registradas |
+| Apertura de la mañana (sin «para qué», Tarea 40) | L–S | 10 min antes de abrir (10:50) | Fichar en Woffu · Abrir · Cartelería · Glovo · Barrido y puesta a punto |
+| Cierre de la mañana | L–S | 10 min antes de cerrar (13:20) | Ventas y stock de la plantilla al día (todo en verde) · Cerrar turno en Woffu (Tarea 40) · Incidencias del turno registradas |
+| Apertura de la tarde (sin «para qué», Tarea 40) | L–S, si hay tarde | 10 min antes (16:50; Bilbao 16:20) | Fichar en Woffu (Tarea 40; antes «Fichar») · Abrir · Cartelería · Glovo |
+| Cierre del día | L–S | 10 min antes del cierre del día | Ventas del día en la plantilla (todo en verde) · Suelo fregado · **Cierre de caja en la app: Z, nº de ventas, efectivo y Glovo** (Tarea 28, §9.14) · Cerrar turno en Woffu (Tarea 40) · Efectivo contado y en la bolsa para mañana · Incidencias de la tarde registradas |
 | Limpieza semanal: cristales, polvo y baños (Tarea 36; antes «Limpieza de cristales», `clave` `limpieza_cristales`) | jueves, tarde | al abrir la tarde | — («Hecho») |
 | Vídeo de la semana | viernes, mañana (y el sábado, §9.6) | al abrir la mañana | — (enlace y una línea) |
 | Recibe la bolsa del reparto (Tarea 28) | cuando sale el reparto, si trae bolsa para la tienda | la hora de salida | Bolsa recibida · Bolsa de ayer entregada con X € en efectivo (§9.11) |
@@ -1165,7 +1171,7 @@ Para la pantalla que ya existe (operario y Administración). Las muestras y el m
 - **`cierres_caja(desde?, hasta?, tienda_id?)`:** `{ cierres: [{ fecha, tienda_id, tienda, z, ventas, efectivo, glovo, por, guardado_en }] }`, los más nuevos primero (por defecto, la última semana). Lectura preparada para el panel (Tarea 30).
   - **`totales`** (Tarea 33): `[{ fecha, propias: { z, ventas, efectivo, glovo, cierres, faltan }, franquicias: { z, ventas, cierres, faltan } }]`, un día por elemento y los más nuevos primero.
     - **Qué días salen:** los días en que abría alguna tienda o hay algún cierre.
-    - **`faltan`:** `[{ tienda_id, tienda }]`, las tiendas de ese grupo que abrían ese día (con su horario y sin día cerrado) y no tienen cierre. Hoy, solo las que ya han pasado su hora de cierre. Enseñar «Falta [tienda]».
+    - **`faltan`:** `[{ tienda_id, tienda }]`, las tiendas de ese grupo que abrían ese día (con su horario y sin día cerrado) y no tienen cierre. Hoy, solo las que ya han pasado una hora de su hora de cierre (Tarea 40 🧪; antes, su hora de cierre). Enseñar «Falta [tienda]».
     - **Qué es franquicia:** la tienda con el cierre de caja corto (Z y nº de ventas; hoy Donosti y Rentería). Sale de la configuración: Durango, con su «Cierre del día» completo, va con las propias.
     - **Con `tienda_id`:** los totales son los de esa tienda.
   - **Dónde** (Tarea 33): en el menú «Tiendas», «Cierres de caja», todos juntos con el total de cada día; y en el dashboard de cada tienda (§9.24).
@@ -1299,7 +1305,7 @@ Decisión del propietario (`ESTADO_DEL_SISTEMA.md` E2-8 v1.62, «Marcas en las p
     - **En una tienda:** sus incidencias abiertas de `incidencias_tiendas()` (§9.17), con los atascados por decidir.
     - **En el almacén:** los problemas abiertos (`estado_actual().problemas_abiertos`, los del botón «Resolver»).
     - **Baja** al cerrarlos o decidirlos.
-  - **`sin_hacer`** (número): las tareas que la tienda dejó sin hacer al cerrar (las `no_hecha`, de los últimos 7 días) que esa persona de Administración no ha visto. Se pinta **«N sin hacer»**, en texto y sin color.
+  - **`sin_hacer`** (número): las tareas que la tienda dejó sin hacer (las `no_hecha`, de los últimos 7 días: desde una hora después de cerrar, Tarea 40 🧪) que esa persona de Administración no ha visto. Se pinta **«N sin hacer»**, en texto y sin color.
     - **Se quita cuando entra en esa tienda** del panel (`marcar_tienda_vista`).
     - **Es por persona:** cada persona de Administración tiene las suyas.
   - **`sin_abrir`** (sí o no): hoy la tienda abre (no es domingo ni está marcada cerrada), ha pasado media hora desde que empieza un turno (mañana o tarde, con su horario; Bilbao, por la tarde, desde las 16:30) y nadie ha empezado ese turno. Se pinta **«sin abrir»**, en texto y sin color.

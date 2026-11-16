@@ -171,8 +171,8 @@ begin
     and (select (v #>> '{}')::int from _v where k = 'renteria') > 0);
   perform pg_temp.comprobar('Y solo para quien ha entrado: otra persona las sigue viendo',
     (pg_temp.m('BASAURI', pg_temp.a('2026-12-16', '09:10'), op) ->> 'sin_hacer')::int = n);
-  perform pg_temp.comprobar('Lo que quede sin hacer el miércoles sale al cerrar el miércoles',
-    (pg_temp.m('BASAURI', pg_temp.a('2026-12-16', '21:00')) ->> 'sin_hacer')::int
+  perform pg_temp.comprobar('Lo que quede sin hacer el miércoles sale una hora después de cerrar el miércoles (Tarea 40)',
+    (pg_temp.m('BASAURI', pg_temp.a('2026-12-16', '21:31')) ->> 'sin_hacer')::int
       = (select count(*) from public.tareas t join public.jornadas j on j.id = t.jornada_id
           where j.persona_id = '00000000-0000-4000-b000-000000000001' and j.fecha = '2026-12-16'
             and t.estado = 'pendiente' and not t.retirada_por_condicion));
@@ -205,11 +205,11 @@ begin
   perform pg_temp.comprobar('Hoy, antes de la hora de cierre, no falta nadie; el día cerrado no cuenta',
     pg_temp.t('2026-12-16', pg_temp.a('2026-12-16', '12:00')) -> 'propias' -> 'faltan' = '[]'::jsonb
     and pg_temp.t('2026-12-16', pg_temp.a('2026-12-16', '12:00')) -> 'franquicias' -> 'faltan' = '[]'::jsonb);
-  perform pg_temp.comprobar('Hoy, pasada su hora de cierre: falta Basauri (Portugalete, cerrado, no) y falta Rentería',
-    (select jsonb_agg(x ->> 'tienda') from jsonb_array_elements(pg_temp.t('2026-12-16', pg_temp.a('2026-12-16', '21:00')) -> 'propias' -> 'faltan') x)
+  perform pg_temp.comprobar('Hoy, pasada una hora de su cierre (Tarea 40): falta Basauri (Portugalete, cerrado, no) y falta Rentería',
+    (select jsonb_agg(x ->> 'tienda') from jsonb_array_elements(pg_temp.t('2026-12-16', pg_temp.a('2026-12-16', '21:31')) -> 'propias' -> 'faltan') x)
       = '["Basauri"]'::jsonb
-    and (select jsonb_agg(x ->> 'tienda') from jsonb_array_elements(pg_temp.t('2026-12-16', pg_temp.a('2026-12-16', '21:00')) -> 'franquicias' -> 'faltan') x)
-      = '["Rentería"]'::jsonb, pg_temp.t('2026-12-16', pg_temp.a('2026-12-16', '21:00'))::text);
+    and (select jsonb_agg(x ->> 'tienda') from jsonb_array_elements(pg_temp.t('2026-12-16', pg_temp.a('2026-12-16', '21:31')) -> 'franquicias' -> 'faltan') x)
+      = '["Rentería"]'::jsonb, pg_temp.t('2026-12-16', pg_temp.a('2026-12-16', '21:31'))::text);
   perform pg_temp.comprobar('El domingo, sin tiendas que abran ni cierres: no sale',
     jsonb_array_length(motor.totales_cierres_de('2026-12-13', '2026-12-13', null, pg_temp.a('2026-12-16', '12:00'))) = 0);
   perform pg_temp.comprobar('Con una sola tienda, los totales son los suyos',

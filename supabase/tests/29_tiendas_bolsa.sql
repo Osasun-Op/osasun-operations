@@ -175,7 +175,7 @@ begin
   v_caja := (select (x ->> 'id')::uuid from jsonb_array_elements(t -> 'puntos') x where x ->> 'pide' = 'cierre_caja');
   perform pg_temp.comprobar('«Cierre del día» con el cierre de caja, el primero de los puntos de dinero',
     (select string_agg(coalesce(x ->> 'pide', '-'), ' ' order by n) from jsonb_array_elements(t -> 'puntos') with ordinality a(x, n))
-      = '- - cierre_caja - -'
+      = '- - cierre_caja - - -'  -- Tarea 40: «Cerrar turno en Woffu» detrás del cierre de caja
     and t -> 'puntos' -> 2 ->> 'texto' = 'Cierre de caja en la app: Z, nº de ventas, efectivo y Glovo', t::text);
   r := motor.marcar_punto_de(basauri, v_caja, pg_temp.a('2026-12-17', '20:25'));
   perform pg_temp.comprobar('El cierre de caja no se marca con un toque: pide sus datos',
