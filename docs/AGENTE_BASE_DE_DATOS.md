@@ -89,7 +89,9 @@ Ninguna. La T-0013 · Tarea 41 está fusionada (PR #49; solo en pruebas, producc
 2. Las demás condiciones de la Tarea 37 se quedan igual (no obligatoria y sin referencia empezada, al pedir la tarea activa; escalones 2 a 4).
 3. Una sola regla para `motor.tras_elemento` y `motor.tarea_activa_de`. Nada más del motor cambia.
 
-**Entrega:** PR **«T-0013 · Tarea 41 — Una urgente no cede ante una tarea con hora»** (#49). Se fusiona con el «sí» del propietario a ese PR, tras revisarlo con el coordinador. No se pasa a producción.
+**Entrega:** PR **«T-0013 · Tarea 41 — Una urgente no cede ante una tarea con hora»** (#49). Fusionado con el «sí» del propietario el 17/11/2026. No se pasa a producción.
+
+**Decisión del propietario en la revisión (17/11/2026): «está bien así».** Por la misma regla, la revisión inicial (con hora) en curso a las 08:45 ya no cede ante «Prepara el reparto» (también con hora): sale al terminarla.
 
 ---
 
