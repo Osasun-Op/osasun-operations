@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.79 · **Fecha:** 16/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.80 · **Fecha:** 17/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -77,7 +77,21 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 ## Tarea activa
 
-Ninguna. La T-0012 · Tarea 40 está fusionada (PR #48; solo en pruebas, espera con todo lo de tiendas). La siguiente, cuando el propietario diga el próximo paso.
+Ninguna. La T-0013 · Tarea 41 está fusionada (PR #49; solo en pruebas, producción espera). La siguiente, cuando el propietario diga el próximo paso.
+
+---
+
+## 7.0 T-0013 · TAREA 41 (fusionada en el PR #49; solo en pruebas, producción espera): una urgente no cede ante una tarea con hora, en pruebas
+
+**Contexto:** encargo T-0013 copiado por el propietario. **Decisión del propietario (17/11/2026):** arreglar el bucle del 17/11. La tarea en curso solo se pausa por la regla de la Tarea 37 si lo que entra va delante de ella en el orden de siempre.
+
+1. En `motor.pausar_si_toca`, pausar solo si el escalón de lo que entra es menor que el que tendría la tarea en curso estando pendiente. Con el mismo escalón, no se pausa.
+2. Las demás condiciones de la Tarea 37 se quedan igual (no obligatoria y sin referencia empezada, al pedir la tarea activa; escalones 2 a 4).
+3. Una sola regla para `motor.tras_elemento` y `motor.tarea_activa_de`. Nada más del motor cambia.
+
+**Entrega:** PR **«T-0013 · Tarea 41 — Una urgente no cede ante una tarea con hora»** (#49). Fusionado con el «sí» del propietario el 17/11/2026. No se pasa a producción.
+
+**Decisión del propietario en la revisión (17/11/2026): «está bien así».** Por la misma regla, la revisión inicial (con hora) en curso a las 08:45 ya no cede ante «Prepara el reparto» (también con hora): sale al terminarla.
 
 ---
 
@@ -1008,3 +1022,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.77 | 11/11/2026 | T-0010 · Tarea 38 fusionada (PR #45, `043ec45`), con las dos decisiones de la revisión. Tarea activa: ninguna. |
 | 1.78 | 12/11/2026 | T-0011 · Tarea 39 (lo que llega de más), fusionada en el PR #47. §6: todo va en el mismo PR (decisión del propietario, 11/11/2026). |
 | 1.79 | 16/11/2026 | T-0012 · Tarea 40 (cierre de tiendas hasta una hora después, textos de las tareas y efectivo en la tarea del operario), fusionada en el PR #48. |
+| 1.80 | 17/11/2026 | T-0013 · Tarea 41 (una urgente no cede ante una tarea con hora), fusionada en el PR #49. |

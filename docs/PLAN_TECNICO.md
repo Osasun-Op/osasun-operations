@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Plan técnico de la base de datos (V1)
 
-**Versión:** 1.6 · **Fecha:** 29/10/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7); «¿Quién sale?» (Tarea 8); reparto de hoy en el panel (Tarea 9); reparto con lista (Tarea 10); pedidos de cliente y cajas en camino (Tarea 12); peticiones especiales e histórico (Tarea 13); almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (Tarea 14); panel de Administración: minis, horas, tiempo libre y menos de 2 semanas (Tarea 15); producto sin granel en el reparto (Tarea 16); envío sin granel (Tarea 17).
+**Versión:** 1.7 · **Fecha:** 17/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). En pruebas: estructura base, permisos y jornada automática (Tarea 2); reparto, stock y lectura de la hoja (Tarea 3); problemas, incidencias, tareas de Administración, retraso de la salida y cierre por correo (Tarea 4); acceso con Google y tiempo real (Tarea 5); incidencias, reparto desde Administración y «nunca sin tarea» (Tarea 7); «¿Quién sale?» (Tarea 8); reparto de hoy en el panel (Tarea 9); reparto con lista (Tarea 10); pedidos de cliente y cajas en camino (Tarea 12); peticiones especiales e histórico (Tarea 13); almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (Tarea 14); panel de Administración: minis, horas, tiempo libre y menos de 2 semanas (Tarea 15); producto sin granel en el reparto (Tarea 16); envío sin granel (Tarea 17).
 
 > Cómo funciona por dentro lo descrito en `MODELO_DATOS.md`, `CONTRATOS.md` y `REGLAS_CALCULO.md`.
 
@@ -68,7 +68,7 @@ Solo dentro de un turno de la persona (`horarios`; Tarea 24): fuera de él no se
 
 Desempates: `orden` de la plantilla y hora de creación. **«Lo que viene después»**: lo que tocaría sin la tarea actual; pero si antes llega una tarea con hora (o el siguiente turno), se anuncia esa con su hora.
 
-**Punto de encaje (§6.4):** una tarea con hora o urgente **nunca interrumpe** a mitad de una referencia o de una bolsa. Se evalúa al terminar un elemento (referencia de producción, o **bolsa completa de una tienda**, decidido) o una tarea (Tarea 3).
+**Punto de encaje (§6.4):** una tarea con hora o urgente **nunca interrumpe** a mitad de una referencia o de una bolsa. Se evalúa al terminar un elemento (referencia de producción, o **bolsa completa de una tienda**, decidido) o una tarea (Tarea 3). **Solo se pausa la tarea en curso si lo que entra va delante de ella** (su escalón, menor que el que tendría la tarea en curso estando pendiente; con el mismo, no): decisión del propietario, 17/11/2026, T-0013 · Tarea 41 (`ESTADO_DEL_SISTEMA.md` §6.4).
 
 ### 2.4 Conflictos al crear una tarea de Administración (§6.4) ✅ Tarea 4
 ```
