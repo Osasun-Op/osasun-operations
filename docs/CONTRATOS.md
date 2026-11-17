@@ -1,6 +1,8 @@
 # OSASUN OPERATIONS — Contratos entre la base de datos y las pantallas (V1)
 
-**Versión:** 1.31 · **Fecha:** 16/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+**Versión:** 1.32 · **Fecha:** 17/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobado (PR #1 y #2). ✅ = publicado en el proyecto de pruebas (Tareas 2 a 24) y, desde la Tarea 25, también en producción. 🧪 = solo en pruebas: lo de tiendas **no** pasa a producción al fusionar su PR, sino cuando el propietario lo apruebe tras probarlo en Basauri y Portugalete.
+
+> **Cambios en 1.32 (T-0013 · Tarea 41) — sin cambios para Lovable.** Solo cambia cuándo el servidor pausa la tarea en curso del operario (`ESTADO_DEL_SISTEMA.md` §6.4): una urgente ya no cede ante lo que tiene hora. `tarea_activa()` devuelve lo mismo.
 
 > **Cambios en 1.31 (T-0012 · Tarea 40) — sin cambios para Lovable.** 🧪 = solo en pruebas. Los campos son los mismos; cambia lo que traen:
 > 1. **Tiendas (§9.2):** `no_hecha` pasa a `true` una hora después de la hora de cierre (no a la hora de cierre), y `se_puede_marcar` sigue `true` hasta entonces. Pasado el margen, marcar devuelve `ESTADO_NO_VALIDO` («Ya ha pasado la hora: esta tarea queda como no hecha.»). Las marcas del panel (§9.25, «N sin hacer») y los «faltan» de los cierres de caja (§9.17), con la misma hora.
