@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.80 · **Fecha:** 17/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.81 · **Fecha:** 18/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -44,6 +44,8 @@ Respondes al **coordinador**. El propietario aprueba. No tomas decisiones de neg
 - Si falta un dato, **lo preguntas**; no lo supones. Lista las preguntas al final de tu entrega.
 - Tus resúmenes de entrega van **en lenguaje de negocio**: qué has hecho, qué cambia, qué riesgo hay y qué decisión se necesita.
 
+- **Pruebas mientras las tiendas trabajan en el proyecto de pruebas** (decisión del propietario, 18/11/2026, en la revisión del PR #50): en pruebas solo se pasa **la prueba nueva de cada cambio**, sin dejar datos y sin bloquear lo que se está usando (nada que borre o cambie datos reales ni que retenga filas que usan la app de las tiendas o el panel mientras dura). **La suite entera, en la base local** (creada solo con las migraciones del repositorio y `seed_pruebas.sql`, con la imitación mínima de Supabase de `supabase/tests/LEEME.md`). Motivo: el 18/11 a las 11:15, la prueba 36 pasada en pruebas bloqueó dos llamadas del panel (dos errores 500).
+
 - **Producción (desde el 02/11/2026):** cuando se fusione un PR tuyo con migraciones o funciones del servidor, pásalas a producción siguiendo `docs/AUDITORIA.md` §5 y cuéntalo en un comentario de ese PR. En producción nunca ejecutas pruebas que escriban.
   - **Excepción, tiendas (decisión del propietario, 02/11/2026):** desde la migración `20261102190536_tiendas_primera_parte` (Tarea 27), **producción espera** hasta que el propietario diga que lo de tiendas está probado en Basauri y Portugalete. Producción se queda con 46 migraciones; las siguientes también esperan y se pasan juntas, en orden, cuando él lo apruebe.
 
@@ -77,7 +79,23 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 ## Tarea activa
 
-Ninguna. La T-0013 · Tarea 41 está fusionada (PR #49; solo en pruebas, producción espera). La siguiente, cuando el propietario diga el próximo paso.
+Ninguna. La T-0014 · Tarea 42 está fusionada (PR #50; solo en pruebas, producción espera). La siguiente, cuando el propietario diga el próximo paso.
+
+---
+
+## 7.0 T-0014 · TAREA 42 (fusionada en el PR #50; solo en pruebas, producción espera): atascados, «Mantener» en la tienda, en pruebas
+
+**Contexto:** encargo T-0014 copiado por el propietario (confirmado el 18/11/2026). **Qué pasa:** con un atascado, Administración solo podía elegir «Promoción» o «Al almacén» (franquicias: «Promoción» o «Recogida»); si lo ponía como promoción para dejarlo en la tienda, a la tienda le quedaba abierto hasta «Ya no queda». Reutiliza: `decidir_atascado`, el estado «cerrado» y su texto en `motor.atascado_json`; sin tablas ni funciones nuevas.
+
+1. **`decidir_atascado` acepta `"mantener"`**, igual en todas las tiendas (propias y franquicias): texto opcional (el mismo tope, 180 letras); el atascado queda cerrado con la decisión, su texto y quién y cuándo; la incidencia se cierra con «Se queda en la tienda» («: texto» si lo hay); sin aviso a la tienda; el registro, como las demás decisiones.
+2. **El objeto atascado:** `"mantener"` en `decisiones` (propias: promoción, almacén, mantener; franquicias: promoción, recogida, mantener); `estado_texto` «Se queda en la tienda» («: texto»); desaparece de la lista de la tienda a la semana, como lo demás cerrado. El error de decisión que no toca nombra también «mantener».
+3. **Datos de pruebas, en la misma migración:** las dos del 18/11 que se pusieron como promoción (Basauri, 3 SPRAY BUCAL; Barakaldo, 1 ICE O LATOR 10g) pasan a «mantener» con el mismo texto, dejan de salir como promoción abierta (y su aviso, si sigue pendiente) y la nota de su incidencia queda como la de «mantener». Las de EGUZKI no se tocan. En producción no hace nada (solo con `entorno` = `"pruebas"`).
+
+No cambia: la pantalla de la tienda. El botón del panel va después, en una orden a Lovable del agente del panel (parte B), con el contrato actualizado (`CONTRATOS.md` 1.33).
+
+**Entrega:** PR **«T-0014 · Tarea 42 — Atascados: «Mantener» en la tienda»** (#50). Fusionado con el «sí» del propietario el 18/11/2026. No se pasa a producción.
+
+**Decisiones del propietario en la revisión (18/11/2026, con el coordinador):** (1) el mensaje de error se queda como está («Elige: promoción, al almacén o mantener.» / «… recogida o mantener.») y el botón del panel se llamará **«Mantener»**; (2) las pruebas 37 y 38 no se tocan (pasan en la base local); (3) mientras las tiendas trabajen en pruebas, en pruebas solo la prueba nueva de cada cambio y la suite entera en local (§4); (4) la prueba 36 no aparta los atascados reales (los borraba dentro de su transacción y bloqueaba a quien usaba la app: los dos errores de las 11:15); se quedan sus listas nuevas de decisiones.
 
 ---
 
@@ -1023,3 +1041,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.78 | 12/11/2026 | T-0011 · Tarea 39 (lo que llega de más), fusionada en el PR #47. §6: todo va en el mismo PR (decisión del propietario, 11/11/2026). |
 | 1.79 | 16/11/2026 | T-0012 · Tarea 40 (cierre de tiendas hasta una hora después, textos de las tareas y efectivo en la tarea del operario), fusionada en el PR #48. |
 | 1.80 | 17/11/2026 | T-0013 · Tarea 41 (una urgente no cede ante una tarea con hora), fusionada en el PR #49. |
+| 1.81 | 18/11/2026 | T-0014 · Tarea 42 (atascados: «Mantener» en la tienda), fusionada en el PR #50, con las decisiones de la revisión. §4: en pruebas, solo la prueba nueva de cada cambio; la suite entera, en local. |
