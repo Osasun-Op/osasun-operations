@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.80 · **Fecha:** 17/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.81 · **Fecha:** 18/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -77,7 +77,21 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 ## Tarea activa
 
-Ninguna. La T-0013 · Tarea 41 está fusionada (PR #49; solo en pruebas, producción espera). La siguiente, cuando el propietario diga el próximo paso.
+**T-0014 · Tarea 42 — Atascados: «Mantener» en la tienda**, en su PR (#50), en revisión con el coordinador. Solo en pruebas; producción espera.
+
+---
+
+## 7.0 T-0014 · TAREA 42 (en el PR #50; solo en pruebas, producción espera): atascados, «Mantener» en la tienda, en pruebas
+
+**Contexto:** encargo T-0014 copiado por el propietario (confirmado el 18/11/2026). **Qué pasa:** con un atascado, Administración solo podía elegir «Promoción» o «Al almacén» (franquicias: «Promoción» o «Recogida»); si lo ponía como promoción para dejarlo en la tienda, a la tienda le quedaba abierto hasta «Ya no queda». Reutiliza: `decidir_atascado`, el estado «cerrado» y su texto en `motor.atascado_json`; sin tablas ni funciones nuevas.
+
+1. **`decidir_atascado` acepta `"mantener"`**, igual en todas las tiendas (propias y franquicias): texto opcional (el mismo tope, 180 letras); el atascado queda cerrado con la decisión, su texto y quién y cuándo; la incidencia se cierra con «Se queda en la tienda» («: texto» si lo hay); sin aviso a la tienda; el registro, como las demás decisiones.
+2. **El objeto atascado:** `"mantener"` en `decisiones` (propias: promoción, almacén, mantener; franquicias: promoción, recogida, mantener); `estado_texto` «Se queda en la tienda» («: texto»); desaparece de la lista de la tienda a la semana, como lo demás cerrado. El error de decisión que no toca nombra también «mantener».
+3. **Datos de pruebas, en la misma migración:** las dos del 18/11 que se pusieron como promoción (Basauri, 3 SPRAY BUCAL; Barakaldo, 1 ICE O LATOR 10g) pasan a «mantener» con el mismo texto, dejan de salir como promoción abierta (y su aviso, si sigue pendiente) y la nota de su incidencia queda como la de «mantener». Las de EGUZKI no se tocan. En producción no hace nada (solo con `entorno` = `"pruebas"`).
+
+No cambia: la pantalla de la tienda. El botón del panel va después, en una orden a Lovable del agente del panel (parte B), con el contrato actualizado (`CONTRATOS.md` 1.33).
+
+**Entrega:** PR **«T-0014 · Tarea 42 — Atascados: «Mantener» en la tienda»** (#50), abierto y sin fusionar, para revisarlo con el coordinador antes del «sí». No se pasa a producción.
 
 ---
 
@@ -1023,3 +1037,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.78 | 12/11/2026 | T-0011 · Tarea 39 (lo que llega de más), fusionada en el PR #47. §6: todo va en el mismo PR (decisión del propietario, 11/11/2026). |
 | 1.79 | 16/11/2026 | T-0012 · Tarea 40 (cierre de tiendas hasta una hora después, textos de las tareas y efectivo en la tarea del operario), fusionada en el PR #48. |
 | 1.80 | 17/11/2026 | T-0013 · Tarea 41 (una urgente no cede ante una tarea con hora), fusionada en el PR #49. |
+| 1.81 | 18/11/2026 | T-0014 · Tarea 42 activa (atascados: «Mantener» en la tienda), en su PR (#50). |

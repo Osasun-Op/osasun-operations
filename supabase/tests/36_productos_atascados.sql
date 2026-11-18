@@ -9,6 +9,10 @@ begin;
 -- Aísla la prueba de las cuentas y los nombres reales de las tiendas. Se deshace al final.
 update public.personas set activo = false where rol = 'tienda';
 update public.personas_tienda set activo = false;
+-- T-0014: y de los atascados reales (en pruebas, las tiendas ya los usan): las cuentas de abajo son de toda la base.
+delete from public.atascados;
+delete from public.peticiones_tienda where tipo = 'atascado';
+delete from public.incidencias where opcion in ('atascado', 'recogida_atascado');
 insert into public.configuracion (clave, centro_id, valor) values ('operario_por_defecto', null, '"00000000-0000-4000-a000-000000000001"')
 on conflict (clave, centro_id) do update set valor = excluded.valor;
 
@@ -196,7 +200,7 @@ begin
     and exists (select 1 from jsonb_array_elements(motor.incidencias_tiendas_de(pg_temp.a('2026-12-15', '11:40')) -> 'incidencias') x
                  where x ->> 'tienda' = 'Donosti' and x ->> 'opcion' = 'atascado' and x ->> 'estado' = 'abierta'
                    and x ->> 'texto' = 'Atascado: 2 cajas de BZ1 4g (Nora Prueba)'
-                   and x -> 'atascado' -> 'decisiones' = '["promocion", "recogida"]'::jsonb)
+                   and x -> 'atascado' -> 'decisiones' = '["promocion", "recogida", "mantener"]'::jsonb)
     and jsonb_array_length(motor.tienda_hoy_de(portu, pg_temp.a('2026-12-15', '11:45')) -> 'ofertas_atascados') = 3,
     r::text);
   perform pg_temp.comprobar('Donosti no lo ve repetido en sus incidencias',
@@ -265,10 +269,10 @@ begin
     (select count(*) = 1 from public.incidencias where opcion = 'atascado'));
   perform motor.vencer_atascados(pg_temp.a('2026-12-16', '09:00'));
   r := motor.incidencias_tiendas_de(pg_temp.a('2026-12-16', '09:00'));
-  perform pg_temp.comprobar('El miércoles a las 9:00, la crema de Basauri y el V2 10g de Portugalete, con «promoción o al almacén»',
+  perform pg_temp.comprobar('El miércoles a las 9:00, la crema de Basauri y el V2 10g de Portugalete, con «promoción, al almacén o mantener»',
     exists (select 1 from jsonb_array_elements(r -> 'incidencias') x
              where x ->> 'tienda' = 'Basauri' and x ->> 'texto' = 'Atascado: 1 caja de CREMA, nadie lo ha pedido (Ane Prueba)'
-               and x -> 'atascado' -> 'decisiones' = '["promocion", "almacen"]'::jsonb
+               and x -> 'atascado' -> 'decisiones' = '["promocion", "almacen", "mantener"]'::jsonb
                and x -> 'atascado' ->> 'estado_texto' = 'Nadie lo ha pedido: decide Administración')
     and exists (select 1 from jsonb_array_elements(r -> 'incidencias') x
                  where x ->> 'tienda' = 'Portugalete' and x ->> 'texto' = 'Atascado: 2 cajas de V2 10g, nadie lo ha pedido (Leire Prueba)')
