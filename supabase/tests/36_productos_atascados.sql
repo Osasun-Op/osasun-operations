@@ -9,10 +9,6 @@ begin;
 -- Aísla la prueba de las cuentas y los nombres reales de las tiendas. Se deshace al final.
 update public.personas set activo = false where rol = 'tienda';
 update public.personas_tienda set activo = false;
--- T-0014: y de los atascados reales (en pruebas, las tiendas ya los usan): las cuentas de abajo son de toda la base.
-delete from public.atascados;
-delete from public.peticiones_tienda where tipo = 'atascado';
-delete from public.incidencias where opcion in ('atascado', 'recogida_atascado');
 insert into public.configuracion (clave, centro_id, valor) values ('operario_por_defecto', null, '"00000000-0000-4000-a000-000000000001"')
 on conflict (clave, centro_id) do update set valor = excluded.valor;
 
