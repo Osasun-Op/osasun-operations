@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.78 · **Fecha:** 18/11/2026 · **Estado:**
+**Versión:** 1.79 · **Fecha:** 23/11/2026 · **Estado:**
 - **Almacén:** en uso real en el entorno de pruebas.
 - **Tiendas:** en prueba en Basauri, Portugalete y Rentería, en el entorno de pruebas (75 migraciones; la última, Tarea 42, T-0014, PR #50).
 - **Producción:** montada y sin usar, sin lo de tiendas. Espera a que el propietario dé por probado lo de tiendas.
@@ -209,7 +209,7 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
 - **Categorías que rotan (Invernadero, Indoor):** se calcula por categoría. Dentro de cada una se aplica FIFO, con un mínimo de 2 variedades de invernadero y 2 de indoor. **El FIFO lo decide el operario:** la app indica las cajas de la categoría y las variedades con granel, y él usa primero el granel más antiguo, que reconoce en el almacén.
 - **Sin granel no se produce.** Al operario le aparece la tarea «Avisa a Administración: falta X».
 
-**R4. Aviso del jueves (cobertura a 2 semanas).** En cada producto se compara el total en gramos (almacén más tiendas, de PRINCIPAL) con 2 × la necesidad semanal. Invernadero e Indoor se valoran sumando toda la categoría, porque se compran 2 o 3 variedades a la vez. La app prepara la lista explicando cada aviso. El operario la revisa, comprueba el granel físicamente y la envía a Administración.
+**R4. Aviso del jueves (cobertura a 2 semanas).** En cada producto se compara el total en gramos (almacén más tiendas, de PRINCIPAL) con 2 × la necesidad semanal. Invernadero e Indoor se valoran sumando toda la categoría, porque se compran 2 o 3 variedades a la vez. La app prepara la lista explicando cada aviso. El operario la revisa, comprueba el granel físicamente y la envía a Administración. **Qué cuenta** (decisión del propietario, 23/11/2026; T-0016 · Tarea 44, PR #51): todo bloque de la columna A de PRINCIPAL que tenga «LO QUE HAY EN TOTAL» y «1 SEMANA NECESIDADES»: los productos que se reparten, **la materia prima** (DISTILLATE, CBDX) y cualquier consumible que se añada en el futuro (cajas, etc.), con la misma cuenta (total frente a 2 × necesidad semanal). Antes la materia prima no contaba: el 23/11 el DISTILLATE tenía 0 en total y 581 de necesidad a la semana y no salía en el panel.
 - **En el panel de Administración, siempre a la vista** (decisión del propietario, 29/10/2026): la misma cuenta, con «LO QUE HAY EN TOTAL» de PRINCIPAL frente a 2 × «1 SEMANA NECESIDADES». **Solo salen los productos por debajo.** Se usa la hoja tal cual: producir o mandar a una tienda no cambia el total; solo lo cambian las ventas, que la hoja recoge con el FIN DE DÍA. Una sola cuenta para el panel y para el aviso del jueves.
 
 **R5. Verificación del recuento.** La app comprueba si STOCK ALMACÉN DIARIO se ha actualizado ese día. Si no, la tarea aparece como «declarado, no verificado».
@@ -628,3 +628,4 @@ Todo entra por PR, también este documento (constitución, regla 7). Las instruc
 | 1.76 | 16/11/2026 | E2-8 (T-0012 · Tarea 40, PR #48): las tiendas marcan hasta una hora después de cerrar; textos nuevos de las tareas (almacén y tiendas); el efectivo de cada tienda en la tarea del operario (con las tres respuestas del propietario en la revisión). Cabecera al día. |
 | 1.77 | 17/11/2026 | §6.4 (T-0013 · Tarea 41, PR #49): la tarea en curso solo se pausa si lo que entra va delante en el orden de siempre (el bucle del 17/11). Cabecera al día. |
 | 1.78 | 18/11/2026 | E2-8, atascados (T-0014 · Tarea 42, PR #50): Administración puede decidir también «Mantener» (se queda en la tienda), en todas las tiendas; las dos del 18/11 de pruebas que se pusieron como promoción pasan a «Mantener». Cabecera al día. |
+| 1.79 | 23/11/2026 | R4 (T-0016 · Tarea 44, PR #51): cuenta todo bloque de PRINCIPAL con total y necesidad, también la materia prima y los consumibles. Cabecera al día (sin migraciones nuevas). |

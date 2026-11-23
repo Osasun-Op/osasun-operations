@@ -1,4 +1,4 @@
-// Pruebas de R4 · cobertura a 2 semanas (REGLAS_CALCULO.md §4, casos R4-01 a R4-08).
+// Pruebas de R4 · cobertura a 2 semanas (REGLAS_CALCULO.md §4, casos R4-01 a R4-11).
 import { assertEquals } from "jsr:@std/assert@1";
 import type { Producto } from "./hoja.ts";
 import { leerHoja } from "./hoja.ts";
@@ -55,19 +55,46 @@ Deno.test("R4-06 dato vacío o raro: no se inventa, va a un aviso", () => {
   ]);
 });
 
-Deno.test("R4-07 orden: de menos a más semanas; la materia prima no cuenta", () => {
-  const distillate: Producto = { nombre: "DISTILLATE", granel: "2054", formatos: [], conTiendas: false, orden: fila++ };
-  const r = calcular([p("KUSH WATERHASH", "302", "219"), p("GRAPEFRUIT", "4", "105,5"), distillate]);
-  assertEquals(r.productos.map((x) => [x.producto, x.semanas]), [["Invernadero", 0], ["KUSH WATERHASH", 1.3]]);
+// Un bloque de PRINCIPAL sin formatos ni tiendas: materia prima o consumible (Tarea 44).
+const bloque = (nombre: string, total: string, necesidad: string): Producto =>
+  ({ nombre, granel: "0", formatos: [], conTiendas: false, orden: fila++, total, necesidad });
+
+Deno.test("R4-07 orden: de menos a más semanas; la materia prima cuenta como lo demás (Tarea 44)", () => {
+  // La lectura del 23/11 a las 15:16: DISTILLATE 0 y 581 (sale, 0 semanas); CBDX 810 y 114,6 (no sale: 810 ≥ 229,2).
+  const r = calcular([p("KUSH WATERHASH", "302", "219"), p("GRAPEFRUIT", "4", "105,5"),
+                      bloque("DISTILLATE", "0", "581"), bloque("CBDX", "810", "114,6")]);
+  assertEquals(r.productos.map((x) => [x.producto, x.semanas]), [["Invernadero", 0], ["DISTILLATE", 0], ["KUSH WATERHASH", 1.3]]);
+  assertEquals(r.productos.find((x) => x.producto === "DISTILLATE")?.motivo,
+               "Hay 0 en total y se necesitan 581 a la semana: da para 0 semanas.");
   assertEquals(r.avisos, []);
+});
+
+Deno.test("R4-09 materia prima con necesidad 0: no sale", () => {
+  assertEquals(calcular([bloque("DISTILLATE", "0", "0")]), { productos: [], avisos: [] });
+});
+
+Deno.test("R4-10 un consumible nuevo en su propio bloque: sale sin tocar nada más", () => {
+  // «CAJAS ENVÍO», 50 frente a 2 × 40 = 80 → 1,2 semanas.
+  assertEquals(calcular([bloque("CAJAS ENVÍO", "50", "40")]).productos, [{
+    producto: "CAJAS ENVÍO", formato: "", total: 50, necesidad_semana: 40, semanas: 1.2,
+    motivo: "Hay 50 en total y se necesitan 40 a la semana: da para 1,2 semanas.",
+  }]);
+});
+
+Deno.test("R4-11 materia prima con la necesidad vacía: aviso, como el resto", () => {
+  assertEquals(calcular([bloque("DISTILLATE", "0", "")]), {
+    productos: [], avisos: ["No puedo calcular DISTILLATE en PRINCIPAL (DISTILLATE: dato vacío o no válido)."],
+  });
 });
 
 Deno.test("R4-08 con el extracto real de la hoja (columnas por su encabezado)", () => {
   const r = calcularCobertura(leerHoja(PRINCIPAL, CONTEO, ALMACEN), EXCLUIDOS);
   // Invernadero: 772 − 10 = 762 frente a 2 × (68,5 + 107,5) = 352: bien. GRAPEFRUIT tiene −10 en total → aviso de la categoría.
   // Indoor: 344 + 558 = 902 frente a 2 × (157,5 + 133,5) = 582: bien. V2: 1498 frente a 1297: bien. FORTE: 134 frente a 36: bien.
+  // Tarea 44: el DISTILLATE (materia prima) también cuenta; en este extracto (26/10) no tiene total ni necesidad → aviso.
   assertEquals(r.productos, []);
-  assertEquals(r.avisos, ["No puedo calcular Invernadero en PRINCIPAL (GRAPEFRUIT: el total es negativo (-10))."]);
+  assertEquals(r.avisos, ["No puedo calcular Invernadero en PRINCIPAL (GRAPEFRUIT: el total es negativo (-10)).",
+                          "No puedo calcular DISTILLATE en PRINCIPAL (DISTILLATE: dato vacío o no válido)."]);
   const sinColumnas = leerHoja([PRINCIPAL[0].map((x) => x === "LO QUE HAY EN TOTAL" ? "" : x), ...PRINCIPAL.slice(1)], CONTEO, ALMACEN);
   assertEquals(calcularCobertura(sinColumnas, EXCLUIDOS).avisos,
                ["No encuentro las columnas «LO QUE HAY EN TOTAL» y «1 SEMANA NECESIDADES» en PRINCIPAL."]);

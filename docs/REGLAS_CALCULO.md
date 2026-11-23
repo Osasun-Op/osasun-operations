@@ -1,6 +1,6 @@
 # OSASUN OPERATIONS — Reglas de cálculo R1, R3 y R4 (especificación V1)
 
-**Versión:** 1.5 · **Fecha:** 11/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27). Tarea 15: el mini se llama MINI 10g (§3.3) y R4, productos con menos de 2 semanas (§4, `r4.ts`, R4-01 a R4-08). Tarea 16: producto sin granel en el reparto (§2.11, `sin_granel.ts`, R1e-01 a R1e-09). Tarea 17: envío sin granel (§2.11, E-01 a E-07). Tarea 29d: «Calcular» del reparto y del envío, solo con la hoja (R1c v1.58; §2.5, §2.10 y §2.11, A-03, A-05, C-06, E-05 y H-01 a H-02). Tarea 38 (T-0010): cajas de otra tienda, el aviso a la tienda de origen y la caja en la lista de la que recibe (§2.11, R1e-10 a R1e-13; prueba SQL 43).
+**Versión:** 1.6 · **Fecha:** 23/11/2026 · **Autor:** agente de base de datos · **Estado:** aprobada (PR #1). Construida en la Tarea 3: `supabase/functions/_compartido/r1.ts` y `r3.ts`, con sus pruebas (`*_test.ts`). Tarea 4: el envío pegado antes del recuento descuenta el reparto del día (§2.5, R1-22 a R1-24). Tarea 8: el desplegable «¿Quién sale?» manda sobre `SALE:` (§2.3, R1-25 a R1-27). Tarea 10: el reparto se prepara con una lista (§2.9, L-01 a L-09). Tarea 12: pedidos de cliente «coge / haz» al salir la tarea, cajas en camino (salida = bolsas listas) y Nacex hasta las 18:00 (§2.10 y §3.9, P-01 a P-08, C-01 a C-09, R3-21 a R3-23). Tarea 13: peticiones especiales, «Además: …» (§2.9 punto 5, R1-28, R1-29 y L-10). Tarea 14: almacén ahora, cajas en camino con hora y pedidos de tienda que activan el reparto (§2.10, A-01 a A-11, R1-30, R3-24 a R3-27). Tarea 15: el mini se llama MINI 10g (§3.3) y R4, productos con menos de 2 semanas (§4, `r4.ts`, R4-01 a R4-08). Tarea 16: producto sin granel en el reparto (§2.11, `sin_granel.ts`, R1e-01 a R1e-09). Tarea 17: envío sin granel (§2.11, E-01 a E-07). Tarea 29d: «Calcular» del reparto y del envío, solo con la hoja (R1c v1.58; §2.5, §2.10 y §2.11, A-03, A-05, C-06, E-05 y H-01 a H-02). Tarea 38 (T-0010): cajas de otra tienda, el aviso a la tienda de origen y la caja en la lista de la que recibe (§2.11, R1e-10 a R1e-13; prueba SQL 43).
 
 > Especificación exacta de las reglas que la V1 calcula con datos de Google Sheets: **R1** (texto del reparto), **R3** (stock del almacén +35 %) y **R4** (cobertura a 2 semanas).
 > Lo aprobado en `ESTADO_DEL_SISTEMA.md` §5 se aplica **sin cambios**; donde hacía falta precisar, se indica la decisión y su fecha.
@@ -376,7 +376,7 @@ Una sola cuenta (`supabase/functions/_compartido/r4.ts`, `calcularCobertura`) pa
 - El total viene por producto, no por formato: `formato` es siempre `""`.
 
 ### 4.2 Qué entra y qué no
-- Los productos que se reparten (los del catálogo: con formatos o con datos de tiendas). La materia prima (DISTILLATE…) no cuenta.
+- **Todo bloque de la columna A de PRINCIPAL** que tenga «LO QUE HAY EN TOTAL» y «1 SEMANA NECESIDADES»: los productos que se reparten, **la materia prima** (DISTILLATE, CBDX) y cualquier consumible que se añada en el futuro (cajas, etc.), con la misma cuenta (decisión del propietario, 23/11/2026, T-0016 · Tarea 44; antes, de la Tarea 15, «La materia prima (DISTILLATE…) no cuenta»).
 - **Fuera:** los de `stock_excluidos` (MINI y VAPER), por nombre de producto, y lo que tiene **necesidad 0**.
 - **Dato vacío, no numérico o negativo** (total o necesidad): no se inventa. Va a un aviso («No puedo calcular X en PRINCIPAL (…)»). Si es una variedad, el aviso es de toda su categoría.
 - Sin las columnas en PRINCIPAL: un solo aviso. El reparto y el stock siguen igual.
@@ -393,8 +393,11 @@ Cada vez que el servidor lee la hoja para el reparto, el envío o la lista de st
 | R4-04 | Invernadero: Slush 662/68,5, Royal Berry 306/28, Grapefruit 4/105,5 | Por categoría: 972 ≥ 404, **no sale** aunque Grapefruit solo tenga 4. Con 100, 50 y 4: 154 < 404 → **«Invernadero», 0,7 semanas** |
 | R4-05 | MINI 10/305, VAPER 1/7, SUGAR 0/0 | **Excluidos** (mini y vaper) y necesidad 0: nada |
 | R4-06 | CBD DRY sin total; TXABAKO SUST con total −40; una variedad de Indoor con necesidad «x» | **Avisos**, ninguno en la lista (el de Indoor, de toda la categoría) |
-| R4-07 | Varios por debajo y una materia prima | De menos a más semanas; la materia prima no cuenta |
-| R4-08 | Extracto real de la hoja | Columnas por su encabezado; sin ellas, un solo aviso |
+| R4-07 | Varios por debajo, DISTILLATE 0/581 y CBDX 810/114,6 (la lectura del 23/11) | De menos a más semanas; **el DISTILLATE sale, 0 semanas** («Hay 0 en total y se necesitan 581 a la semana: da para 0 semanas.»); el CBDX no (810 ≥ 229,2). Hasta la Tarea 44, la materia prima no contaba |
+| R4-08 | Extracto real de la hoja (26/10) | Columnas por su encabezado; sin ellas, un solo aviso. El DISTILLATE de ese extracto no tiene total ni necesidad: aviso (Tarea 44) |
+| R4-09 | Materia prima con necesidad 0 | No sale |
+| R4-10 | Un consumible nuevo en su propio bloque, sin formatos ni tiendas («CAJAS ENVÍO», 50/40) | **Sale, 1,2 semanas**, sin tocar nada más |
+| R4-11 | Materia prima con la necesidad vacía | Aviso, como el resto |
 
 ## 5. Propuestas pendientes (no aprobadas)
 

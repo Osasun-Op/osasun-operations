@@ -2,7 +2,9 @@
 //   En cada producto: «LO QUE HAY EN TOTAL» de PRINCIPAL frente a 2 × «1 SEMANA
 //   NECESIDADES». Invernadero e Indoor, sumando toda la categoría. Con la hoja
 //   tal cual: producir o mandar a una tienda no cambia el total. Una sola cuenta
-//   para el panel de Administración y para el aviso del jueves.
+//   para el panel de Administración y para el aviso del jueves. Cuenta todo bloque
+//   de PRINCIPAL con esas dos columnas, también la materia prima y los consumibles
+//   (Tarea 44).
 
 import type { DatosHoja } from "./hoja.ts";
 import { centesimas, norm, textoNumero } from "./normalizar.ts";
@@ -38,10 +40,10 @@ export function calcularCobertura(d: Pick<DatosHoja, "productos" | "variedades">
   for (const v of d.variedades.INVERNADERO) categoria.set(norm(v), "Invernadero");
   for (const v of d.variedades.INDOOR) categoria.set(norm(v), "Indoor");
 
-  // Grupos: cada producto que se reparte (como el catálogo) o su categoría.
+  // Grupos: cada bloque de PRINCIPAL con total y necesidad (lo que se reparte, la materia prima y cualquier consumible;
+  // decisión del propietario, 23/11/2026, Tarea 44), o su categoría.
   const grupos = new Map<string, { nombre: string; orden: number; total: number; necesidad: number; malos: string[] }>();
   for (const p of d.productos) {
-    if (p.formatos.length === 0 && !p.conTiendas) continue; // materia prima, no se vende
     const nombre = p.nombre.trim();
     if (fuera.has(norm(nombre))) continue;
     const clave = categoria.get(norm(nombre)) ?? nombre;

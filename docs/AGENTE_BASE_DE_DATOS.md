@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.81 · **Fecha:** 18/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.82 · **Fecha:** 23/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -79,7 +79,20 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 ## Tarea activa
 
-Ninguna. La T-0014 · Tarea 42 está fusionada (PR #50; solo en pruebas, producción espera). La siguiente, cuando el propietario diga el próximo paso.
+Ninguna. La T-0016 · Tarea 44 está fusionada (PR #51; solo en pruebas, producción espera). La siguiente, cuando el propietario diga el próximo paso.
+
+---
+
+## 7.0 T-0016 · TAREA 44 (fusionada en el PR #51; solo en pruebas, producción espera): materias primas en «Productos con menos de 2 semanas», en pruebas
+
+**Contexto:** encargo T-0016 copiado por el propietario. En el panel, «Productos con menos de 2 semanas» (R4) no enseñaba el DISTILLATE (lectura del 23/11 a las 15:16: 0 en total y 581 de necesidad a la semana) por la regla de la Tarea 15 («la materia prima no cuenta»). **Decisión del propietario (23/11/2026):** cuenta todo bloque de la columna A de PRINCIPAL con «LO QUE HAY EN TOTAL» y «1 SEMANA NECESIDADES» (lo que se reparte, la materia prima y cualquier consumible futuro), con la misma cuenta.
+
+1. `_compartido/r4.ts`: fuera la exclusión de las filas sin formatos ni tiendas. Lo demás, igual (fuera `stock_excluidos` y necesidad 0; un dato malo, aviso; Invernadero e Indoor por categoría).
+2. La lectura de PRINCIPAL tiene límite (`A1:Z500`, `_compartido/google.ts`): se lo dije al propietario antes de cambiar nada y decidió dejarlo («nunca va a haber tantos»).
+3. Pruebas Deno: R4-07 (DISTILLATE sale, CBDX no), R4-09 a R4-11.
+4. Desplegadas de nuevo en pruebas las tres funciones que incluyen `r4.ts`: `guardar_reparto`, `lista_stock` y `catalogo`.
+
+**Entrega:** PR **«T-0016 · Tarea 44 — Materias primas en «Productos con menos de 2 semanas»»** (#51). Se fusiona con el «sí» del propietario a ese PR, tras revisarlo con el coordinador. No se pasa a producción.
 
 ---
 
@@ -1042,3 +1055,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.79 | 16/11/2026 | T-0012 · Tarea 40 (cierre de tiendas hasta una hora después, textos de las tareas y efectivo en la tarea del operario), fusionada en el PR #48. |
 | 1.80 | 17/11/2026 | T-0013 · Tarea 41 (una urgente no cede ante una tarea con hora), fusionada en el PR #49. |
 | 1.81 | 18/11/2026 | T-0014 · Tarea 42 (atascados: «Mantener» en la tienda), fusionada en el PR #50, con las decisiones de la revisión. §4: en pruebas, solo la prueba nueva de cada cambio; la suite entera, en local. |
+| 1.82 | 23/11/2026 | T-0016 · Tarea 44 (materias primas en «Productos con menos de 2 semanas»), fusionada en el PR #51. |
