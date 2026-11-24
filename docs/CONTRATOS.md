@@ -697,7 +697,7 @@ Botón en la tarea «Prepara el pedido de cliente (Nacex)»: si por la producci�
 ### 3.19 `resolver_sin_granel(elemento_id, decisiones)` ✅ (Tarea 16)
 En «Producción del reparto», una referencia que hay que hacer y **no tiene granel** (`sin_granel: true`, §3.2): el operario decide, tienda por tienda, si se quita o se coge de otra tienda (`ESTADO_DEL_SISTEMA.md` §5 R1e).
 - **Quién:** el operario (su producción del reparto, abierta hoy).
-- **Entrada:** `decisiones: [{ destino_id, accion: "quitar" | "otra_tienda", origen_id?, cantidad }]`, **una por tienda** de `para`. `cantidad`: entero, de 1 a lo que pide esa tienda (`para[].pedido`). `origen_id`, solo en `otra_tienda`: otra tienda **con bolsa en el reparto de hoy** (lo normal, una de `tiendas_con_stock`; Tarea 45). **Entre todas suman lo que falta** (`cantidad` de la referencia).
+- **Entrada:** `decisiones: [{ destino_id, accion: "quitar" | "otra_tienda", origen_id?, cantidad }]`, **una por tienda** de `para`. `cantidad`: entero, de 1 a lo que pide esa tienda (`para[].pedido`). `origen_id`, solo en `otra_tienda`: otra tienda **con bolsa en el reparto de hoy** (lo normal, una de `tiendas_con_stock`; Tarea 45). Una con bolsa pero sin cajas según la hoja se acepta (la hoja puede no estar al día). **Entre todas suman lo que falta** (`cantidad` de la referencia).
 - **Efecto:**
   - la referencia queda hecha sin producir (`cantidad` 0) y la producción sigue como siempre; queda anotado quién y cuándo;
   - **quitar:** la bolsa de esa tienda lleva menos (y la línea del reparto baja);
