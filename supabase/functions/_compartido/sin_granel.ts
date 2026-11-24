@@ -5,6 +5,8 @@
 // que la reciben (`para`) y las demás tiendas del reparto que tienen cajas
 // (`tiendas_con_stock`, de sus columnas en PRINCIPAL). Qué se hace con ella
 // (quitarla o cogerla de otra tienda) lo decide el operario en la producción.
+// Tarea 45 (24/11/2026): solo cuentan las tiendas que tienen bolsa en el reparto de ese día (las paradas de la ruta:
+// productos, peticiones especiales o pedidos de cliente), no todas las de la configuración de la ruta.
 
 import type { DatosHoja } from "./hoja.ts";
 import type { Bolsa, Destino, ElementoProduccion } from "./r1.ts";
@@ -23,12 +25,15 @@ function cajasEnTienda(tiendas: Record<string, string> | undefined, d: Destino &
  * Marca las referencias sin granel de la producción del reparto. `destinos`: las
  * tiendas del reparto, en su orden. Lo que hay en el almacén se reparte entre las
  * tiendas que lo reciben en ese orden: a las últimas es a las que les falta.
+ * `conBolsa`: las tiendas con bolsa en el reparto de ese día (sin él, las que llevan
+ * productos); `tiendas_con_stock` solo sale de ellas (Tarea 45).
  */
 export function marcarSinGranel(
   produccion: ElementoProduccion[], bolsas: Bolsa[], datos: Pick<DatosHoja, "productos">,
-  destinos: (Destino & { codigo?: string })[],
+  destinos: (Destino & { codigo?: string })[], conBolsa?: string[],
 ): ElementoProduccion[] {
   const porNombre = new Map(datos.productos.map((p) => [norm(p.nombre), p]));
+  const paradas = new Set(conBolsa ?? bolsas.map((b) => b.destino_id));
   return produccion.map((e) => {
     const p = porNombre.get(norm(e.producto));
     const granel = p ? centesimas(p.granel) : null;
@@ -46,7 +51,7 @@ export function marcarSinGranel(
     }
     const tiendas = e.formato === "" ? p.tiendas : p.formatos.find((f) => norm(f.formato) === norm(e.formato))?.tiendas;
     const tiendas_con_stock = destinos
-      .filter((d) => !para.some((x) => x.destino_id === d.id))
+      .filter((d) => paradas.has(d.id) && !para.some((x) => x.destino_id === d.id))
       .map((d) => ({ destino_id: d.id, destino: d.nombre, cajas: cajasEnTienda(tiendas, d) ?? 0 }))
       .filter((t) => t.cajas > 0);
     return { ...e, sin_granel: true, para: para.filter((x) => x.faltan > 0), tiendas_con_stock };

@@ -1,6 +1,6 @@
 # Agente de base de datos — Instrucciones
 
-**Versión:** 1.82 · **Fecha:** 23/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
+**Versión:** 1.83 · **Fecha:** 24/11/2026 · **Emite:** coordinador del proyecto · **Aprueba:** propietario de Osasun
 
 ---
 
@@ -79,7 +79,23 @@ Antes del 07/11/2026, la tarea activa era la de la sección «Tarea activa» de 
 
 ## Tarea activa
 
-Ninguna. La T-0016 · Tarea 44 está fusionada (PR #51; solo en pruebas, producción espera). La siguiente, cuando el propietario diga el próximo paso.
+Ninguna. La T-0017 · Tarea 45 está fusionada (PR #52; solo en pruebas, producción espera). La siguiente, cuando el propietario diga el próximo paso.
+
+---
+
+## 7.0 T-0017 · TAREA 45 (fusionada en el PR #52; solo en pruebas, producción espera): sin granel, de otra tienda solo de las que tienen reparto ese día, en pruebas
+
+**Contexto:** encargo T-0017 copiado por el propietario (el archivo del ticket no está en el repositorio: se trabaja con el texto del encargo). El 24/11, el ANKA para Bilbao no tenía granel y «Cogerlo de otra tienda» ofreció Algorta, Barakaldo, Basauri y Portugalete; ese día Basauri no tenía reparto, se eligió y hubo un viaje que no hacía falta. **Decisión del propietario (24/11/2026), igual para todas las tiendas:**
+
+1. `tiendas_con_stock` (`_compartido/sin_granel.ts`): solo las tiendas con bolsa en el reparto de ese día (productos, peticiones especiales o pedidos de cliente) que tienen cajas, sin contar la que la recibe. `guardar_reparto` le pasa esas tiendas (`reparto_lista.ts`).
+2. `resolver_sin_granel` rechaza como origen una tienda sin bolsa ese día (`DATOS_NO_VALIDOS`, «[Tienda] no tiene reparto hoy: elige una tienda que esté en el reparto de hoy.»).
+3. Sin nadie con reparto que lo tenga, la lista va vacía y solo cabe «quitar».
+4. Al modificar el reparto (`motor.aplicar_sin_granel`), una decisión «otra_tienda» cuya tienda de origen se queda sin bolsa se va: la referencia vuelve sin resolver, sin su parada ni su «Avisa a…»; el aviso a la tienda de origen ya creado se queda (T-0010). Las demás decisiones se quedan.
+5. Migración `20261124093012_sin_granel_solo_con_reparto`: `motor.tiendas_con_bolsa` (nueva: las paradas de `motor.paradas_bolsas` más las peticiones y los pedidos que, mientras se guarda una versión nueva del reparto, aún no están en ella), `motor.aplicar_sin_granel` y `motor.resolver_sin_granel_de`.
+6. Prueba 48 nueva; las 21, 43 y 44 dan bolsa a Algorta (era el origen sin estar en el reparto). Desplegadas de nuevo en pruebas `guardar_reparto`, `catalogo` y, tras la revisión, `guardar_pedido_cliente`, para que quede igual que el repositorio. Antes comprobé que lo que hace no cambia: solo difería en cuatro archivos que no ejecuta (toma un tipo de `reparto_lista.ts`), y el código que se ejecuta es el mismo byte a byte en la versión anterior y en la nueva.
+7. **Respuestas de la revisión (propietario, 24/11/2026):** un origen con bolsa pero sin cajas según la hoja se acepta (la hoja puede no estar al día); una tienda que se queda sin nada y a la vez recibe un pedido de cliente nuevo en la misma modificación pierde su decisión y la referencia vuelve a salir para decidir: se deja así.
+
+**Entrega:** PR **«T-0017 · Tarea 45 — Sin granel: solo tiendas con reparto ese día»** (#52). Se fusiona con el «sí» del propietario a ese PR, tras revisarlo con el coordinador. No se pasa a producción.
 
 ---
 
@@ -1056,3 +1072,4 @@ Sale de la primera prueba real del propietario y de Eder. Lee antes `ESTADO_DEL_
 | 1.80 | 17/11/2026 | T-0013 · Tarea 41 (una urgente no cede ante una tarea con hora), fusionada en el PR #49. |
 | 1.81 | 18/11/2026 | T-0014 · Tarea 42 (atascados: «Mantener» en la tienda), fusionada en el PR #50, con las decisiones de la revisión. §4: en pruebas, solo la prueba nueva de cada cambio; la suite entera, en local. |
 | 1.82 | 23/11/2026 | T-0016 · Tarea 44 (materias primas en «Productos con menos de 2 semanas»), fusionada en el PR #51. |
+| 1.83 | 24/11/2026 | T-0017 · Tarea 45 (sin granel: de otra tienda, solo de las que tienen reparto ese día), fusionada en el PR #52. |

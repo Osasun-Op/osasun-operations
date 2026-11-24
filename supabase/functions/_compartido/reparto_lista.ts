@@ -164,8 +164,11 @@ export async function guardarRepartoDe(d: Dependencias, persona: string, cuerpo:
     entradas,
     permitirVacio: activanReparto,
   });
-  // R1e: lo que hay que hacer sin granel se resuelve en la producción (quitarlo o de otra tienda).
-  const produccion = tipo === "reparto" ? marcarSinGranel(r.produccion, r.bolsas, lectura.datos, destinos) : r.produccion;
+  // R1e: lo que hay que hacer sin granel se resuelve en la producción (quitarlo o de otra tienda). De otra tienda, solo
+  // de las que tienen bolsa en este reparto: productos, peticiones especiales o pedidos de cliente (Tarea 45).
+  const conBolsa = [...r.bolsas.map((b) => b.destino_id), ...pv.peticiones.map((p) => p.destino_id),
+                    ...pedidos.map((p) => p.destino_id)];
+  const produccion = tipo === "reparto" ? marcarSinGranel(r.produccion, r.bolsas, lectura.datos, destinos, conBolsa) : r.produccion;
   if (r.estado !== "aceptado") {
     return error("REPARTO_NO_CALCULADO", "No se ha podido calcular el reparto. Avisa a Administración.",
                  { estado: r.estado, lineas: r.errores.map((l) => ({ num: l.num, texto: l.texto, error: l.error })) });

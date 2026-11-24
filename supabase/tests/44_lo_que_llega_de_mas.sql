@@ -79,7 +79,7 @@ insert into public.personas_tienda (id, centro_id, nombre, cuando, turno) values
 create function pg_temp.guardar(p_jornada uuid) returns jsonb language sql as $$
   select public.servidor_guardar_reparto(
     '00000000-0000-4000-a000-000000000002', p_jornada, 'reparto',
-    E'REPARTO 15/12\nSALE: ALMACÉN\n\nBILBAO\n2x V2 4g\n\nBASAURI\n2x V2 4g\n3x CBD DRY 4g\n\nPORTU\n1x BZ1 4g',
+    E'REPARTO 15/12\nSALE: ALMACÉN\n\nBILBAO\n2x V2 4g\n\nBASAURI\n2x V2 4g\n3x CBD DRY 4g\n\nPORTU\n1x BZ1 4g\n\nALGORTA\n1x V2 4g',
     'h44', '2026-12-15', 'operario', null,
     jsonb_build_array(
       jsonb_build_object('num', 1, 'texto', 'REPARTO 15/12', 'clase', 'cabecera'),
@@ -94,9 +94,13 @@ create function pg_temp.guardar(p_jornada uuid) returns jsonb language sql as $$
                          'cantidad', 3, 'producto', 'CBD DRY', 'formato', '4g'),
       jsonb_build_object('num', 11, 'texto', 'PORTU', 'clase', 'tienda', 'destino_id', pg_temp.d('PORTU')),
       jsonb_build_object('num', 12, 'texto', '1x BZ1 4g', 'clase', 'producto', 'destino_id', pg_temp.d('PORTU'),
-                         'cantidad', 1, 'producto', 'BZ1', 'formato', '4g')),
+                         'cantidad', 1, 'producto', 'BZ1', 'formato', '4g'),
+      -- Tarea 45: Algorta, de donde se cogen las cajas, tiene bolsa ese día.
+      jsonb_build_object('num', 14, 'texto', 'ALGORTA', 'clase', 'tienda', 'destino_id', pg_temp.d('ALGORTA')),
+      jsonb_build_object('num', 15, 'texto', '1x V2 4g', 'clase', 'producto', 'destino_id', pg_temp.d('ALGORTA'),
+                         'cantidad', 1, 'producto', 'V2', 'formato', '4g')),
     jsonb_build_array(
-      jsonb_build_object('producto', 'V2', 'formato', '4g', 'pedido', 4, 'en_almacen', 20, 'faltan', 0, 'aviso', null, 'orden', 1),
+      jsonb_build_object('producto', 'V2', 'formato', '4g', 'pedido', 5, 'en_almacen', 20, 'faltan', 0, 'aviso', null, 'orden', 1),
       jsonb_build_object('producto', 'CBD DRY', 'formato', '4g', 'pedido', 3, 'en_almacen', 2, 'faltan', 1, 'aviso', null, 'orden', 2,
                          'sin_granel', true,
                          'para', jsonb_build_array(jsonb_build_object('destino_id', pg_temp.d('BASAURI'), 'destino', 'Basauri',
@@ -116,7 +120,9 @@ create function pg_temp.guardar(p_jornada uuid) returns jsonb language sql as $$
         jsonb_build_object('producto', 'V2', 'formato', '4g', 'cantidad', 2, 'orden', 1),
         jsonb_build_object('producto', 'CBD DRY', 'formato', '4g', 'cantidad', 3, 'orden', 2))),
       jsonb_build_object('destino_id', pg_temp.d('PORTU'), 'items', jsonb_build_array(
-        jsonb_build_object('producto', 'BZ1', 'formato', '4g', 'cantidad', 1, 'orden', 3)))),
+        jsonb_build_object('producto', 'BZ1', 'formato', '4g', 'cantidad', 1, 'orden', 3))),
+      jsonb_build_object('destino_id', pg_temp.d('ALGORTA'), 'items', jsonb_build_array(
+        jsonb_build_object('producto', 'V2', 'formato', '4g', 'cantidad', 1, 'orden', 1)))),
     true, pg_temp.a('2026-12-15', '08:40')) $$;
 
 -- El envío a Gipuzkoa del miércoles: 4x V2 4g y 1x BZ1 4g.
