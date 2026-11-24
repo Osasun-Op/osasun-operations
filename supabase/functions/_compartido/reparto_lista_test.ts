@@ -332,12 +332,36 @@ Deno.test("guardar_reparto: lo que hay que hacer sin granel va marcado a la prod
   const lineas = [{ destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 3 }];
   const f = falso({ lectura: { ok: true, datos: sinGranel },
                     guardado: { reparto_id: "reparto-1", estado: "aceptado", texto_whatsapp: "texto de la base de datos" } });
-  const r = await guardarRepartoDe(f.d, "p", cuerpo({ lineas }));
+  // Algorta tiene bolsa ese día (aquí, solo con una petición especial: también cuenta, Tarea 45).
+  const r = await guardarRepartoDe(f.d, "p", cuerpo({ lineas, peticiones: [{ destino_id: "algorta", texto: "Rollos de TPV" }] }));
   const prod = (f.args("servidor_guardar_reparto")!.p_produccion as Record<string, unknown>[])[0];
   assertEquals([prod.producto, prod.faltan, prod.sin_granel], ["BZ1", 3, true]);
   assertEquals(prod.para, [{ destino_id: "bilbao", destino: "Bilbao", pedido: 3, faltan: 3 }]);
   assertEquals(prod.tiendas_con_stock, [{ destino_id: "algorta", destino: "Algorta", cajas: 4 }]);
   assertEquals(r.texto_whatsapp, "texto de la base de datos");
+});
+
+Deno.test("guardar_reparto (Tarea 45): de otra tienda, solo las que tienen bolsa ese día (productos, peticiones o pedidos de cliente)", async () => {
+  const sinGranel: DatosHoja = {
+    ...DATOS, productos: DATOS.productos.map((p) => p.nombre === "BZ1"
+      ? { ...p, granel: "0", formatos: [{ formato: "4g", almacen: "0", tiendas: { ALGORTA: "4", BASAURI: "2", PORTU: "1" } }] } : p),
+  };
+  const tiendas = async (o: { ctx?: Record<string, unknown> }, extra: Record<string, unknown>) => {
+    const f = falso({ lectura: { ok: true, datos: sinGranel }, ...o });
+    await guardarRepartoDe(f.d, "p", cuerpo(extra));
+    const prod = (f.args("servidor_guardar_reparto")!.p_produccion as { tiendas_con_stock?: { destino: string }[] }[])[0];
+    return prod.tiendas_con_stock?.map((t) => t.destino);
+  };
+  const bilbao = { destino_id: "bilbao", producto: "BZ1", formato: "4g", cantidad: 3 };
+  // Nadie más en el reparto: nadie para cogerlo.
+  assertEquals(await tiendas({}, { lineas: [bilbao] }), []);
+  // Portugalete con productos: sale (con sus cajas de BZ1); Algorta y Basauri, sin bolsa, no.
+  assertEquals(await tiendas({}, { lineas: [bilbao, { destino_id: "portu", producto: "V2", formato: "4g", cantidad: 1 }] }),
+               ["Portugalete"]);
+  // Basauri solo con un pedido de cliente para recoger en tienda: también tiene bolsa ese día.
+  const ctx = { ...CTX, pedidos_tienda: [{ id: "pedido-1", cliente: "Cliente", destino_id: "basauri",
+                                            lineas: [{ producto: "V2", formato: "4g", cantidad: 1 }] }] };
+  assertEquals(await tiendas({ ctx }, { lineas: [bilbao] }), ["Basauri"]);
 });
 
 // ===== Tarea 17: envío sin granel (R1e en el envío): se comprueba al calcular =====

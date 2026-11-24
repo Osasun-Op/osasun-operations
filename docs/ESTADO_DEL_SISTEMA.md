@@ -1,8 +1,8 @@
 # OSASUN OPERATIONS — Estado del sistema y decisiones
 
-**Versión:** 1.79 · **Fecha:** 23/11/2026 · **Estado:**
+**Versión:** 1.80 · **Fecha:** 24/11/2026 · **Estado:**
 - **Almacén:** en uso real en el entorno de pruebas.
-- **Tiendas:** en prueba en Basauri, Portugalete y Rentería, en el entorno de pruebas (75 migraciones; la última, Tarea 42, T-0014, PR #50).
+- **Tiendas:** en prueba en Basauri, Portugalete y Rentería, en el entorno de pruebas (76 migraciones; la última, Tarea 45, T-0017, PR #52).
 - **Producción:** montada y sin usar, sin lo de tiendas. Espera a que el propietario dé por probado lo de tiendas.
 - **Cómo se trabaja desde el 07/11/2026:** con tickets (T-XXXX). Ver §11.
 
@@ -148,7 +148,7 @@ El reparto **ya no se pega como texto: se prepara en la app**, eligiendo de una 
 - Quien prepara el reparto pone las cantidades **sin mirar el almacén**: el reparto tiene en cuenta que hay otras tiendas. **De dónde sale cada cosa lo decide el almacén.**
 - **En la tarea «Producción del reparto»**, cuando el operario elige un producto que hay que hacer y **no tiene granel**, le sale el aviso con dos opciones:
   - **Quitarlo** del reparto (lo habrá hablado antes con Administración);
-  - **Cogerlo de otra tienda**: elige de qué tienda, viendo cuántas tiene cada una según la hoja.
+  - **Cogerlo de otra tienda**: elige de qué tienda, viendo cuántas tiene cada una según la hoja. **Solo salen las tiendas que tienen bolsa en el reparto de ese día** (productos, peticiones especiales o pedidos de cliente) y tienen ese producto, sin contar la que lo recibe; si ninguna lo tiene, solo cabe quitarlo. Una tienda sin bolsa ese día no se puede elegir. Al modificar el reparto, la lista se vuelve a calcular: la tienda que entra sale desde ese momento; la que se queda sin bolsa deja de salir y, si era el origen, esa decisión se va y la referencia vuelve a salir sin resolver (sin su parada ni su «Avisa a…»; el aviso ya creado a esa tienda se queda). Igual para todas las tiendas (propietario, 24/11/2026; T-0017 · Tarea 45: el 24/11 se eligió Basauri, que ese día no tenía reparto, y hubo un viaje de unos 20 minutos que no hacía falta).
 - **En «Bolsas listas en la mesa de salida»**, en la bolsa de la tienda que recibe, le sale: **«Avisa a [tienda] para que prepare N [producto formato] para su retirada»** (hasta el 11/11/2026, «Llama a…»). Lo marca al llamar (como las peticiones especiales) y esa bolsa no se da por terminada sin marcarlo. Esas cajas no van en la bolsa.
 - **Cajas de otra tienda** (propietario, 11/11/2026; T-0010 · Tarea 38): la tienda de origen recibe un aviso en su tablet **en el momento en que el operario prepara la bolsa y marca esa línea**, no antes (por si hay que modificar algo): «Prepara N [producto formato] para [destino]: lo recoge hoy el reparto». Y la tienda que recibe **ve esas cajas en la lista de su bolsa**, en la línea de su producto, con de dónde vienen («3 (1 de Algorta)»). Igual para todas las tiendas. El operario no tiene ningún paso nuevo: es el mismo toque. Si la tienda de origen todavía no ha entrado con su cuenta en la app web, o ese día no abre, el aviso no se crea; el operario marca la línea igual, sin ningún mensaje, y la tienda que recibe ve las cajas en su lista (propietario, 11/11/2026: se deja así). Si el operario desmarca la línea, o se modifica la decisión o el reparto después de marcarla, el aviso ya creado se queda como está; si la línea se rehace (por ejemplo, otra cantidad) y se vuelve a marcar, sale otro aviso (propietario, 11/11/2026: se deja así, es un caso puntual; si da problemas, se revisará).
 - **La parada sale siempre a quien hace la ruta:** «Recoge N [producto] en [tienda] y déjalas en [tienda]». Si sale el operario, en su «Salida del reparto»; si sale Administración, como aviso en su panel (no es una tarea).
@@ -629,3 +629,4 @@ Todo entra por PR, también este documento (constitución, regla 7). Las instruc
 | 1.77 | 17/11/2026 | §6.4 (T-0013 · Tarea 41, PR #49): la tarea en curso solo se pausa si lo que entra va delante en el orden de siempre (el bucle del 17/11). Cabecera al día. |
 | 1.78 | 18/11/2026 | E2-8, atascados (T-0014 · Tarea 42, PR #50): Administración puede decidir también «Mantener» (se queda en la tienda), en todas las tiendas; las dos del 18/11 de pruebas que se pusieron como promoción pasan a «Mantener». Cabecera al día. |
 | 1.79 | 23/11/2026 | R4 (T-0016 · Tarea 44, PR #51): cuenta todo bloque de PRINCIPAL con total y necesidad, también la materia prima y los consumibles. Cabecera al día (sin migraciones nuevas). |
+| 1.80 | 24/11/2026 | R1e (T-0017 · Tarea 45, PR #52): «Cogerlo de otra tienda», solo de las tiendas con bolsa en el reparto de ese día; una sin bolsa se rechaza como origen y, al modificar el reparto, su decisión se va. Cabecera al día (76 migraciones). |
